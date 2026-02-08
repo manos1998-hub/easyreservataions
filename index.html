@@ -7244,5 +7244,81 @@
         // Initialize the application
         document.addEventListener('DOMContentLoaded', init);
     </script>
+
+    <form id="reservationForm">
+  <input type="text" id="name" placeholder="Name" required>
+  <input type="date" id="date" required>
+  <input type="time" id="time" required>
+  <button type="submit">Reserve</button>
+</form>
+
+<p id="message"></p>
+
+<script type="module">
+  // Firebase code (same as previous message)
+</script>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  query,
+  where,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBXCDXtgax8vp8lT0pjBncYeRcyuxmSPcw",
+  authDomain: "reservationseasy-32cd3.firebaseapp.com",
+  projectId: "reservationseasy-32cd3",
+  storageBucket: "reservationseasy-32cd3.firebasestorage.app",
+  messagingSenderId: "756967125466",
+  appId: "1:756967125466:web:d28c0f584ef077c6ee50e3"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const form = document.getElementById("reservationForm");
+const message = document.getElementById("message");
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const name = document.getElementById("name").value;
+  const date = document.getElementById("date").value;
+  const time = document.getElementById("time").value;
+  const phone = document.getElementById("phone").value;
+
+  // 🔍 Check for existing reservation
+  const q = query(
+    collection(db, "reservations"),
+    where("date", "==", date),
+    where("time", "==", time)
+  );
+
+  const snapshot = await getDocs(q);
+  if (!snapshot.empty) {
+    message.innerText = "❌ This time is already booked.";
+    return;
+  }
+
+  // ✅ Save reservation
+  await addDoc(collection(db, "reservations"), {
+    name,
+    date,
+    time,
+    phone,
+    createdAt: new Date()
+  });
+
+  message.innerText = "✅ Reservation confirmed!";
+  form.reset();
+});
+</script>
+
+
 </body>
 </html>
