@@ -41,7 +41,7 @@
         .logo-text { font-size: 18px; font-weight: 700; color: var(--text-primary); }
         .logo-subtext { font-size: 12px; color: var(--text-secondary); font-weight: 500; }
         .nav-menu { padding: 20px 0; flex-grow: 1; }
-        .nav-item { display: flex; align-items: center; padding: 12px 20px; color: var(--text-secondary); text-decoration: none; font-weight: 500; transition: var(--transition); border-left: 3px solid transparent; }
+        .nav-item { display: flex; align-items: center; padding: 12px 20px; color: var(--text-secondary); text-decoration: none; font-weight: 500; transition: var(--transition); border-left: 3px solid transparent; cursor: pointer; }
         .nav-item:hover { background-color: var(--light-bg); color: var(--primary-color); }
         .nav-item.active { background-color: rgba(37, 99, 235, 0.05); color: var(--primary-color); border-left: 3px solid var(--primary-color); }
         .nav-item i { margin-right: 12px; width: 20px; text-align: center; }
@@ -301,7 +301,7 @@
     </style>
 </head>
 <body>
-    <!-- ========== FULL HTML STRUCTURE (modified) ========== -->
+    <!-- ========== FULL HTML STRUCTURE ========== -->
     <div class="container">
         <!-- Sidebar Navigation -->
         <div class="sidebar">
@@ -572,7 +572,7 @@
                 </div>
             </div>
 
-            <!-- Analytics Content -->
+            <!-- Analytics Content (with horizontal scroll for table) -->
             <div class="content-wrapper" id="analytics-content" style="display: none;">
                 <div class="analytics-filters">
                     <div class="filter-group"><label class="filter-label">Time Period</label><select class="form-control" id="analytics-period"><option value="30">Last 30 Days</option><option value="90">Last 90 Days</option><option value="180">Last 6 Months</option><option value="365">Last 12 Months</option><option value="all">All Time</option></select></div>
@@ -597,7 +597,18 @@
                     <div class="chart-container"><div class="chart-header"><h3><i class="fas fa-chart-line"></i> Monthly Revenue by Type</h3></div><div class="chart-body"><canvas id="monthlyTrendChart"></canvas></div></div>
                     <div class="chart-container"><div class="chart-header"><h3><i class="fas fa-percentage"></i> Profit Margin</h3></div><div class="chart-body"><canvas id="profitMarginChart"></canvas></div></div>
                 </div>
-                <div class="chart-container"><div class="chart-header"><h3><i class="fas fa-table"></i> Detailed Analytics</h3></div><div class="panel-body"><table class="data-table"><thead><tr><th>Period</th><th>Reservations</th><th>Transfer Income</th><th>Meal Income</th><th>Total Income</th><th>Expenses</th><th>Monthly Profit</th><th>Total Profit</th><th>Margin</th></tr></thead><tbody id="analytics-body"></tbody></table></div></div>
+                <div class="chart-container">
+                    <div class="chart-header"><h3><i class="fas fa-table"></i> Detailed Analytics</h3></div>
+                    <div class="panel-body">
+                        <!-- Added table-wrapper for horizontal scroll on mobile -->
+                        <div class="table-wrapper">
+                            <table class="data-table" id="analytics-table">
+                                <thead><tr><th>Period</th><th>Reservations</th><th>Transfer Income</th><th>Meal Income</th><th>Total Income</th><th>Expenses</th><th>Monthly Profit</th><th>Total Profit</th><th>Margin</th></tr></thead>
+                                <tbody id="analytics-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Settings Content -->
@@ -655,7 +666,7 @@
         </div>
     </div>
 
-    <!-- ========== FIREBASE SCRIPT (modified) ========== -->
+    <!-- ========== FIREBASE SCRIPT (full working version) ========== -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
         import { 
@@ -758,7 +769,7 @@
             } catch (e) { console.error(e); }
         }
 
-        // Custom Fields (unchanged)
+        // Custom Fields
         async function addCustomField() {
             const name = document.getElementById('field-name').value.trim();
             const def = document.getElementById('field-default').value.trim();
@@ -832,7 +843,7 @@
             });
         }
 
-        // Reservations (modified: includes transferAmount, mealPrice, checkinTime, checkoutTime)
+        // Reservations
         async function addReservation() {
             const room = document.getElementById('reservation-room').value;
             const checkin = document.getElementById('reservation-checkin').value;
@@ -902,7 +913,7 @@
             });
         }
 
-        // Categories (unchanged)
+        // Categories
         async function addCategory() {
             const name = document.getElementById('category-name').value.trim();
             if (!name) { showNotification('Category name required', 'error'); return; }
@@ -954,7 +965,7 @@
             } catch (e) { console.error(e); showNotification('Delete failed', 'error'); }
         }
 
-        // Expenses (unchanged)
+        // Expenses
         async function addExpense() {
             const name = document.getElementById('expense-name').value.trim();
             const catId = document.getElementById('expense-category').value;
