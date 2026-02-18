@@ -393,7 +393,7 @@
                             </div>
                         </div>
                     </div>
-                    <!-- Add Reservation Panel (Room Type dropdown, Income Type separate) -->
+                    <!-- Add Reservation Panel (Room Type dropdown, Transfer Amount, Meal Price) -->
                     <div class="panel">
                         <div class="panel-header"><h2><i class="fas fa-calendar-plus"></i> New Reservation</h2><div style="margin-top: 10px; font-size: 13px; color: var(--text-secondary);"><i class="fas fa-info-circle"></i> Drag and drop fields to reorder them</div></div>
                         <div class="panel-body">
@@ -414,12 +414,10 @@
                                 <div class="form-group"><label class="form-label">Check-out Date <span>*</span></label><input type="date" class="form-control" id="reservation-checkout"></div>
                                 <div class="form-group"><label class="form-label">Time <span>*</span></label><input type="time" class="form-control" id="reservation-time"></div>
                             </div>
-                            <!-- Income Type dropdown (kept for analytics) -->
-                            <div class="form-group"><label class="form-label">Income Type</label>
-                                <select class="form-control" id="reservation-income-type">
-                                    <option value="transfer">Transfer</option>
-                                    <option value="meal">Meal</option>
-                                </select>
+                            <!-- New fields: Transfer Amount and Meal Price -->
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+                                <div class="form-group"><label class="form-label">Transfer Amount ($)</label><input type="number" class="form-control" id="reservation-transfer" step="0.01" min="0" value="0"></div>
+                                <div class="form-group"><label class="form-label">Meal Price ($)</label><input type="number" class="form-control" id="reservation-meal" step="0.01" min="0" value="0"></div>
                             </div>
                             <div class="form-group" id="duration-display" style="display: none;"><div class="reservation-duration-display"><i class="fas fa-moon"></i><span id="duration-days">0</span> nights stay</div></div>
                             <div id="custom-fields-container"></div>
@@ -431,7 +429,7 @@
                 <!-- Active Filters -->
                 <div class="active-filters" id="active-filters" style="display: none;"></div>
 
-                <!-- Reservations Table (Room Type column only, no separate room/income type columns) -->
+                <!-- Reservations Table (with Transfer and Meal columns) -->
                 <div class="table-container">
                     <div class="table-header">
                         <div class="table-title"><i class="fas fa-table"></i> All Reservations <span id="reservation-count-badge" style="background-color: var(--primary-color); color: white; padding: 4px 10px; border-radius: 20px; font-size: 13px; margin-left: 10px;">0</span></div>
@@ -444,14 +442,14 @@
                     </div>
                     <div class="table-wrapper">
                         <table class="data-table" id="reservations-table">
-                            <thead id="reservations-thead"><tr><th>Room Type</th><th>Check-in</th><th>Check-out</th><th>Duration</th><th>Time</th><th>Income Type</th><th>Actions</th></tr></thead>
+                            <thead id="reservations-thead"><tr><th>Room Type</th><th>Check-in</th><th>Check-out</th><th>Duration</th><th>Time</th><th>Transfer ($)</th><th>Meal ($)</th><th>Actions</th></tr></thead>
                             <tbody id="reservations-body"></tbody>
                         </table>
                     </div>
                 </div>
             </div>
 
-            <!-- Calendar Content (unchanged) -->
+            <!-- Calendar Content -->
             <div class="content-wrapper" id="calendar-content" style="display: none;">
                 <div class="calendar-header">
                     <div class="calendar-navigation">
@@ -570,11 +568,10 @@
                 </div>
             </div>
 
-            <!-- Analytics Content (unchanged, uses income type) -->
+            <!-- Analytics Content (with transfer and meal breakdown) -->
             <div class="content-wrapper" id="analytics-content" style="display: none;">
                 <div class="analytics-filters">
                     <div class="filter-group"><label class="filter-label">Time Period</label><select class="form-control" id="analytics-period"><option value="30">Last 30 Days</option><option value="90">Last 90 Days</option><option value="180">Last 6 Months</option><option value="365">Last 12 Months</option><option value="all">All Time</option></select></div>
-                    <div class="filter-group"><label class="filter-label">Income Type</label><select class="form-control" id="analytics-income-type"><option value="all">All Income</option><option value="transfer">Transfer</option><option value="meal">Meal</option></select></div>
                     <div class="filter-group"><label class="filter-label">&nbsp;</label><button class="btn btn-primary" id="apply-analytics-filters"><i class="fas fa-filter"></i> Apply</button></div>
                     <div class="filter-group"><label class="filter-label">&nbsp;</label><button class="btn btn-success" id="export-analytics-btn"><i class="fas fa-file-excel"></i> Export</button></div>
                 </div>
@@ -604,7 +601,7 @@
         </div>
     </div>
 
-    <!-- Modals (edit reservation modal updated) -->
+    <!-- Modals -->
     <div class="modal" id="edit-reservation-modal">
         <div class="modal-content"><div class="modal-header"><div class="modal-title">Edit Reservation</div><button class="modal-close" id="close-edit-reservation-modal"><i class="fas fa-times"></i></button></div><div class="modal-body" id="edit-reservation-body"></div><div class="modal-footer"><button class="btn btn-secondary" id="cancel-edit-reservation-btn">Cancel</button><button class="btn btn-primary" id="save-edit-reservation-btn">Save Changes</button></div></div>
     </div>
@@ -626,7 +623,7 @@
         <div class="modal-content" style="max-width: 700px;">
             <div class="modal-header"><div class="modal-title"><i class="fas fa-filter"></i> Filter Reservations</div><button class="modal-close" id="close-filter-reservation-modal"><i class="fas fa-times"></i></button></div>
             <div class="modal-body" id="filter-reservation-body">
-                <!-- Room Type filter (replaces client name) -->
+                <!-- Room Type filter -->
                 <div class="form-group"><label class="form-label">Room Type</label>
                     <select class="form-control" id="filter-room">
                         <option value="">All</option>
@@ -645,7 +642,6 @@
                     <div class="form-group"><label class="form-label">Check-out From</label><input type="date" class="form-control" id="filter-checkout-from"></div>
                     <div class="form-group"><label class="form-label">Check-out To</label><input type="date" class="form-control" id="filter-checkout-to"></div>
                 </div>
-                <div class="form-group"><label class="form-label">Income Type</label><select class="form-control" id="filter-income-type"><option value="">All</option><option value="transfer">Transfer</option><option value="meal">Meal</option></select></div>
                 <div id="custom-field-filters"></div>
                 <div style="margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border-color);">
                     <div class="form-group"><label class="form-label">Sort By</label><select class="form-control" id="filter-sort-by"><option value="checkin">Check-in (newest)</option><option value="checkin_oldest">Check-in (oldest)</option><option value="name">Room Type A-Z</option></select></div>
@@ -832,18 +828,27 @@
             });
         }
 
-        // Reservations (modified: room type is the main identifier, stored as 'name' field)
+        // Reservations (modified: includes transferAmount and mealPrice)
         async function addReservation() {
             const room = document.getElementById('reservation-room').value;
             const checkin = document.getElementById('reservation-checkin').value;
             const checkout = document.getElementById('reservation-checkout').value;
             const time = document.getElementById('reservation-time').value;
-            const incomeType = document.getElementById('reservation-income-type').value;
-            if (!room || !checkin || !checkout || !time || !incomeType) { showNotification('Fill all required fields', 'error'); return; }
+            const transferAmount = parseFloat(document.getElementById('reservation-transfer').value) || 0;
+            const mealPrice = parseFloat(document.getElementById('reservation-meal').value) || 0;
+            if (!room || !checkin || !checkout || !time) { showNotification('Fill all required fields', 'error'); return; }
             if (new Date(checkout) < new Date(checkin)) { showNotification('Check-out after check-in', 'error'); return; }
             const duration = calculateDuration(checkin, checkout);
-            // Store room type as 'name' field
-            const newRes = { name: room, checkin, checkout, duration, time, incomeType, createdAt: new Date().toISOString() };
+            const newRes = { 
+                name: room, 
+                checkin, 
+                checkout, 
+                duration, 
+                time, 
+                transferAmount, 
+                mealPrice, 
+                createdAt: new Date().toISOString() 
+            };
             state.customFields.forEach(f => {
                 const el = document.getElementById(f.id);
                 if (el) newRes[f.id] = f.type === 'checkbox' ? el.checked : el.value;
@@ -879,7 +884,8 @@
             document.getElementById('reservation-checkin').value = today;
             document.getElementById('reservation-checkout').value = tomorrow;
             document.getElementById('reservation-time').value = '12:00';
-            document.getElementById('reservation-income-type').value = 'transfer';
+            document.getElementById('reservation-transfer').value = '0';
+            document.getElementById('reservation-meal').value = '0';
             state.customFields.forEach(f => {
                 const el = document.getElementById(f.id);
                 if (el) {
@@ -971,7 +977,7 @@
                 await deleteDoc(doc(db, 'expenses', id));
                 await loadAllData();
                 showNotification('Expense deleted', 'success');
-            } catch (e) { console.error(e); showNotification('Delete failed', 'error'); }
+            } catch (e) { console.error(e); showNotification('Error deleting', 'error'); }
         }
 
         async function updateExpense(id) {
@@ -1088,7 +1094,7 @@
                 `;
                 container.appendChild(div);
             });
-            // drag & drop
+            // drag & drop - improved
             const handles = container.querySelectorAll('.drag-handle');
             handles.forEach(h => {
                 h.addEventListener('dragstart', e => {
@@ -1105,10 +1111,12 @@
                 if (!target || target.dataset.id === draggedId) return;
                 const draggedIdx = state.fieldOrder.indexOf(draggedId);
                 const targetIdx = state.fieldOrder.indexOf(target.dataset.id);
+                // Remove and insert
                 state.fieldOrder.splice(draggedIdx, 1);
                 state.fieldOrder.splice(targetIdx, 0, draggedId);
                 renderCustomFields();
                 saveSettings();
+                showNotification('Field order updated', 'success');
             });
         }
 
@@ -1117,7 +1125,7 @@
             const tbody = document.getElementById('reservations-body');
             if (!thead || !tbody) return;
 
-            let headerHtml = '<tr><th>Room Type</th><th>Check-in</th><th>Check-out</th><th>Duration</th><th>Time</th><th>Income Type</th>';
+            let headerHtml = '<tr><th>Room Type</th><th>Check-in</th><th>Check-out</th><th>Duration</th><th>Time</th><th>Transfer ($)</th><th>Meal ($)</th>';
             state.customFields.forEach(f => { headerHtml += `<th>${f.name}</th>`; });
             headerHtml += '<th>Actions</th></tr>';
             thead.innerHTML = headerHtml;
@@ -1125,7 +1133,7 @@
             tbody.innerHTML = '';
             const res = state.filteredReservations || state.reservations;
             if (res.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="${6 + state.customFields.length + 1}"><div class="empty-state"><i class="fas fa-calendar-times"></i><h3>No Reservations</h3></div></td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="${7 + state.customFields.length + 1}"><div class="empty-state"><i class="fas fa-calendar-times"></i><h3>No Reservations</h3></div></td></tr>`;
                 return;
             }
             res.forEach(r => {
@@ -1136,7 +1144,8 @@
                     <td>${r.checkout}</td>
                     <td>${r.duration || 1}</td>
                     <td>${r.time}</td>
-                    <td>${r.incomeType || ''}</td>
+                    <td class="currency-cell">$${(r.transferAmount || 0).toFixed(2)}</td>
+                    <td class="currency-cell">$${(r.mealPrice || 0).toFixed(2)}</td>
                 `;
                 state.customFields.forEach(f => {
                     let val = r[f.id];
@@ -1270,7 +1279,7 @@
             document.getElementById('monthly-expenses').textContent = `$${monthlyExp.toFixed(2)}`;
             let revenue = 0;
             state.reservations.forEach(r => {
-                state.customFields.forEach(f => { if (f.type==='currency' && r[f.id]) revenue += parseFloat(r[f.id])||0; });
+                revenue += (r.transferAmount || 0) + (r.mealPrice || 0);
             });
             document.getElementById('net-revenue').textContent = `$${(revenue-monthlyExp).toFixed(2)}`;
             const totalExpenses = state.expenses.reduce((s,e)=>s+parseFloat(e.amount),0);
@@ -1286,25 +1295,24 @@
             document.getElementById('highest-category').textContent = maxCat.name;
         }
 
-        // Analytics (unchanged)
+        // Analytics with transfer and meal breakdown
         function renderAnalytics() {
             const period = document.getElementById('analytics-period').value;
-            const incomeTypeFilter = document.getElementById('analytics-income-type').value;
             const cutoff = period === 'all' ? new Date(0) : new Date(Date.now() - parseInt(period)*24*60*60*1000);
             
             let monthly = {};
             let totalTransfer = 0, totalMeal = 0;
             state.reservations.forEach(r => {
                 const d = new Date(r.checkin);
-                if (d >= cutoff && (incomeTypeFilter === 'all' || r.incomeType === incomeTypeFilter)) {
+                if (d >= cutoff) {
                     const monthKey = `${d.getFullYear()}-${d.getMonth()+1}`;
-                    let inc = 0;
-                    state.customFields.forEach(f => { if (f.type==='currency' && r[f.id]) inc += parseFloat(r[f.id])||0; });
-                    if (r.incomeType === 'transfer') totalTransfer += inc;
-                    else if (r.incomeType === 'meal') totalMeal += inc;
+                    const transfer = r.transferAmount || 0;
+                    const meal = r.mealPrice || 0;
+                    totalTransfer += transfer;
+                    totalMeal += meal;
                     monthly[monthKey] = monthly[monthKey] || { transfer:0, meal:0, expenses:0, count:0 };
-                    if (r.incomeType === 'transfer') monthly[monthKey].transfer += inc;
-                    else if (r.incomeType === 'meal') monthly[monthKey].meal += inc;
+                    monthly[monthKey].transfer += transfer;
+                    monthly[monthKey].meal += meal;
                     monthly[monthKey].count += 1;
                 }
             });
@@ -1419,7 +1427,7 @@
             document.getElementById('last-month-net').textContent = `$${(((monthly[lastMonthKey]?.transfer||0)+(monthly[lastMonthKey]?.meal||0))-(monthly[lastMonthKey]?.expenses||0)).toFixed(2)}`;
         }
 
-        // Calendar (unchanged)
+        // Calendar (unchanged, but uses name for room)
         function renderCalendar() {
             const grid = document.getElementById('calendar-days-grid');
             if (!grid) return;
@@ -1493,7 +1501,7 @@
             });
         }
 
-        // Export functions (unchanged)
+        // Export functions
         function exportToCSV(data, filename) {
             if (!data || data.length === 0) { showNotification('No data to export', 'error'); return; }
             const headers = Object.keys(data[0]);
@@ -1535,10 +1543,8 @@
                 <div class="form-group"><label>Check-in</label><input type="date" id="edit-checkin" class="form-control" value="${r.checkin}"></div>
                 <div class="form-group"><label>Check-out</label><input type="date" id="edit-checkout" class="form-control" value="${r.checkout}"></div>
                 <div class="form-group"><label>Time</label><input type="time" id="edit-time" class="form-control" value="${r.time}"></div>
-                <div class="form-group"><label>Income Type</label><select id="edit-income-type" class="form-control">
-                    <option value="transfer" ${r.incomeType==='transfer'?'selected':''}>Transfer</option>
-                    <option value="meal" ${r.incomeType==='meal'?'selected':''}>Meal</option>
-                </select></div>
+                <div class="form-group"><label>Transfer Amount ($)</label><input type="number" id="edit-transfer" class="form-control" step="0.01" value="${r.transferAmount || 0}"></div>
+                <div class="form-group"><label>Meal Price ($)</label><input type="number" id="edit-meal" class="form-control" step="0.01" value="${r.mealPrice || 0}"></div>
                 ${state.customFields.map(f => `
                     <div class="form-group"><label>${f.name}</label>
                         ${f.type==='checkbox' ? `<input type="checkbox" id="edit-${f.id}" ${r[f.id]?'checked':''}>` :
@@ -1556,7 +1562,8 @@
                 checkin: document.getElementById('edit-checkin').value,
                 checkout: document.getElementById('edit-checkout').value,
                 time: document.getElementById('edit-time').value,
-                incomeType: document.getElementById('edit-income-type').value,
+                transferAmount: parseFloat(document.getElementById('edit-transfer').value) || 0,
+                mealPrice: parseFloat(document.getElementById('edit-meal').value) || 0,
                 duration: calculateDuration(document.getElementById('edit-checkin').value, document.getElementById('edit-checkout').value)
             };
             state.customFields.forEach(f => {
@@ -1648,7 +1655,6 @@
             document.getElementById('filter-checkin-to').value = state.activeFilters.checkinTo || '';
             document.getElementById('filter-checkout-from').value = state.activeFilters.checkoutFrom || '';
             document.getElementById('filter-checkout-to').value = state.activeFilters.checkoutTo || '';
-            document.getElementById('filter-income-type').value = state.activeFilters.incomeType || '';
             document.getElementById('filter-sort-by').value = state.activeFilters.sortBy || 'checkin';
             const container = document.getElementById('custom-field-filters');
             container.innerHTML = '';
@@ -1699,7 +1705,6 @@
             if (document.getElementById('filter-checkin-to').value) filters.checkinTo = document.getElementById('filter-checkin-to').value;
             if (document.getElementById('filter-checkout-from').value) filters.checkoutFrom = document.getElementById('filter-checkout-from').value;
             if (document.getElementById('filter-checkout-to').value) filters.checkoutTo = document.getElementById('filter-checkout-to').value;
-            if (document.getElementById('filter-income-type').value) filters.incomeType = document.getElementById('filter-income-type').value;
             if (document.getElementById('filter-sort-by').value) filters.sortBy = document.getElementById('filter-sort-by').value;
             state.customFields.forEach(f => {
                 const el = document.getElementById(`filter-${f.id}`);
@@ -1713,7 +1718,6 @@
                     else if (key === 'checkinTo') { if (r.checkin > val) return false; }
                     else if (key === 'checkoutFrom') { if (r.checkout < val) return false; }
                     else if (key === 'checkoutTo') { if (r.checkout > val) return false; }
-                    else if (key === 'incomeType') { if (r.incomeType !== val) return false; }
                     else if (key === 'sortBy') continue;
                     else {
                         const field = state.customFields.find(f => f.id === key);
@@ -1752,7 +1756,8 @@
                 Checkout: r.checkout,
                 Duration: r.duration,
                 Time: r.time,
-                IncomeType: r.incomeType,
+                Transfer: r.transferAmount || 0,
+                Meal: r.mealPrice || 0,
                 ...state.customFields.reduce((acc, f) => ({ ...acc, [f.name]: r[f.id] }), {})
             }));
             exportToCSV(data, 'reservations.csv');
@@ -1764,7 +1769,8 @@
                 Checkout: r.checkout,
                 Duration: r.duration,
                 Time: r.time,
-                IncomeType: r.incomeType,
+                Transfer: r.transferAmount || 0,
+                Meal: r.mealPrice || 0,
                 ...state.customFields.reduce((acc, f) => ({ ...acc, [f.name]: r[f.id] }), {})
             }));
             exportToCSV(data, 'reservations.csv');
@@ -1792,11 +1798,9 @@
                 const d = new Date(r.checkin);
                 if (d >= cutoff) {
                     const monthKey = `${d.getFullYear()}-${d.getMonth()+1}`;
-                    let inc = 0;
-                    state.customFields.forEach(f => { if (f.type==='currency' && r[f.id]) inc += parseFloat(r[f.id])||0; });
                     monthly[monthKey] = monthly[monthKey] || { transfer:0, meal:0, expenses:0, count:0 };
-                    if (r.incomeType === 'transfer') monthly[monthKey].transfer += inc;
-                    else if (r.incomeType === 'meal') monthly[monthKey].meal += inc;
+                    monthly[monthKey].transfer += r.transferAmount || 0;
+                    monthly[monthKey].meal += r.mealPrice || 0;
                     monthly[monthKey].count += 1;
                 }
             });
@@ -1819,6 +1823,16 @@
                 Profit: (monthly[m].transfer + monthly[m].meal - monthly[m].expenses).toFixed(2)
             }));
             exportToCSV(data, 'analytics.csv');
+        });
+
+        // Refresh buttons
+        document.getElementById('refresh-table-btn')?.addEventListener('click', () => {
+            renderReservationsTable();
+            showNotification('Reservations table refreshed', 'success');
+        });
+        document.getElementById('refresh-expense-table-btn')?.addEventListener('click', () => {
+            renderExpensesTable();
+            showNotification('Expenses table refreshed', 'success');
         });
 
         // Event listeners
@@ -1923,10 +1937,6 @@
                 if (state.selectedCalendarDate) document.getElementById('reservation-checkin').value = state.selectedCalendarDate;
             });
 
-            // Refresh
-            document.getElementById('refresh-table-btn')?.addEventListener('click', renderReservationsTable);
-            document.getElementById('refresh-expense-table-btn')?.addEventListener('click', renderExpensesTable);
-
             // Analytics apply
             document.getElementById('apply-analytics-filters')?.addEventListener('click', renderAnalytics);
 
@@ -1943,7 +1953,6 @@
                 document.getElementById('filter-checkin-to').value = '';
                 document.getElementById('filter-checkout-from').value = '';
                 document.getElementById('filter-checkout-to').value = '';
-                document.getElementById('filter-income-type').value = '';
                 document.getElementById('filter-sort-by').value = 'checkin';
                 state.customFields.forEach(f => {
                     const el = document.getElementById(`filter-${f.id}`);
