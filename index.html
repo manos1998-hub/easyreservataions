@@ -303,7 +303,7 @@
     </style>
 </head>
 <body>
-    <!-- ========== FULL HTML STRUCTURE (with new fields) ========== -->
+    <!-- ========== FULL HTML STRUCTURE (modified) ========== -->
     <div class="container">
         <!-- Sidebar Navigation -->
         <div class="sidebar">
@@ -393,36 +393,33 @@
                             </div>
                         </div>
                     </div>
-                    <!-- Add Reservation Panel (with Room Type and Income Type) -->
+                    <!-- Add Reservation Panel (Room Type dropdown, Income Type separate) -->
                     <div class="panel">
                         <div class="panel-header"><h2><i class="fas fa-calendar-plus"></i> New Reservation</h2><div style="margin-top: 10px; font-size: 13px; color: var(--text-secondary);"><i class="fas fa-info-circle"></i> Drag and drop fields to reorder them</div></div>
                         <div class="panel-body">
                             <div class="reorder-instructions"><i class="fas fa-arrows-alt"></i><span>Drag the <i class="fas fa-grip-vertical" style="margin: 0 4px;"></i> handle on the left to reorder fields</span></div>
-                            <div class="form-group"><label class="form-label">Client Name <span>*</span></label><input type="text" class="form-control" id="reservation-name" placeholder="Enter client name"></div>
+                            <!-- Room Type dropdown (replaces Client Name) -->
+                            <div class="form-group"><label class="form-label">Room Type <span>*</span></label>
+                                <select class="form-control" id="reservation-room">
+                                    <option value="">Select Room Type</option>
+                                    <option value="Apartment 1">Apartment 1</option>
+                                    <option value="Apartment 2">Apartment 2</option>
+                                    <option value="Studio">Studio</option>
+                                    <option value="Villa">Villa</option>
+                                    <option value="Horizon">Horizon</option>
+                                </select>
+                            </div>
                             <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 20px;">
                                 <div class="form-group"><label class="form-label">Check-in Date <span>*</span></label><input type="date" class="form-control" id="reservation-checkin"></div>
                                 <div class="form-group"><label class="form-label">Check-out Date <span>*</span></label><input type="date" class="form-control" id="reservation-checkout"></div>
                                 <div class="form-group"><label class="form-label">Time <span>*</span></label><input type="time" class="form-control" id="reservation-time"></div>
                             </div>
-                            <!-- New fields: Room Type and Income Type -->
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
-                                <div class="form-group"><label class="form-label">Room Type</label>
-                                    <select class="form-control" id="reservation-room">
-                                        <option value="">Select Room Type</option>
-                                        <option value="single">Single</option>
-                                        <option value="double">Double</option>
-                                        <option value="suite">Suite</option>
-                                        <option value="vip">VIP</option>
-                                        <option value="family">Family</option>
-                                        <option value="deluxe">Deluxe</option>
-                                    </select>
-                                </div>
-                                <div class="form-group"><label class="form-label">Income Type</label>
-                                    <select class="form-control" id="reservation-income-type">
-                                        <option value="transfer">Transfer</option>
-                                        <option value="meal">Meal</option>
-                                    </select>
-                                </div>
+                            <!-- Income Type dropdown (kept for analytics) -->
+                            <div class="form-group"><label class="form-label">Income Type</label>
+                                <select class="form-control" id="reservation-income-type">
+                                    <option value="transfer">Transfer</option>
+                                    <option value="meal">Meal</option>
+                                </select>
                             </div>
                             <div class="form-group" id="duration-display" style="display: none;"><div class="reservation-duration-display"><i class="fas fa-moon"></i><span id="duration-days">0</span> nights stay</div></div>
                             <div id="custom-fields-container"></div>
@@ -434,7 +431,7 @@
                 <!-- Active Filters -->
                 <div class="active-filters" id="active-filters" style="display: none;"></div>
 
-                <!-- Reservations Table -->
+                <!-- Reservations Table (Room Type column only, no separate room/income type columns) -->
                 <div class="table-container">
                     <div class="table-header">
                         <div class="table-title"><i class="fas fa-table"></i> All Reservations <span id="reservation-count-badge" style="background-color: var(--primary-color); color: white; padding: 4px 10px; border-radius: 20px; font-size: 13px; margin-left: 10px;">0</span></div>
@@ -447,14 +444,14 @@
                     </div>
                     <div class="table-wrapper">
                         <table class="data-table" id="reservations-table">
-                            <thead id="reservations-thead"><tr><th>Client</th><th>Check-in</th><th>Check-out</th><th>Duration</th><th>Time</th><th>Room</th><th>Income Type</th><th>Actions</th></tr></thead>
+                            <thead id="reservations-thead"><tr><th>Room Type</th><th>Check-in</th><th>Check-out</th><th>Duration</th><th>Time</th><th>Income Type</th><th>Actions</th></tr></thead>
                             <tbody id="reservations-body"></tbody>
                         </table>
                     </div>
                 </div>
             </div>
 
-            <!-- Calendar Content -->
+            <!-- Calendar Content (unchanged) -->
             <div class="content-wrapper" id="calendar-content" style="display: none;">
                 <div class="calendar-header">
                     <div class="calendar-navigation">
@@ -481,7 +478,7 @@
                 </div>
             </div>
 
-            <!-- Expenses Content -->
+            <!-- Expenses Content (unchanged) -->
             <div class="content-wrapper" id="expenses-content" style="display: none;">
                 <!-- Stats -->
                 <div class="dashboard-stats">
@@ -573,7 +570,7 @@
                 </div>
             </div>
 
-            <!-- Analytics Content (with income type breakdown) -->
+            <!-- Analytics Content (unchanged, uses income type) -->
             <div class="content-wrapper" id="analytics-content" style="display: none;">
                 <div class="analytics-filters">
                     <div class="filter-group"><label class="filter-label">Time Period</label><select class="form-control" id="analytics-period"><option value="30">Last 30 Days</option><option value="90">Last 90 Days</option><option value="180">Last 6 Months</option><option value="365">Last 12 Months</option><option value="all">All Time</option></select></div>
@@ -607,7 +604,7 @@
         </div>
     </div>
 
-    <!-- Modals (edit/delete) -->
+    <!-- Modals (edit reservation modal updated) -->
     <div class="modal" id="edit-reservation-modal">
         <div class="modal-content"><div class="modal-header"><div class="modal-title">Edit Reservation</div><button class="modal-close" id="close-edit-reservation-modal"><i class="fas fa-times"></i></button></div><div class="modal-body" id="edit-reservation-body"></div><div class="modal-footer"><button class="btn btn-secondary" id="cancel-edit-reservation-btn">Cancel</button><button class="btn btn-primary" id="save-edit-reservation-btn">Save Changes</button></div></div>
     </div>
@@ -629,7 +626,17 @@
         <div class="modal-content" style="max-width: 700px;">
             <div class="modal-header"><div class="modal-title"><i class="fas fa-filter"></i> Filter Reservations</div><button class="modal-close" id="close-filter-reservation-modal"><i class="fas fa-times"></i></button></div>
             <div class="modal-body" id="filter-reservation-body">
-                <div class="form-group"><label class="form-label">Client Name</label><input type="text" class="form-control" id="filter-client-name"></div>
+                <!-- Room Type filter (replaces client name) -->
+                <div class="form-group"><label class="form-label">Room Type</label>
+                    <select class="form-control" id="filter-room">
+                        <option value="">All</option>
+                        <option value="Apartment 1">Apartment 1</option>
+                        <option value="Apartment 2">Apartment 2</option>
+                        <option value="Studio">Studio</option>
+                        <option value="Villa">Villa</option>
+                        <option value="Horizon">Horizon</option>
+                    </select>
+                </div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
                     <div class="form-group"><label class="form-label">Check-in From</label><input type="date" class="form-control" id="filter-checkin-from"></div>
                     <div class="form-group"><label class="form-label">Check-in To</label><input type="date" class="form-control" id="filter-checkin-to"></div>
@@ -638,18 +645,17 @@
                     <div class="form-group"><label class="form-label">Check-out From</label><input type="date" class="form-control" id="filter-checkout-from"></div>
                     <div class="form-group"><label class="form-label">Check-out To</label><input type="date" class="form-control" id="filter-checkout-to"></div>
                 </div>
-                <div class="form-group"><label class="form-label">Room Type</label><select class="form-control" id="filter-room"><option value="">All</option><option value="single">Single</option><option value="double">Double</option><option value="suite">Suite</option><option value="vip">VIP</option><option value="family">Family</option><option value="deluxe">Deluxe</option></select></div>
                 <div class="form-group"><label class="form-label">Income Type</label><select class="form-control" id="filter-income-type"><option value="">All</option><option value="transfer">Transfer</option><option value="meal">Meal</option></select></div>
                 <div id="custom-field-filters"></div>
                 <div style="margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border-color);">
-                    <div class="form-group"><label class="form-label">Sort By</label><select class="form-control" id="filter-sort-by"><option value="checkin">Check-in (newest)</option><option value="checkin_oldest">Check-in (oldest)</option><option value="name">Name A-Z</option></select></div>
+                    <div class="form-group"><label class="form-label">Sort By</label><select class="form-control" id="filter-sort-by"><option value="checkin">Check-in (newest)</option><option value="checkin_oldest">Check-in (oldest)</option><option value="name">Room Type A-Z</option></select></div>
                 </div>
             </div>
             <div class="modal-footer"><button class="btn btn-secondary" id="clear-all-filters-btn">Clear All</button><button class="btn btn-primary" id="apply-filters-btn">Apply Filters</button></div>
         </div>
     </div>
 
-    <!-- ========== FIREBASE SCRIPT ========== -->
+    <!-- ========== FIREBASE SCRIPT (modified) ========== -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
         import { 
@@ -752,7 +758,7 @@
             } catch (e) { console.error(e); }
         }
 
-        // Custom Fields
+        // Custom Fields (unchanged)
         async function addCustomField() {
             const name = document.getElementById('field-name').value.trim();
             const def = document.getElementById('field-default').value.trim();
@@ -826,18 +832,18 @@
             });
         }
 
-        // Reservations
+        // Reservations (modified: room type is the main identifier, stored as 'name' field)
         async function addReservation() {
-            const name = document.getElementById('reservation-name').value.trim();
+            const room = document.getElementById('reservation-room').value;
             const checkin = document.getElementById('reservation-checkin').value;
             const checkout = document.getElementById('reservation-checkout').value;
             const time = document.getElementById('reservation-time').value;
-            const room = document.getElementById('reservation-room').value;
             const incomeType = document.getElementById('reservation-income-type').value;
-            if (!name || !checkin || !checkout || !time || !room || !incomeType) { showNotification('Fill all required fields', 'error'); return; }
+            if (!room || !checkin || !checkout || !time || !incomeType) { showNotification('Fill all required fields', 'error'); return; }
             if (new Date(checkout) < new Date(checkin)) { showNotification('Check-out after check-in', 'error'); return; }
             const duration = calculateDuration(checkin, checkout);
-            const newRes = { name, checkin, checkout, duration, time, room, incomeType, createdAt: new Date().toISOString() };
+            // Store room type as 'name' field
+            const newRes = { name: room, checkin, checkout, duration, time, incomeType, createdAt: new Date().toISOString() };
             state.customFields.forEach(f => {
                 const el = document.getElementById(f.id);
                 if (el) newRes[f.id] = f.type === 'checkbox' ? el.checked : el.value;
@@ -867,13 +873,12 @@
         }
 
         function clearForm() {
-            document.getElementById('reservation-name').value = '';
+            document.getElementById('reservation-room').value = '';
             const today = new Date().toISOString().split('T')[0];
             const tomorrow = new Date(Date.now()+86400000).toISOString().split('T')[0];
             document.getElementById('reservation-checkin').value = today;
             document.getElementById('reservation-checkout').value = tomorrow;
             document.getElementById('reservation-time').value = '12:00';
-            document.getElementById('reservation-room').value = '';
             document.getElementById('reservation-income-type').value = 'transfer';
             state.customFields.forEach(f => {
                 const el = document.getElementById(f.id);
@@ -884,7 +889,7 @@
             });
         }
 
-        // Categories
+        // Categories (unchanged)
         async function addCategory() {
             const name = document.getElementById('category-name').value.trim();
             if (!name) { showNotification('Category name required', 'error'); return; }
@@ -936,7 +941,7 @@
             } catch (e) { console.error(e); showNotification('Delete failed', 'error'); }
         }
 
-        // Expenses
+        // Expenses (unchanged)
         async function addExpense() {
             const name = document.getElementById('expense-name').value.trim();
             const catId = document.getElementById('expense-category').value;
@@ -1112,7 +1117,7 @@
             const tbody = document.getElementById('reservations-body');
             if (!thead || !tbody) return;
 
-            let headerHtml = '<tr><th>Client</th><th>Check-in</th><th>Check-out</th><th>Duration</th><th>Time</th><th>Room</th><th>Income Type</th>';
+            let headerHtml = '<tr><th>Room Type</th><th>Check-in</th><th>Check-out</th><th>Duration</th><th>Time</th><th>Income Type</th>';
             state.customFields.forEach(f => { headerHtml += `<th>${f.name}</th>`; });
             headerHtml += '<th>Actions</th></tr>';
             thead.innerHTML = headerHtml;
@@ -1120,7 +1125,7 @@
             tbody.innerHTML = '';
             const res = state.filteredReservations || state.reservations;
             if (res.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="${7 + state.customFields.length + 1}"><div class="empty-state"><i class="fas fa-calendar-times"></i><h3>No Reservations</h3></div></td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="${6 + state.customFields.length + 1}"><div class="empty-state"><i class="fas fa-calendar-times"></i><h3>No Reservations</h3></div></td></tr>`;
                 return;
             }
             res.forEach(r => {
@@ -1131,7 +1136,6 @@
                     <td>${r.checkout}</td>
                     <td>${r.duration || 1}</td>
                     <td>${r.time}</td>
-                    <td>${r.room || ''}</td>
                     <td>${r.incomeType || ''}</td>
                 `;
                 state.customFields.forEach(f => {
@@ -1282,7 +1286,7 @@
             document.getElementById('highest-category').textContent = maxCat.name;
         }
 
-        // Analytics with income type breakdown
+        // Analytics (unchanged)
         function renderAnalytics() {
             const period = document.getElementById('analytics-period').value;
             const incomeTypeFilter = document.getElementById('analytics-income-type').value;
@@ -1327,7 +1331,6 @@
             document.getElementById('analytics-meal-income').textContent = `$${totalMeal.toFixed(2)}`;
             document.getElementById('analytics-total-expenses').textContent = `$${state.expenses.reduce((s,e)=>s+parseFloat(e.amount),0).toFixed(2)}`;
 
-            // Destroy existing charts
             if (state.charts.incomeExpense) state.charts.incomeExpense.destroy();
             if (state.charts.expenseCategory) state.charts.expenseCategory.destroy();
             if (state.charts.monthlyTrend) state.charts.monthlyTrend.destroy();
@@ -1379,7 +1382,6 @@
                 data: { labels, datasets: [{ label: 'Profit Margin %', data: marginData, backgroundColor: marginData.map(v=>v>=0?'rgba(16,185,129,0.7)':'rgba(239,68,68,0.7)') }] }
             });
 
-            // Analytics table
             const tbody = document.getElementById('analytics-body');
             tbody.innerHTML = '';
             let cumulative = 0;
@@ -1405,7 +1407,6 @@
                 tbody.innerHTML += row;
             });
 
-            // This/last month
             const now = new Date();
             const thisMonthKey = `${now.getFullYear()}-${now.getMonth()+1}`;
             const lastMonth = new Date(now.getFullYear(), now.getMonth()-1, 1);
@@ -1418,7 +1419,7 @@
             document.getElementById('last-month-net').textContent = `$${(((monthly[lastMonthKey]?.transfer||0)+(monthly[lastMonthKey]?.meal||0))-(monthly[lastMonthKey]?.expenses||0)).toFixed(2)}`;
         }
 
-        // Calendar with room colors
+        // Calendar (unchanged)
         function renderCalendar() {
             const grid = document.getElementById('calendar-days-grid');
             if (!grid) return;
@@ -1445,7 +1446,13 @@
                     indicator.className = 'calendar-reservation-indicator';
                     dayReservations.slice(0,3).forEach(r => {
                         const resDiv = document.createElement('div');
-                        const roomClass = r.room ? `reservation-room-${r.room}` : 'reservation-pending';
+                        // map room name to a class for color
+                        let roomClass = 'reservation-pending';
+                        if (r.name === 'Apartment 1') roomClass = 'reservation-room-single';
+                        else if (r.name === 'Apartment 2') roomClass = 'reservation-room-double';
+                        else if (r.name === 'Studio') roomClass = 'reservation-room-suite';
+                        else if (r.name === 'Villa') roomClass = 'reservation-room-vip';
+                        else if (r.name === 'Horizon') roomClass = 'reservation-room-deluxe';
                         resDiv.className = `calendar-reservation ${roomClass}`;
                         resDiv.innerHTML = `<div class="time">${r.time}</div><div class="name">${r.name}</div>`;
                         indicator.appendChild(resDiv);
@@ -1479,14 +1486,14 @@
                 const item = document.createElement('div');
                 item.className = 'calendar-reservation-item';
                 item.innerHTML = `
-                    <div><strong>${r.name}</strong> ${r.time} (${r.room || 'no room'})</div>
+                    <div><strong>${r.name}</strong> ${r.time}</div>
                     <div>${r.checkin} to ${r.checkout}</div>
                 `;
                 container.appendChild(item);
             });
         }
 
-        // Export functions
+        // Export functions (unchanged)
         function exportToCSV(data, filename) {
             if (!data || data.length === 0) { showNotification('No data to export', 'error'); return; }
             const headers = Object.keys(data[0]);
@@ -1508,25 +1515,26 @@
             window.URL.revokeObjectURL(url);
         }
 
-        // Modal functions
+        // Modal functions (edit reservation updated)
         window.editReservation = (id) => {
             const r = state.reservations.find(r => r.id === id);
             if (!r) return;
             state.editingReservationId = id;
             const body = document.getElementById('edit-reservation-body');
             body.innerHTML = `
-                <div class="form-group"><label>Name</label><input type="text" id="edit-name" class="form-control" value="${r.name}"></div>
+                <div class="form-group"><label>Room Type</label>
+                    <select id="edit-name" class="form-control">
+                        <option value="">Select</option>
+                        <option value="Apartment 1" ${r.name==='Apartment 1'?'selected':''}>Apartment 1</option>
+                        <option value="Apartment 2" ${r.name==='Apartment 2'?'selected':''}>Apartment 2</option>
+                        <option value="Studio" ${r.name==='Studio'?'selected':''}>Studio</option>
+                        <option value="Villa" ${r.name==='Villa'?'selected':''}>Villa</option>
+                        <option value="Horizon" ${r.name==='Horizon'?'selected':''}>Horizon</option>
+                    </select>
+                </div>
                 <div class="form-group"><label>Check-in</label><input type="date" id="edit-checkin" class="form-control" value="${r.checkin}"></div>
                 <div class="form-group"><label>Check-out</label><input type="date" id="edit-checkout" class="form-control" value="${r.checkout}"></div>
                 <div class="form-group"><label>Time</label><input type="time" id="edit-time" class="form-control" value="${r.time}"></div>
-                <div class="form-group"><label>Room</label><select id="edit-room" class="form-control">
-                    <option value="">Select</option><option value="single" ${r.room==='single'?'selected':''}>Single</option>
-                    <option value="double" ${r.room==='double'?'selected':''}>Double</option>
-                    <option value="suite" ${r.room==='suite'?'selected':''}>Suite</option>
-                    <option value="vip" ${r.room==='vip'?'selected':''}>VIP</option>
-                    <option value="family" ${r.room==='family'?'selected':''}>Family</option>
-                    <option value="deluxe" ${r.room==='deluxe'?'selected':''}>Deluxe</option>
-                </select></div>
                 <div class="form-group"><label>Income Type</label><select id="edit-income-type" class="form-control">
                     <option value="transfer" ${r.incomeType==='transfer'?'selected':''}>Transfer</option>
                     <option value="meal" ${r.incomeType==='meal'?'selected':''}>Meal</option>
@@ -1548,7 +1556,6 @@
                 checkin: document.getElementById('edit-checkin').value,
                 checkout: document.getElementById('edit-checkout').value,
                 time: document.getElementById('edit-time').value,
-                room: document.getElementById('edit-room').value,
                 incomeType: document.getElementById('edit-income-type').value,
                 duration: calculateDuration(document.getElementById('edit-checkin').value, document.getElementById('edit-checkout').value)
             };
@@ -1636,12 +1643,11 @@
 
         // Filter modal
         function openFilterModal() {
-            document.getElementById('filter-client-name').value = state.activeFilters.clientName || '';
+            document.getElementById('filter-room').value = state.activeFilters.room || '';
             document.getElementById('filter-checkin-from').value = state.activeFilters.checkinFrom || '';
             document.getElementById('filter-checkin-to').value = state.activeFilters.checkinTo || '';
             document.getElementById('filter-checkout-from').value = state.activeFilters.checkoutFrom || '';
             document.getElementById('filter-checkout-to').value = state.activeFilters.checkoutTo || '';
-            document.getElementById('filter-room').value = state.activeFilters.room || '';
             document.getElementById('filter-income-type').value = state.activeFilters.incomeType || '';
             document.getElementById('filter-sort-by').value = state.activeFilters.sortBy || 'checkin';
             const container = document.getElementById('custom-field-filters');
@@ -1688,12 +1694,11 @@
 
         function applyFilters() {
             const filters = {};
-            if (document.getElementById('filter-client-name').value) filters.clientName = document.getElementById('filter-client-name').value.toLowerCase();
+            if (document.getElementById('filter-room').value) filters.room = document.getElementById('filter-room').value;
             if (document.getElementById('filter-checkin-from').value) filters.checkinFrom = document.getElementById('filter-checkin-from').value;
             if (document.getElementById('filter-checkin-to').value) filters.checkinTo = document.getElementById('filter-checkin-to').value;
             if (document.getElementById('filter-checkout-from').value) filters.checkoutFrom = document.getElementById('filter-checkout-from').value;
             if (document.getElementById('filter-checkout-to').value) filters.checkoutTo = document.getElementById('filter-checkout-to').value;
-            if (document.getElementById('filter-room').value) filters.room = document.getElementById('filter-room').value;
             if (document.getElementById('filter-income-type').value) filters.incomeType = document.getElementById('filter-income-type').value;
             if (document.getElementById('filter-sort-by').value) filters.sortBy = document.getElementById('filter-sort-by').value;
             state.customFields.forEach(f => {
@@ -1703,12 +1708,11 @@
             state.activeFilters = filters;
             state.filteredReservations = state.reservations.filter(r => {
                 for (let [key, val] of Object.entries(filters)) {
-                    if (key === 'clientName') { if (!r.name.toLowerCase().includes(val)) return false; }
+                    if (key === 'room') { if (r.name !== val) return false; }
                     else if (key === 'checkinFrom') { if (r.checkin < val) return false; }
                     else if (key === 'checkinTo') { if (r.checkin > val) return false; }
                     else if (key === 'checkoutFrom') { if (r.checkout < val) return false; }
                     else if (key === 'checkoutTo') { if (r.checkout > val) return false; }
-                    else if (key === 'room') { if (r.room !== val) return false; }
                     else if (key === 'incomeType') { if (r.incomeType !== val) return false; }
                     else if (key === 'sortBy') continue;
                     else {
@@ -1743,12 +1747,11 @@
         // Export handlers
         document.getElementById('export-dashboard-btn')?.addEventListener('click', () => {
             const data = state.reservations.map(r => ({
-                Name: r.name,
+                Room: r.name,
                 Checkin: r.checkin,
                 Checkout: r.checkout,
                 Duration: r.duration,
                 Time: r.time,
-                Room: r.room,
                 IncomeType: r.incomeType,
                 ...state.customFields.reduce((acc, f) => ({ ...acc, [f.name]: r[f.id] }), {})
             }));
@@ -1756,12 +1759,11 @@
         });
         document.getElementById('export-reservations-btn')?.addEventListener('click', () => {
             const data = state.reservations.map(r => ({
-                Name: r.name,
+                Room: r.name,
                 Checkin: r.checkin,
                 Checkout: r.checkout,
                 Duration: r.duration,
                 Time: r.time,
-                Room: r.room,
                 IncomeType: r.incomeType,
                 ...state.customFields.reduce((acc, f) => ({ ...acc, [f.name]: r[f.id] }), {})
             }));
@@ -1783,7 +1785,6 @@
             exportToCSV(data, 'expenses.csv');
         });
         document.getElementById('export-analytics-btn')?.addEventListener('click', () => {
-            // Export current analytics view (monthly data)
             const period = document.getElementById('analytics-period').value;
             const cutoff = period === 'all' ? new Date(0) : new Date(Date.now() - parseInt(period)*24*60*60*1000);
             let monthly = {};
@@ -1937,12 +1938,11 @@
             document.getElementById('filter-table-btn')?.addEventListener('click', openFilterModal);
             document.getElementById('close-filter-reservation-modal')?.addEventListener('click', closeFilterModal);
             document.getElementById('clear-all-filters-btn')?.addEventListener('click', () => {
-                document.getElementById('filter-client-name').value = '';
+                document.getElementById('filter-room').value = '';
                 document.getElementById('filter-checkin-from').value = '';
                 document.getElementById('filter-checkin-to').value = '';
                 document.getElementById('filter-checkout-from').value = '';
                 document.getElementById('filter-checkout-to').value = '';
-                document.getElementById('filter-room').value = '';
                 document.getElementById('filter-income-type').value = '';
                 document.getElementById('filter-sort-by').value = 'checkin';
                 state.customFields.forEach(f => {
