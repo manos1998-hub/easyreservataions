@@ -303,7 +303,7 @@
     </style>
 </head>
 <body>
-    <!-- ========== FULL ORIGINAL HTML STRUCTURE (with modifications) ========== -->
+    <!-- ========== FULL HTML STRUCTURE (with new fields) ========== -->
     <div class="container">
         <!-- Sidebar Navigation -->
         <div class="sidebar">
@@ -328,7 +328,7 @@
             <div class="header">
                 <div class="header-title"><h1 id="page-title">Reservation Dashboard</h1><p id="page-subtitle">Manage bookings, custom fields, and business expenses</p></div>
                 <div class="header-actions">
-                    <button class="btn btn-secondary btn-sm" id="export-btn"><i class="fas fa-download"></i> Export</button>
+                    <button class="btn btn-secondary btn-sm" id="export-dashboard-btn"><i class="fas fa-download"></i> Export Dashboard</button>
                     <button class="btn btn-primary btn-sm" id="print-btn"><i class="fas fa-print"></i> Print Report</button>
                     <div style="width:1px;height:24px;background-color:var(--border-color);"></div>
                     <div style="font-size:14px;font-weight:600;color:var(--text-primary);"><i class="fas fa-user-circle" style="margin-right:8px;"></i>Admin User</div>
@@ -393,7 +393,7 @@
                             </div>
                         </div>
                     </div>
-                    <!-- Add Reservation Panel -->
+                    <!-- Add Reservation Panel (with Room Type and Income Type) -->
                     <div class="panel">
                         <div class="panel-header"><h2><i class="fas fa-calendar-plus"></i> New Reservation</h2><div style="margin-top: 10px; font-size: 13px; color: var(--text-secondary);"><i class="fas fa-info-circle"></i> Drag and drop fields to reorder them</div></div>
                         <div class="panel-body">
@@ -403,6 +403,26 @@
                                 <div class="form-group"><label class="form-label">Check-in Date <span>*</span></label><input type="date" class="form-control" id="reservation-checkin"></div>
                                 <div class="form-group"><label class="form-label">Check-out Date <span>*</span></label><input type="date" class="form-control" id="reservation-checkout"></div>
                                 <div class="form-group"><label class="form-label">Time <span>*</span></label><input type="time" class="form-control" id="reservation-time"></div>
+                            </div>
+                            <!-- New fields: Room Type and Income Type -->
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+                                <div class="form-group"><label class="form-label">Room Type</label>
+                                    <select class="form-control" id="reservation-room">
+                                        <option value="">Select Room Type</option>
+                                        <option value="single">Single</option>
+                                        <option value="double">Double</option>
+                                        <option value="suite">Suite</option>
+                                        <option value="vip">VIP</option>
+                                        <option value="family">Family</option>
+                                        <option value="deluxe">Deluxe</option>
+                                    </select>
+                                </div>
+                                <div class="form-group"><label class="form-label">Income Type</label>
+                                    <select class="form-control" id="reservation-income-type">
+                                        <option value="transfer">Transfer</option>
+                                        <option value="meal">Meal</option>
+                                    </select>
+                                </div>
                             </div>
                             <div class="form-group" id="duration-display" style="display: none;"><div class="reservation-duration-display"><i class="fas fa-moon"></i><span id="duration-days">0</span> nights stay</div></div>
                             <div id="custom-fields-container"></div>
@@ -418,18 +438,23 @@
                 <div class="table-container">
                     <div class="table-header">
                         <div class="table-title"><i class="fas fa-table"></i> All Reservations <span id="reservation-count-badge" style="background-color: var(--primary-color); color: white; padding: 4px 10px; border-radius: 20px; font-size: 13px; margin-left: 10px;">0</span></div>
-                        <div class="table-actions"><button class="btn btn-secondary btn-sm" id="refresh-table-btn"><i class="fas fa-sync-alt"></i> Refresh</button><button class="btn btn-primary btn-sm" id="filter-table-btn"><i class="fas fa-filter"></i> Filter</button><button class="btn btn-secondary btn-sm" id="clear-filters-btn" style="display: none;"><i class="fas fa-times"></i> Clear Filters</button></div>
+                        <div class="table-actions">
+                            <button class="btn btn-secondary btn-sm" id="refresh-table-btn"><i class="fas fa-sync-alt"></i> Refresh</button>
+                            <button class="btn btn-primary btn-sm" id="filter-table-btn"><i class="fas fa-filter"></i> Filter</button>
+                            <button class="btn btn-secondary btn-sm" id="clear-filters-btn" style="display: none;"><i class="fas fa-times"></i> Clear Filters</button>
+                            <button class="btn btn-success btn-sm" id="export-reservations-btn"><i class="fas fa-file-excel"></i> Export</button>
+                        </div>
                     </div>
                     <div class="table-wrapper">
                         <table class="data-table" id="reservations-table">
-                            <thead id="reservations-thead"><tr><th>Client</th><th>Check-in</th><th>Check-out</th><th>Duration</th><th>Time</th><th>Actions</th></tr></thead>
+                            <thead id="reservations-thead"><tr><th>Client</th><th>Check-in</th><th>Check-out</th><th>Duration</th><th>Time</th><th>Room</th><th>Income Type</th><th>Actions</th></tr></thead>
                             <tbody id="reservations-body"></tbody>
                         </table>
                     </div>
                 </div>
             </div>
 
-            <!-- Calendar Content (simplified) -->
+            <!-- Calendar Content -->
             <div class="content-wrapper" id="calendar-content" style="display: none;">
                 <div class="calendar-header">
                     <div class="calendar-navigation">
@@ -438,17 +463,27 @@
                         <button class="btn btn-secondary btn-sm" id="calendar-next-month"><i class="fas fa-chevron-right"></i></button>
                         <button class="btn btn-primary btn-sm" id="calendar-today"><i class="fas fa-calendar-day"></i> Today</button>
                     </div>
+                    <div class="calendar-view-switcher">
+                        <button class="calendar-view-btn active" id="calendar-month-view-btn"><i class="fas fa-calendar-alt"></i> Month</button>
+                        <button class="calendar-view-btn" id="calendar-week-view-btn"><i class="fas fa-calendar-week"></i> Week</button>
+                    </div>
                 </div>
                 <div class="calendar-grid" id="calendar-days-headers">
                     <div class="calendar-day-header">Sun</div><div class="calendar-day-header">Mon</div><div class="calendar-day-header">Tue</div><div class="calendar-day-header">Wed</div><div class="calendar-day-header">Thu</div><div class="calendar-day-header">Fri</div><div class="calendar-day-header">Sat</div>
                 </div>
                 <div class="calendar-grid" id="calendar-days-grid"></div>
-                <div class="calendar-reservation-details" id="calendar-reservation-details">...</div>
+                <div class="calendar-reservation-details" id="calendar-reservation-details">
+                    <div class="calendar-details-header">
+                        <div class="calendar-details-date" id="selected-date-title">Select a date</div>
+                        <button class="btn btn-primary btn-sm" id="add-reservation-from-calendar"><i class="fas fa-plus"></i> Add</button>
+                    </div>
+                    <div class="calendar-reservation-list" id="selected-date-reservations"></div>
+                </div>
             </div>
 
-            <!-- Expenses Content (Modified: removed avg per reservation, added name filter) -->
+            <!-- Expenses Content -->
             <div class="content-wrapper" id="expenses-content" style="display: none;">
-                <!-- Stats (removed avg per reservation) -->
+                <!-- Stats -->
                 <div class="dashboard-stats">
                     <div class="stat-card"><div class="stat-header"><div class="stat-title">Total Expenses</div><div class="stat-icon" style="background-color: var(--expense-color);"><i class="fas fa-money-bill-wave"></i></div></div><div class="stat-value" id="total-expenses">$0</div><div class="stat-change negative"><i class="fas fa-arrow-up"></i> 8% from last month</div></div>
                     <div class="stat-card"><div class="stat-header"><div class="stat-title">This Month</div><div class="stat-icon" style="background-color: var(--accent-color);"><i class="fas fa-calendar"></i></div></div><div class="stat-value" id="month-expenses">$0</div><div class="stat-change positive"><i class="fas fa-arrow-down"></i> 5% from last month</div></div>
@@ -523,7 +558,10 @@
                 <div class="expense-table-container">
                     <div class="expense-table-header">
                         <div class="expense-table-title"><i class="fas fa-table"></i> All Expenses <span id="expense-count-badge" style="background-color: var(--expense-color); color: white; padding: 4px 10px; border-radius: 20px; font-size: 13px; margin-left: 10px;">0</span></div>
-                        <div class="expense-table-actions"><button class="btn btn-secondary btn-sm" id="refresh-expense-table-btn"><i class="fas fa-sync-alt"></i> Refresh</button><button class="btn btn-expense btn-sm" id="export-expenses-btn"><i class="fas fa-file-export"></i> Export</button></div>
+                        <div class="expense-table-actions">
+                            <button class="btn btn-secondary btn-sm" id="refresh-expense-table-btn"><i class="fas fa-sync-alt"></i> Refresh</button>
+                            <button class="btn btn-expense btn-sm" id="export-expenses-btn"><i class="fas fa-file-excel"></i> Export</button>
+                        </div>
                     </div>
                     <div class="expense-table-wrapper">
                         <table class="expense-table" id="expenses-table">
@@ -535,17 +573,19 @@
                 </div>
             </div>
 
-            <!-- Analytics Content -->
+            <!-- Analytics Content (with income type breakdown) -->
             <div class="content-wrapper" id="analytics-content" style="display: none;">
                 <div class="analytics-filters">
                     <div class="filter-group"><label class="filter-label">Time Period</label><select class="form-control" id="analytics-period"><option value="30">Last 30 Days</option><option value="90">Last 90 Days</option><option value="180">Last 6 Months</option><option value="365">Last 12 Months</option><option value="all">All Time</option></select></div>
-                    <div class="filter-group"><label class="filter-label">&nbsp;</label><button class="btn btn-primary" id="apply-analytics-filters"><i class="fas fa-filter"></i> Apply Filters</button></div>
+                    <div class="filter-group"><label class="filter-label">Income Type</label><select class="form-control" id="analytics-income-type"><option value="all">All Income</option><option value="transfer">Transfer</option><option value="meal">Meal</option></select></div>
+                    <div class="filter-group"><label class="filter-label">&nbsp;</label><button class="btn btn-primary" id="apply-analytics-filters"><i class="fas fa-filter"></i> Apply</button></div>
+                    <div class="filter-group"><label class="filter-label">&nbsp;</label><button class="btn btn-success" id="export-analytics-btn"><i class="fas fa-file-excel"></i> Export</button></div>
                 </div>
                 <div class="analytics-stats">
-                    <div class="analytics-stat-card"><div class="analytics-stat-header"><div class="analytics-stat-title">Total Revenue</div><div class="analytics-stat-icon" style="background-color: var(--success-color);"><i class="fas fa-dollar-sign"></i></div></div><div class="analytics-stat-value" id="analytics-total-revenue">$0</div><div class="analytics-stat-subtitle">From all reservations</div></div>
-                    <div class="analytics-stat-card"><div class="analytics-stat-header"><div class="analytics-stat-title">Total Expenses</div><div class="analytics-stat-icon" style="background-color: var(--danger-color);"><i class="fas fa-money-bill-wave"></i></div></div><div class="analytics-stat-value" id="analytics-total-expenses">$0</div><div class="analytics-stat-subtitle">From all categories</div></div>
-                    <div class="analytics-stat-card"><div class="analytics-stat-header"><div class="analytics-stat-title">Net Profit</div><div class="analytics-stat-icon" style="background-color: var(--primary-color);"><i class="fas fa-chart-line"></i></div></div><div class="analytics-stat-value" id="analytics-net-profit">$0</div><div class="analytics-stat-subtitle">Revenue minus expenses</div></div>
-                    <div class="analytics-stat-card"><div class="analytics-stat-header"><div class="analytics-stat-title">Profit Margin</div><div class="analytics-stat-icon" style="background-color: var(--warning-color);"><i class="fas fa-percentage"></i></div></div><div class="analytics-stat-value" id="analytics-profit-margin">0%</div><div class="analytics-stat-subtitle">Net profit as percentage</div></div>
+                    <div class="analytics-stat-card"><div class="analytics-stat-header"><div class="analytics-stat-title">Total Revenue</div><div class="analytics-stat-icon" style="background-color: var(--success-color);"><i class="fas fa-dollar-sign"></i></div></div><div class="analytics-stat-value" id="analytics-total-revenue">$0</div><div class="analytics-stat-subtitle">All income</div></div>
+                    <div class="analytics-stat-card"><div class="analytics-stat-header"><div class="analytics-stat-title">Transfer Income</div><div class="analytics-stat-icon" style="background-color: var(--primary-color);"><i class="fas fa-truck"></i></div></div><div class="analytics-stat-value" id="analytics-transfer-income">$0</div><div class="analytics-stat-subtitle">From transfers</div></div>
+                    <div class="analytics-stat-card"><div class="analytics-stat-header"><div class="analytics-stat-title">Meal Income</div><div class="analytics-stat-icon" style="background-color: var(--warning-color);"><i class="fas fa-utensils"></i></div></div><div class="analytics-stat-value" id="analytics-meal-income">$0</div><div class="analytics-stat-subtitle">From meals</div></div>
+                    <div class="analytics-stat-card"><div class="analytics-stat-header"><div class="analytics-stat-title">Total Expenses</div><div class="analytics-stat-icon" style="background-color: var(--danger-color);"><i class="fas fa-money-bill-wave"></i></div></div><div class="analytics-stat-value" id="analytics-total-expenses">$0</div><div class="analytics-stat-subtitle">All expenses</div></div>
                 </div>
                 <div class="comparison-cards">
                     <div class="comparison-card"><div class="comparison-header"><div class="comparison-title">This Month</div><div class="comparison-value" id="this-month-profit">$0</div></div><div class="comparison-details"><div class="comparison-row"><div class="comparison-label">Income</div><div class="comparison-amount income-amount" id="this-month-income">$0</div></div><div class="comparison-row"><div class="comparison-label">Expenses</div><div class="comparison-amount expense-amount" id="this-month-expenses">$0</div></div><div class="comparison-row"><div class="comparison-label">Net Profit</div><div class="comparison-amount" id="this-month-net">$0</div></div></div></div>
@@ -556,10 +596,10 @@
                     <div class="chart-container"><div class="chart-header"><h3><i class="fas fa-pie-chart"></i> Expense by Category</h3></div><div class="chart-body"><canvas id="expenseCategoryChart"></canvas></div></div>
                 </div>
                 <div class="panel-container">
-                    <div class="chart-container"><div class="chart-header"><h3><i class="fas fa-chart-line"></i> Monthly Revenue</h3></div><div class="chart-body"><canvas id="monthlyTrendChart"></canvas></div></div>
+                    <div class="chart-container"><div class="chart-header"><h3><i class="fas fa-chart-line"></i> Monthly Revenue by Type</h3></div><div class="chart-body"><canvas id="monthlyTrendChart"></canvas></div></div>
                     <div class="chart-container"><div class="chart-header"><h3><i class="fas fa-percentage"></i> Profit Margin</h3></div><div class="chart-body"><canvas id="profitMarginChart"></canvas></div></div>
                 </div>
-                <div class="chart-container"><div class="chart-header"><h3><i class="fas fa-table"></i> Detailed Analytics</h3></div><div class="panel-body"><table class="data-table"><thead><tr><th>Period</th><th>Reservations</th><th>Income</th><th>Expenses</th><th>Monthly Profit</th><th>Total Profit</th><th>Profit Margin</th><th>Status</th></tr></thead><tbody id="analytics-body"></tbody></table></div></div>
+                <div class="chart-container"><div class="chart-header"><h3><i class="fas fa-table"></i> Detailed Analytics</h3></div><div class="panel-body"><table class="data-table"><thead><tr><th>Period</th><th>Reservations</th><th>Transfer Income</th><th>Meal Income</th><th>Total Income</th><th>Expenses</th><th>Monthly Profit</th><th>Total Profit</th><th>Margin</th></tr></thead><tbody id="analytics-body"></tbody></table></div></div>
             </div>
 
             <!-- Settings Content -->
@@ -567,11 +607,10 @@
         </div>
     </div>
 
-    <!-- Modals -->
+    <!-- Modals (edit/delete) -->
     <div class="modal" id="edit-reservation-modal">
         <div class="modal-content"><div class="modal-header"><div class="modal-title">Edit Reservation</div><button class="modal-close" id="close-edit-reservation-modal"><i class="fas fa-times"></i></button></div><div class="modal-body" id="edit-reservation-body"></div><div class="modal-footer"><button class="btn btn-secondary" id="cancel-edit-reservation-btn">Cancel</button><button class="btn btn-primary" id="save-edit-reservation-btn">Save Changes</button></div></div>
     </div>
-    <div class="modal" id="delete-reservation-modal">...</div>
     <div class="modal" id="edit-category-modal">
         <div class="modal-content"><div class="modal-header"><div class="modal-title">Edit Category</div><button class="modal-close" id="close-edit-category-modal"><i class="fas fa-times"></i></button></div><div class="modal-body"><div class="form-group"><label>Name</label><input type="text" id="edit-category-name" class="form-control"></div><div class="form-group"><label>Description</label><textarea id="edit-category-description" class="form-control"></textarea></div></div><div class="modal-footer"><button class="btn btn-secondary" id="cancel-edit-category-btn">Cancel</button><button class="btn btn-primary" id="save-edit-category-btn">Save</button></div></div>
     </div>
@@ -586,7 +625,6 @@
             <div class="form-group"><label>Status</label><select id="edit-expense-status" class="form-control"><option value="paid">Paid</option><option value="pending">Pending</option></select></div>
         </div><div class="modal-footer"><button class="btn btn-secondary" id="cancel-edit-expense-btn">Cancel</button><button class="btn btn-primary" id="save-edit-expense-btn">Save</button></div></div>
     </div>
-    <div class="modal" id="delete-expense-modal">...</div>
     <div class="modal" id="filter-reservation-modal">
         <div class="modal-content" style="max-width: 700px;">
             <div class="modal-header"><div class="modal-title"><i class="fas fa-filter"></i> Filter Reservations</div><button class="modal-close" id="close-filter-reservation-modal"><i class="fas fa-times"></i></button></div>
@@ -600,6 +638,8 @@
                     <div class="form-group"><label class="form-label">Check-out From</label><input type="date" class="form-control" id="filter-checkout-from"></div>
                     <div class="form-group"><label class="form-label">Check-out To</label><input type="date" class="form-control" id="filter-checkout-to"></div>
                 </div>
+                <div class="form-group"><label class="form-label">Room Type</label><select class="form-control" id="filter-room"><option value="">All</option><option value="single">Single</option><option value="double">Double</option><option value="suite">Suite</option><option value="vip">VIP</option><option value="family">Family</option><option value="deluxe">Deluxe</option></select></div>
+                <div class="form-group"><label class="form-label">Income Type</label><select class="form-control" id="filter-income-type"><option value="">All</option><option value="transfer">Transfer</option><option value="meal">Meal</option></select></div>
                 <div id="custom-field-filters"></div>
                 <div style="margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border-color);">
                     <div class="form-group"><label class="form-label">Sort By</label><select class="form-control" id="filter-sort-by"><option value="checkin">Check-in (newest)</option><option value="checkin_oldest">Check-in (oldest)</option><option value="name">Name A-Z</option></select></div>
@@ -609,7 +649,7 @@
         </div>
     </div>
 
-    <!-- ========== FIREBASE SCRIPT (FULLY FUNCTIONAL WITH ALL FIXES) ========== -->
+    <!-- ========== FIREBASE SCRIPT ========== -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
         import { 
@@ -639,8 +679,8 @@
             customFields: [], reservations: [], expenseCategories: [], expenses: [],
             selectedFieldType: 'text', editingReservationId: null, editingExpenseId: null,
             deletingReservationId: null, deletingExpenseId: null,
-            activeFilters: {}, activeExpenseFilters: {}, calendarFilters: {},
-            filteredReservations: null, filteredExpenses: null, filteredCalendarReservations: null,
+            activeFilters: {}, activeExpenseFilters: {},
+            filteredReservations: null, filteredExpenses: null,
             fieldOrder: [], currentPage: 'dashboard', selectedCategoryId: null,
             editingCategoryId: null, deletingCategoryId: null,
             currentCalendarDate: new Date(), selectedCalendarDate: null, calendarView: 'month',
@@ -676,7 +716,6 @@
                 state.expenseCategories = catSnap.docs.map(d => ({ id: d.id, ...d.data() }));
                 state.expenses = expSnap.docs.map(d => ({ id: d.id, ...d.data() }));
                 
-                // Load field order and active filters from settings
                 if (!settingsSnap.empty) {
                     const settingsData = settingsSnap.docs[0].data();
                     state.fieldOrder = settingsData.fieldOrder || [];
@@ -686,9 +725,7 @@
                     if (state.fieldOrder.length) await addDoc(settingsCol, { fieldOrder: state.fieldOrder, expenseFilters: {} });
                 }
 
-                // Apply expense filters if any
                 applyExpenseFiltersFromState();
-
                 renderCustomFieldsList();
                 renderCustomFields();
                 renderReservationsTable();
@@ -702,7 +739,7 @@
             } catch (e) { console.error(e); showNotification('Load failed', 'error'); }
         }
 
-        // Save field order and expense filters
+        // Save settings
         async function saveSettings() {
             try {
                 const snap = await getDocs(settingsCol);
@@ -715,7 +752,7 @@
             } catch (e) { console.error(e); }
         }
 
-        // Custom Fields Management
+        // Custom Fields
         async function addCustomField() {
             const name = document.getElementById('field-name').value.trim();
             const def = document.getElementById('field-default').value.trim();
@@ -795,10 +832,12 @@
             const checkin = document.getElementById('reservation-checkin').value;
             const checkout = document.getElementById('reservation-checkout').value;
             const time = document.getElementById('reservation-time').value;
-            if (!name || !checkin || !checkout || !time) { showNotification('Fill required fields', 'error'); return; }
+            const room = document.getElementById('reservation-room').value;
+            const incomeType = document.getElementById('reservation-income-type').value;
+            if (!name || !checkin || !checkout || !time || !room || !incomeType) { showNotification('Fill all required fields', 'error'); return; }
             if (new Date(checkout) < new Date(checkin)) { showNotification('Check-out after check-in', 'error'); return; }
             const duration = calculateDuration(checkin, checkout);
-            const newRes = { name, checkin, checkout, duration, time, createdAt: new Date().toISOString() };
+            const newRes = { name, checkin, checkout, duration, time, room, incomeType, createdAt: new Date().toISOString() };
             state.customFields.forEach(f => {
                 const el = document.getElementById(f.id);
                 if (el) newRes[f.id] = f.type === 'checkbox' ? el.checked : el.value;
@@ -834,6 +873,8 @@
             document.getElementById('reservation-checkin').value = today;
             document.getElementById('reservation-checkout').value = tomorrow;
             document.getElementById('reservation-time').value = '12:00';
+            document.getElementById('reservation-room').value = '';
+            document.getElementById('reservation-income-type').value = 'transfer';
             state.customFields.forEach(f => {
                 const el = document.getElementById(f.id);
                 if (el) {
@@ -948,7 +989,7 @@
             } catch (e) { console.error(e); showNotification('Update failed', 'error'); }
         }
 
-        // Filter functions
+        // Filters
         function applyExpenseFiltersFromState() {
             const filters = state.activeExpenseFilters;
             if (Object.keys(filters).length === 0) {
@@ -977,7 +1018,6 @@
                 amountFrom: document.getElementById('expense-filter-amount-from').value,
                 amountTo: document.getElementById('expense-filter-amount-to').value
             };
-            // Remove empty
             Object.keys(state.activeExpenseFilters).forEach(key => !state.activeExpenseFilters[key] && delete state.activeExpenseFilters[key]);
             applyExpenseFiltersFromState();
             renderExpensesTable();
@@ -1072,8 +1112,7 @@
             const tbody = document.getElementById('reservations-body');
             if (!thead || !tbody) return;
 
-            // Build header
-            let headerHtml = '<tr><th>Client</th><th>Check-in</th><th>Check-out</th><th>Duration</th><th>Time</th>';
+            let headerHtml = '<tr><th>Client</th><th>Check-in</th><th>Check-out</th><th>Duration</th><th>Time</th><th>Room</th><th>Income Type</th>';
             state.customFields.forEach(f => { headerHtml += `<th>${f.name}</th>`; });
             headerHtml += '<th>Actions</th></tr>';
             thead.innerHTML = headerHtml;
@@ -1081,7 +1120,7 @@
             tbody.innerHTML = '';
             const res = state.filteredReservations || state.reservations;
             if (res.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="${5 + state.customFields.length + 1}"><div class="empty-state"><i class="fas fa-calendar-times"></i><h3>No Reservations</h3></div></td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="${7 + state.customFields.length + 1}"><div class="empty-state"><i class="fas fa-calendar-times"></i><h3>No Reservations</h3></div></td></tr>`;
                 return;
             }
             res.forEach(r => {
@@ -1092,6 +1131,8 @@
                     <td>${r.checkout}</td>
                     <td>${r.duration || 1}</td>
                     <td>${r.time}</td>
+                    <td>${r.room || ''}</td>
+                    <td>${r.incomeType || ''}</td>
                 `;
                 state.customFields.forEach(f => {
                     let val = r[f.id];
@@ -1135,7 +1176,6 @@
                         document.getElementById('category-name').value = cat.name;
                         document.getElementById('category-description').value = cat.description || '';
                         document.getElementById('category-color').value = cat.color;
-                        // update color picker selection
                         document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('selected'));
                         document.querySelector(`.color-option[data-color="${cat.color}"]`)?.classList.add('selected');
                         document.getElementById('category-icon').value = cat.icon;
@@ -1229,11 +1269,9 @@
                 state.customFields.forEach(f => { if (f.type==='currency' && r[f.id]) revenue += parseFloat(r[f.id])||0; });
             });
             document.getElementById('net-revenue').textContent = `$${(revenue-monthlyExp).toFixed(2)}`;
-            // Expense stats
             const totalExpenses = state.expenses.reduce((s,e)=>s+parseFloat(e.amount),0);
             document.getElementById('total-expenses').textContent = `$${totalExpenses.toFixed(2)}`;
             document.getElementById('month-expenses').textContent = `$${monthlyExp.toFixed(2)}`;
-            // Highest category
             const catTotals = {};
             state.expenses.forEach(e => { if (e.categoryId) catTotals[e.categoryId] = (catTotals[e.categoryId]||0) + parseFloat(e.amount); });
             let maxCat = { name: 'None', amount: 0 };
@@ -1244,19 +1282,25 @@
             document.getElementById('highest-category').textContent = maxCat.name;
         }
 
-        // Analytics
+        // Analytics with income type breakdown
         function renderAnalytics() {
             const period = document.getElementById('analytics-period').value;
+            const incomeTypeFilter = document.getElementById('analytics-income-type').value;
             const cutoff = period === 'all' ? new Date(0) : new Date(Date.now() - parseInt(period)*24*60*60*1000);
+            
             let monthly = {};
+            let totalTransfer = 0, totalMeal = 0;
             state.reservations.forEach(r => {
                 const d = new Date(r.checkin);
-                if (d >= cutoff) {
+                if (d >= cutoff && (incomeTypeFilter === 'all' || r.incomeType === incomeTypeFilter)) {
                     const monthKey = `${d.getFullYear()}-${d.getMonth()+1}`;
                     let inc = 0;
                     state.customFields.forEach(f => { if (f.type==='currency' && r[f.id]) inc += parseFloat(r[f.id])||0; });
-                    monthly[monthKey] = monthly[monthKey] || { income:0, expenses:0, count:0 };
-                    monthly[monthKey].income += inc;
+                    if (r.incomeType === 'transfer') totalTransfer += inc;
+                    else if (r.incomeType === 'meal') totalMeal += inc;
+                    monthly[monthKey] = monthly[monthKey] || { transfer:0, meal:0, expenses:0, count:0 };
+                    if (r.incomeType === 'transfer') monthly[monthKey].transfer += inc;
+                    else if (r.incomeType === 'meal') monthly[monthKey].meal += inc;
                     monthly[monthKey].count += 1;
                 }
             });
@@ -1264,22 +1308,26 @@
                 const d = new Date(e.date);
                 if (d >= cutoff) {
                     const monthKey = `${d.getFullYear()}-${d.getMonth()+1}`;
-                    monthly[monthKey] = monthly[monthKey] || { income:0, expenses:0, count:0 };
+                    monthly[monthKey] = monthly[monthKey] || { transfer:0, meal:0, expenses:0, count:0 };
                     monthly[monthKey].expenses += parseFloat(e.amount)||0;
                 }
             });
+
             const months = Object.keys(monthly).sort();
             const labels = months.map(m => { let [y,mo]=m.split('-'); return new Date(y,mo-1).toLocaleString('default',{month:'short'})+' '+y; });
-            const incomeData = months.map(m => monthly[m].income);
+            const transferData = months.map(m => monthly[m].transfer);
+            const mealData = months.map(m => monthly[m].meal);
             const expenseData = months.map(m => monthly[m].expenses);
-            const profitData = months.map(m => monthly[m].income - monthly[m].expenses);
-            const totalRevenue = incomeData.reduce((a,b)=>a+b,0);
-            const totalExpenses = expenseData.reduce((a,b)=>a+b,0);
+            const totalIncomeData = months.map(m => monthly[m].transfer + monthly[m].meal);
+            const profitData = months.map(m => (monthly[m].transfer + monthly[m].meal) - monthly[m].expenses);
+
+            const totalRevenue = totalTransfer + totalMeal;
             document.getElementById('analytics-total-revenue').textContent = `$${totalRevenue.toFixed(2)}`;
-            document.getElementById('analytics-total-expenses').textContent = `$${totalExpenses.toFixed(2)}`;
-            document.getElementById('analytics-net-profit').textContent = `$${(totalRevenue-totalExpenses).toFixed(2)}`;
-            document.getElementById('analytics-profit-margin').textContent = totalRevenue>0 ? `${((totalRevenue-totalExpenses)/totalRevenue*100).toFixed(1)}%` : '0%';
-            
+            document.getElementById('analytics-transfer-income').textContent = `$${totalTransfer.toFixed(2)}`;
+            document.getElementById('analytics-meal-income').textContent = `$${totalMeal.toFixed(2)}`;
+            document.getElementById('analytics-total-expenses').textContent = `$${state.expenses.reduce((s,e)=>s+parseFloat(e.amount),0).toFixed(2)}`;
+
+            // Destroy existing charts
             if (state.charts.incomeExpense) state.charts.incomeExpense.destroy();
             if (state.charts.expenseCategory) state.charts.expenseCategory.destroy();
             if (state.charts.monthlyTrend) state.charts.monthlyTrend.destroy();
@@ -1289,10 +1337,11 @@
             state.charts.incomeExpense = new Chart(ctx1, {
                 type: 'bar',
                 data: { labels, datasets: [
-                    { label: 'Income', data: incomeData, backgroundColor: 'rgba(16,185,129,0.7)' },
+                    { label: 'Total Income', data: totalIncomeData, backgroundColor: 'rgba(16,185,129,0.7)' },
                     { label: 'Expenses', data: expenseData, backgroundColor: 'rgba(239,68,68,0.7)' }
                 ]}
             });
+
             const catTotals = {};
             state.expenses.filter(e => new Date(e.date) >= cutoff).forEach(e => {
                 const cat = state.expenseCategories.find(c => c.id === e.categoryId);
@@ -1310,45 +1359,66 @@
                     }]
                 }
             });
+
             const ctx3 = document.getElementById('monthlyTrendChart').getContext('2d');
             state.charts.monthlyTrend = new Chart(ctx3, {
                 type: 'line',
-                data: { labels, datasets: [{ label: 'Net Profit', data: profitData, borderColor: '#2563eb', fill: false }] }
+                data: { labels, datasets: [
+                    { label: 'Transfer Income', data: transferData, borderColor: '#2563eb', fill: false },
+                    { label: 'Meal Income', data: mealData, borderColor: '#f59e0b', fill: false }
+                ]}
             });
+
             const marginData = months.map(m => {
-                const inc = monthly[m].income;
-                return inc>0 ? ((monthly[m].income - monthly[m].expenses)/inc*100) : 0;
+                const total = monthly[m].transfer + monthly[m].meal;
+                return total>0 ? ((total - monthly[m].expenses)/total*100) : 0;
             });
             const ctx4 = document.getElementById('profitMarginChart').getContext('2d');
             state.charts.profitMargin = new Chart(ctx4, {
                 type: 'bar',
                 data: { labels, datasets: [{ label: 'Profit Margin %', data: marginData, backgroundColor: marginData.map(v=>v>=0?'rgba(16,185,129,0.7)':'rgba(239,68,68,0.7)') }] }
             });
+
+            // Analytics table
             const tbody = document.getElementById('analytics-body');
             tbody.innerHTML = '';
             let cumulative = 0;
             months.forEach(m => {
-                const inc = monthly[m].income;
+                const transfer = monthly[m].transfer;
+                const meal = monthly[m].meal;
+                const total = transfer + meal;
                 const exp = monthly[m].expenses;
-                const profit = inc - exp;
+                const profit = total - exp;
                 cumulative += profit;
-                const margin = inc>0 ? (profit/inc*100).toFixed(1) : '0.0';
-                const row = `<tr><td>${m}</td><td>${monthly[m].count}</td><td class="currency-cell">$${inc.toFixed(2)}</td><td class="expense-cell">$${exp.toFixed(2)}</td><td class="${profit>=0?'currency-cell':'expense-cell'}">$${profit.toFixed(2)}</td><td class="${cumulative>=0?'currency-cell':'expense-cell'}">$${cumulative.toFixed(2)}</td><td>${margin}%</td><td><span class="status-badge ${profit>=0?'status-confirmed':'status-cancelled'}">${profit>=0?'Profit':'Loss'}</span></td></tr>`;
+                const margin = total>0 ? (profit/total*100).toFixed(1) : '0.0';
+                const row = `<tr>
+                    <td>${m}</td>
+                    <td>${monthly[m].count}</td>
+                    <td class="currency-cell">$${transfer.toFixed(2)}</td>
+                    <td class="currency-cell">$${meal.toFixed(2)}</td>
+                    <td class="currency-cell">$${total.toFixed(2)}</td>
+                    <td class="expense-cell">$${exp.toFixed(2)}</td>
+                    <td class="${profit>=0?'currency-cell':'expense-cell'}">$${profit.toFixed(2)}</td>
+                    <td class="${cumulative>=0?'currency-cell':'expense-cell'}">$${cumulative.toFixed(2)}</td>
+                    <td>${margin}%</td>
+                </tr>`;
                 tbody.innerHTML += row;
             });
+
+            // This/last month
             const now = new Date();
             const thisMonthKey = `${now.getFullYear()}-${now.getMonth()+1}`;
             const lastMonth = new Date(now.getFullYear(), now.getMonth()-1, 1);
             const lastMonthKey = `${lastMonth.getFullYear()}-${lastMonth.getMonth()+1}`;
-            document.getElementById('this-month-income').textContent = `$${(monthly[thisMonthKey]?.income||0).toFixed(2)}`;
+            document.getElementById('this-month-income').textContent = `$${((monthly[thisMonthKey]?.transfer||0)+(monthly[thisMonthKey]?.meal||0)).toFixed(2)}`;
             document.getElementById('this-month-expenses').textContent = `$${(monthly[thisMonthKey]?.expenses||0).toFixed(2)}`;
-            document.getElementById('this-month-net').textContent = `$${((monthly[thisMonthKey]?.income||0)-(monthly[thisMonthKey]?.expenses||0)).toFixed(2)}`;
-            document.getElementById('last-month-income').textContent = `$${(monthly[lastMonthKey]?.income||0).toFixed(2)}`;
+            document.getElementById('this-month-net').textContent = `$${(((monthly[thisMonthKey]?.transfer||0)+(monthly[thisMonthKey]?.meal||0))-(monthly[thisMonthKey]?.expenses||0)).toFixed(2)}`;
+            document.getElementById('last-month-income').textContent = `$${((monthly[lastMonthKey]?.transfer||0)+(monthly[lastMonthKey]?.meal||0)).toFixed(2)}`;
             document.getElementById('last-month-expenses').textContent = `$${(monthly[lastMonthKey]?.expenses||0).toFixed(2)}`;
-            document.getElementById('last-month-net').textContent = `$${((monthly[lastMonthKey]?.income||0)-(monthly[lastMonthKey]?.expenses||0)).toFixed(2)}`;
+            document.getElementById('last-month-net').textContent = `$${(((monthly[lastMonthKey]?.transfer||0)+(monthly[lastMonthKey]?.meal||0))-(monthly[lastMonthKey]?.expenses||0)).toFixed(2)}`;
         }
 
-        // Calendar
+        // Calendar with room colors
         function renderCalendar() {
             const grid = document.getElementById('calendar-days-grid');
             if (!grid) return;
@@ -1361,12 +1431,81 @@
             const daysInMonth = new Date(year, month+1, 0).getDate();
             for (let i=0; i<firstDay; i++) grid.appendChild(document.createElement('div')).className = 'calendar-day empty';
             for (let d=1; d<=daysInMonth; d++) {
+                const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+                const dayReservations = state.reservations.filter(r => 
+                    new Date(r.checkin) <= new Date(dateStr) && new Date(r.checkout) > new Date(dateStr)
+                );
                 const dayDiv = document.createElement('div');
                 dayDiv.className = 'calendar-day';
-                dayDiv.dataset.date = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+                dayDiv.dataset.date = dateStr;
+                if (dateStr === new Date().toISOString().split('T')[0]) dayDiv.classList.add('today');
                 dayDiv.innerHTML = `<div class="calendar-day-number">${d}</div>`;
+                if (dayReservations.length > 0) {
+                    const indicator = document.createElement('div');
+                    indicator.className = 'calendar-reservation-indicator';
+                    dayReservations.slice(0,3).forEach(r => {
+                        const resDiv = document.createElement('div');
+                        const roomClass = r.room ? `reservation-room-${r.room}` : 'reservation-pending';
+                        resDiv.className = `calendar-reservation ${roomClass}`;
+                        resDiv.innerHTML = `<div class="time">${r.time}</div><div class="name">${r.name}</div>`;
+                        indicator.appendChild(resDiv);
+                    });
+                    if (dayReservations.length > 3) {
+                        const more = document.createElement('div');
+                        more.textContent = `+${dayReservations.length-3} more`;
+                        more.style.fontStyle = 'italic';
+                        indicator.appendChild(more);
+                    }
+                    dayDiv.appendChild(indicator);
+                }
+                dayDiv.addEventListener('click', () => showDayReservations(dateStr));
                 grid.appendChild(dayDiv);
             }
+        }
+
+        function showDayReservations(dateStr) {
+            const container = document.getElementById('selected-date-reservations');
+            const title = document.getElementById('selected-date-title');
+            title.textContent = `Reservations for ${dateStr}`;
+            const dayRes = state.reservations.filter(r => 
+                new Date(r.checkin) <= new Date(dateStr) && new Date(r.checkout) > new Date(dateStr)
+            );
+            if (dayRes.length === 0) {
+                container.innerHTML = '<div class="calendar-no-reservations">No reservations</div>';
+                return;
+            }
+            container.innerHTML = '';
+            dayRes.forEach(r => {
+                const item = document.createElement('div');
+                item.className = 'calendar-reservation-item';
+                item.innerHTML = `
+                    <div><strong>${r.name}</strong> ${r.time} (${r.room || 'no room'})</div>
+                    <div>${r.checkin} to ${r.checkout}</div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        // Export functions
+        function exportToCSV(data, filename) {
+            if (!data || data.length === 0) { showNotification('No data to export', 'error'); return; }
+            const headers = Object.keys(data[0]);
+            const csvRows = [];
+            csvRows.push(headers.join(','));
+            for (const row of data) {
+                const values = headers.map(h => {
+                    const val = row[h] || '';
+                    return `"${String(val).replace(/"/g, '""')}"`;
+                });
+                csvRows.push(values.join(','));
+            }
+            const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            window.URL.revokeObjectURL(url);
         }
 
         // Modal functions
@@ -1380,6 +1519,18 @@
                 <div class="form-group"><label>Check-in</label><input type="date" id="edit-checkin" class="form-control" value="${r.checkin}"></div>
                 <div class="form-group"><label>Check-out</label><input type="date" id="edit-checkout" class="form-control" value="${r.checkout}"></div>
                 <div class="form-group"><label>Time</label><input type="time" id="edit-time" class="form-control" value="${r.time}"></div>
+                <div class="form-group"><label>Room</label><select id="edit-room" class="form-control">
+                    <option value="">Select</option><option value="single" ${r.room==='single'?'selected':''}>Single</option>
+                    <option value="double" ${r.room==='double'?'selected':''}>Double</option>
+                    <option value="suite" ${r.room==='suite'?'selected':''}>Suite</option>
+                    <option value="vip" ${r.room==='vip'?'selected':''}>VIP</option>
+                    <option value="family" ${r.room==='family'?'selected':''}>Family</option>
+                    <option value="deluxe" ${r.room==='deluxe'?'selected':''}>Deluxe</option>
+                </select></div>
+                <div class="form-group"><label>Income Type</label><select id="edit-income-type" class="form-control">
+                    <option value="transfer" ${r.incomeType==='transfer'?'selected':''}>Transfer</option>
+                    <option value="meal" ${r.incomeType==='meal'?'selected':''}>Meal</option>
+                </select></div>
                 ${state.customFields.map(f => `
                     <div class="form-group"><label>${f.name}</label>
                         ${f.type==='checkbox' ? `<input type="checkbox" id="edit-${f.id}" ${r[f.id]?'checked':''}>` :
@@ -1397,6 +1548,8 @@
                 checkin: document.getElementById('edit-checkin').value,
                 checkout: document.getElementById('edit-checkout').value,
                 time: document.getElementById('edit-time').value,
+                room: document.getElementById('edit-room').value,
+                incomeType: document.getElementById('edit-income-type').value,
                 duration: calculateDuration(document.getElementById('edit-checkin').value, document.getElementById('edit-checkout').value)
             };
             state.customFields.forEach(f => {
@@ -1449,7 +1602,6 @@
             document.getElementById('edit-expense-description').value = e.description || '';
             document.getElementById('edit-expense-status').value = e.status;
             state.editingExpenseId = id;
-            // populate category dropdown
             const catSelect = document.getElementById('edit-expense-category');
             catSelect.innerHTML = '<option value="">Select a category</option>';
             state.expenseCategories.forEach(c => {
@@ -1482,15 +1634,16 @@
             if (page === 'analytics') renderAnalytics();
         }
 
-        // Filter modal functions
+        // Filter modal
         function openFilterModal() {
             document.getElementById('filter-client-name').value = state.activeFilters.clientName || '';
             document.getElementById('filter-checkin-from').value = state.activeFilters.checkinFrom || '';
             document.getElementById('filter-checkin-to').value = state.activeFilters.checkinTo || '';
             document.getElementById('filter-checkout-from').value = state.activeFilters.checkoutFrom || '';
             document.getElementById('filter-checkout-to').value = state.activeFilters.checkoutTo || '';
+            document.getElementById('filter-room').value = state.activeFilters.room || '';
+            document.getElementById('filter-income-type').value = state.activeFilters.incomeType || '';
             document.getElementById('filter-sort-by').value = state.activeFilters.sortBy || 'checkin';
-            // custom fields
             const container = document.getElementById('custom-field-filters');
             container.innerHTML = '';
             state.customFields.forEach(f => {
@@ -1540,13 +1693,14 @@
             if (document.getElementById('filter-checkin-to').value) filters.checkinTo = document.getElementById('filter-checkin-to').value;
             if (document.getElementById('filter-checkout-from').value) filters.checkoutFrom = document.getElementById('filter-checkout-from').value;
             if (document.getElementById('filter-checkout-to').value) filters.checkoutTo = document.getElementById('filter-checkout-to').value;
+            if (document.getElementById('filter-room').value) filters.room = document.getElementById('filter-room').value;
+            if (document.getElementById('filter-income-type').value) filters.incomeType = document.getElementById('filter-income-type').value;
             if (document.getElementById('filter-sort-by').value) filters.sortBy = document.getElementById('filter-sort-by').value;
             state.customFields.forEach(f => {
                 const el = document.getElementById(`filter-${f.id}`);
                 if (el && el.value) filters[f.id] = el.value;
             });
             state.activeFilters = filters;
-            // apply to reservations
             state.filteredReservations = state.reservations.filter(r => {
                 for (let [key, val] of Object.entries(filters)) {
                     if (key === 'clientName') { if (!r.name.toLowerCase().includes(val)) return false; }
@@ -1554,6 +1708,8 @@
                     else if (key === 'checkinTo') { if (r.checkin > val) return false; }
                     else if (key === 'checkoutFrom') { if (r.checkout < val) return false; }
                     else if (key === 'checkoutTo') { if (r.checkout > val) return false; }
+                    else if (key === 'room') { if (r.room !== val) return false; }
+                    else if (key === 'incomeType') { if (r.incomeType !== val) return false; }
                     else if (key === 'sortBy') continue;
                     else {
                         const field = state.customFields.find(f => f.id === key);
@@ -1573,7 +1729,6 @@
             renderReservationsTable();
             updateStats();
             closeFilterModal();
-            // show active filters indicator (simplified)
             document.getElementById('clear-filters-btn').style.display = 'block';
         }
 
@@ -1584,6 +1739,86 @@
             updateStats();
             document.getElementById('clear-filters-btn').style.display = 'none';
         }
+
+        // Export handlers
+        document.getElementById('export-dashboard-btn')?.addEventListener('click', () => {
+            const data = state.reservations.map(r => ({
+                Name: r.name,
+                Checkin: r.checkin,
+                Checkout: r.checkout,
+                Duration: r.duration,
+                Time: r.time,
+                Room: r.room,
+                IncomeType: r.incomeType,
+                ...state.customFields.reduce((acc, f) => ({ ...acc, [f.name]: r[f.id] }), {})
+            }));
+            exportToCSV(data, 'reservations.csv');
+        });
+        document.getElementById('export-reservations-btn')?.addEventListener('click', () => {
+            const data = state.reservations.map(r => ({
+                Name: r.name,
+                Checkin: r.checkin,
+                Checkout: r.checkout,
+                Duration: r.duration,
+                Time: r.time,
+                Room: r.room,
+                IncomeType: r.incomeType,
+                ...state.customFields.reduce((acc, f) => ({ ...acc, [f.name]: r[f.id] }), {})
+            }));
+            exportToCSV(data, 'reservations.csv');
+        });
+        document.getElementById('export-expenses-btn')?.addEventListener('click', () => {
+            const data = state.expenses.map(e => {
+                const cat = state.expenseCategories.find(c => c.id === e.categoryId);
+                return {
+                    Name: e.name,
+                    Category: cat ? cat.name : 'Uncategorized',
+                    Amount: e.amount,
+                    Date: e.date,
+                    Payment: e.payment,
+                    Description: e.description,
+                    Status: e.status
+                };
+            });
+            exportToCSV(data, 'expenses.csv');
+        });
+        document.getElementById('export-analytics-btn')?.addEventListener('click', () => {
+            // Export current analytics view (monthly data)
+            const period = document.getElementById('analytics-period').value;
+            const cutoff = period === 'all' ? new Date(0) : new Date(Date.now() - parseInt(period)*24*60*60*1000);
+            let monthly = {};
+            state.reservations.forEach(r => {
+                const d = new Date(r.checkin);
+                if (d >= cutoff) {
+                    const monthKey = `${d.getFullYear()}-${d.getMonth()+1}`;
+                    let inc = 0;
+                    state.customFields.forEach(f => { if (f.type==='currency' && r[f.id]) inc += parseFloat(r[f.id])||0; });
+                    monthly[monthKey] = monthly[monthKey] || { transfer:0, meal:0, expenses:0, count:0 };
+                    if (r.incomeType === 'transfer') monthly[monthKey].transfer += inc;
+                    else if (r.incomeType === 'meal') monthly[monthKey].meal += inc;
+                    monthly[monthKey].count += 1;
+                }
+            });
+            state.expenses.forEach(e => {
+                const d = new Date(e.date);
+                if (d >= cutoff) {
+                    const monthKey = `${d.getFullYear()}-${d.getMonth()+1}`;
+                    monthly[monthKey] = monthly[monthKey] || { transfer:0, meal:0, expenses:0, count:0 };
+                    monthly[monthKey].expenses += parseFloat(e.amount)||0;
+                }
+            });
+            const months = Object.keys(monthly).sort();
+            const data = months.map(m => ({
+                Period: m,
+                Reservations: monthly[m].count,
+                TransferIncome: monthly[m].transfer.toFixed(2),
+                MealIncome: monthly[m].meal.toFixed(2),
+                TotalIncome: (monthly[m].transfer + monthly[m].meal).toFixed(2),
+                Expenses: monthly[m].expenses.toFixed(2),
+                Profit: (monthly[m].transfer + monthly[m].meal - monthly[m].expenses).toFixed(2)
+            }));
+            exportToCSV(data, 'analytics.csv');
+        });
 
         // Event listeners
         document.addEventListener('DOMContentLoaded', async () => {
@@ -1603,7 +1838,6 @@
                 });
             });
 
-            // Color picker
             document.querySelectorAll('.color-option').forEach(opt => {
                 opt.addEventListener('click', function() {
                     document.querySelectorAll('.color-option').forEach(o => o.classList.remove('selected'));
@@ -1612,7 +1846,6 @@
                 });
             });
 
-            // Icon picker (simplified)
             const iconPicker = document.getElementById('category-icon-picker');
             const icons = ['fas fa-box','fas fa-bolt','fas fa-users','fas fa-tools','fas fa-car','fas fa-home','fas fa-utensils','fas fa-shopping-cart','fas fa-plane','fas fa-wifi'];
             iconPicker.innerHTML = '';
@@ -1631,20 +1864,19 @@
 
             document.getElementById('add-field-btn')?.addEventListener('click', addCustomField);
             document.getElementById('clear-fields-btn')?.addEventListener('click', async () => {
-                if (confirm('Delete ALL custom fields, reservations, expenses, categories?')) {
-                    try {
-                        const batch = writeBatch(db);
-                        state.customFields.forEach(f => batch.delete(doc(db, 'customFields', f.id)));
-                        state.reservations.forEach(r => batch.delete(doc(db, 'reservations', r.id)));
-                        state.expenses.forEach(e => batch.delete(doc(db, 'expenses', e.id)));
-                        state.expenseCategories.forEach(c => batch.delete(doc(db, 'expenseCategories', c.id)));
-                        const snap = await getDocs(settingsCol);
-                        snap.forEach(d => batch.delete(doc(db, 'settings', d.id)));
-                        await batch.commit();
-                        await loadAllData();
-                        showNotification('All data cleared', 'success');
-                    } catch (e) { console.error(e); showNotification('Error clearing', 'error'); }
-                }
+                if (!confirm('Delete ALL data?')) return;
+                try {
+                    const batch = writeBatch(db);
+                    state.customFields.forEach(f => batch.delete(doc(db, 'customFields', f.id)));
+                    state.reservations.forEach(r => batch.delete(doc(db, 'reservations', r.id)));
+                    state.expenses.forEach(e => batch.delete(doc(db, 'expenses', e.id)));
+                    state.expenseCategories.forEach(c => batch.delete(doc(db, 'expenseCategories', c.id)));
+                    const snap = await getDocs(settingsCol);
+                    snap.forEach(d => batch.delete(doc(db, 'settings', d.id)));
+                    await batch.commit();
+                    await loadAllData();
+                    showNotification('All data cleared', 'success');
+                } catch (e) { console.error(e); showNotification('Error clearing', 'error'); }
             });
             document.getElementById('add-reservation-btn')?.addEventListener('click', addReservation);
             document.getElementById('clear-form-btn')?.addEventListener('click', clearForm);
@@ -1683,6 +1915,12 @@
                 state.currentCalendarDate = new Date();
                 renderCalendar();
             });
+            document.getElementById('calendar-month-view-btn')?.addEventListener('click', () => { state.calendarView = 'month'; renderCalendar(); });
+            document.getElementById('calendar-week-view-btn')?.addEventListener('click', () => { state.calendarView = 'week'; renderCalendar(); });
+            document.getElementById('add-reservation-from-calendar')?.addEventListener('click', () => {
+                showPage('dashboard');
+                if (state.selectedCalendarDate) document.getElementById('reservation-checkin').value = state.selectedCalendarDate;
+            });
 
             // Refresh
             document.getElementById('refresh-table-btn')?.addEventListener('click', renderReservationsTable);
@@ -1704,6 +1942,8 @@
                 document.getElementById('filter-checkin-to').value = '';
                 document.getElementById('filter-checkout-from').value = '';
                 document.getElementById('filter-checkout-to').value = '';
+                document.getElementById('filter-room').value = '';
+                document.getElementById('filter-income-type').value = '';
                 document.getElementById('filter-sort-by').value = 'checkin';
                 state.customFields.forEach(f => {
                     const el = document.getElementById(`filter-${f.id}`);
@@ -1713,10 +1953,8 @@
             document.getElementById('apply-filters-btn')?.addEventListener('click', applyFilters);
             document.getElementById('clear-filters-btn')?.addEventListener('click', clearAllFilters);
 
-            // Export (dummy)
-            document.getElementById('export-btn')?.addEventListener('click', () => showNotification('Export not implemented', 'info'));
+            // Print
             document.getElementById('print-btn')?.addEventListener('click', () => window.print());
-            document.getElementById('export-expenses-btn')?.addEventListener('click', () => showNotification('Export not implemented', 'info'));
         });
     </script>
 </body>
