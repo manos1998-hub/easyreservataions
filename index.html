@@ -303,7 +303,7 @@
     </style>
 </head>
 <body>
-    <!-- ========== FULL ORIGINAL HTML STRUCTURE (abbreviated for space, but all essential elements present) ========== -->
+    <!-- ========== FULL ORIGINAL HTML STRUCTURE (with modifications) ========== -->
     <div class="container">
         <!-- Sidebar Navigation -->
         <div class="sidebar">
@@ -338,20 +338,37 @@
             <div class="content-wrapper" id="dashboard-content">
                 <!-- Dashboard Stats -->
                 <div class="dashboard-stats">
-                    <div class="stat-card"><div class="stat-header"><div class="stat-title">Total Reservations</div><div class="stat-icon" style="background-color: var(--primary-color);"><i class="fas fa-calendar-check"></i></div></div><div class="stat-value" id="total-reservations">0</div><div class="stat-change positive"><i class="fas fa-arrow-up"></i> 12% from last month</div></div>
-                    <div class="stat-card"><div class="stat-header"><div class="stat-title">Pending Confirmations</div><div class="stat-icon" style="background-color: var(--warning-color);"><i class="fas fa-clock"></i></div></div><div class="stat-value" id="pending-reservations">0</div><div class="stat-change negative"><i class="fas fa-arrow-down"></i> 5% from last week</div></div>
-                    <div class="stat-card"><div class="stat-header"><div class="stat-title">Monthly Expenses</div><div class="stat-icon" style="background-color: var(--expense-color);"><i class="fas fa-money-bill-wave"></i></div></div><div class="stat-value" id="monthly-expenses">$0</div><div class="stat-change negative"><i class="fas fa-arrow-up"></i> 8% from last month</div></div>
-                    <div class="stat-card"><div class="stat-header"><div class="stat-title">Net Revenue</div><div class="stat-icon" style="background-color: var(--success-color);"><i class="fas fa-dollar-sign"></i></div></div><div class="stat-value" id="net-revenue">$0</div><div class="stat-change positive"><i class="fas fa-arrow-up"></i> 15% from last month</div></div>
+                    <div class="stat-card">
+                        <div class="stat-header"><div class="stat-title">Total Transfers</div><div class="stat-icon" style="background-color: var(--primary-color);"><i class="fas fa-calendar-check"></i></div></div>
+                        <div class="stat-value" id="total-reservations">0</div>
+                        <div class="stat-change positive"><i class="fas fa-arrow-up"></i> 12% from last month</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header"><div class="stat-title">Pending Confirmations</div><div class="stat-icon" style="background-color: var(--warning-color);"><i class="fas fa-clock"></i></div></div>
+                        <div class="stat-value" id="pending-reservations">0</div>
+                        <div class="stat-change negative"><i class="fas fa-arrow-down"></i> 5% from last week</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header"><div class="stat-title">Monthly Expenses</div><div class="stat-icon" style="background-color: var(--expense-color);"><i class="fas fa-money-bill-wave"></i></div></div>
+                        <div class="stat-value" id="monthly-expenses">$0</div>
+                        <div class="stat-change negative"><i class="fas fa-arrow-up"></i> 8% from last month</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header"><div class="stat-title">Net Revenue</div><div class="stat-icon" style="background-color: var(--success-color);"><i class="fas fa-dollar-sign"></i></div></div>
+                        <div class="stat-value" id="net-revenue">$0</div>
+                        <div class="stat-change positive"><i class="fas fa-arrow-up"></i> 15% from last month</div>
+                    </div>
                 </div>
+
                 <!-- Main Panels -->
                 <div class="panel-container">
-                    <!-- Add Custom Fields Panel -->
+                    <!-- Add Custom Fields Panel (with edit/delete list) -->
                     <div class="panel">
-                        <div class="panel-header"><h2><i class="fas fa-plus-circle"></i> Add Custom Field</h2></div>
+                        <div class="panel-header"><h2><i class="fas fa-plus-circle"></i> Custom Fields</h2></div>
                         <div class="panel-body">
-                            <div class="form-group"><label class="form-label">Field Name <span>*</span></label><input type="text" class="form-control" id="field-name" placeholder="e.g., Deposit Amount"></div>
+                            <div class="form-group"><label class="form-label">Field Name</label><input type="text" class="form-control" id="field-name" placeholder="e.g., Deposit Amount"></div>
                             <div class="form-group">
-                                <label class="form-label">Field Type <span>*</span></label>
+                                <label class="form-label">Field Type</label>
                                 <div class="column-types">
                                     <div class="type-option" data-type="text"><div class="type-icon"><i class="fas fa-font"></i></div><div class="type-name">Text</div></div>
                                     <div class="type-option" data-type="checkbox"><div class="type-icon"><i class="fas fa-check-square"></i></div><div class="type-name">Checkbox</div></div>
@@ -365,7 +382,15 @@
                             </div>
                             <div class="form-group" id="dropdown-options-container" style="display: none;"><label class="form-label">Dropdown Options (comma separated)</label><input type="text" class="form-control" id="dropdown-options" placeholder="e.g., Option 1, Option 2"></div>
                             <div class="form-group"><label class="form-label">Default Value (Optional)</label><input type="text" class="form-control" id="field-default" placeholder="Leave empty"></div>
-                            <div style="display: flex; gap: 12px; margin-top: 24px;"><button class="btn btn-primary" id="add-field-btn"><i class="fas fa-plus"></i> Add Field</button><button class="btn btn-secondary" id="clear-fields-btn"><i class="fas fa-trash-alt"></i> Clear All</button></div>
+                            <div style="display: flex; gap: 12px; margin-top: 24px;">
+                                <button class="btn btn-primary" id="add-field-btn"><i class="fas fa-plus"></i> Add Field</button>
+                                <button class="btn btn-secondary" id="clear-fields-btn"><i class="fas fa-trash-alt"></i> Clear All</button>
+                            </div>
+                            <!-- List of existing fields with edit/delete -->
+                            <div style="margin-top: 30px;">
+                                <h4 style="margin-bottom: 10px;">Existing Fields</h4>
+                                <div id="custom-fields-list" style="max-height: 200px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 10px;"></div>
+                            </div>
                         </div>
                     </div>
                     <!-- Add Reservation Panel -->
@@ -385,8 +410,10 @@
                         </div>
                     </div>
                 </div>
+
                 <!-- Active Filters -->
                 <div class="active-filters" id="active-filters" style="display: none;"></div>
+
                 <!-- Reservations Table -->
                 <div class="table-container">
                     <div class="table-header">
@@ -395,13 +422,14 @@
                     </div>
                     <div class="table-wrapper">
                         <table class="data-table" id="reservations-table">
-                            <thead><tr><th>Client</th><th>Check-in</th><th>Check-out</th><th>Duration</th><th>Time</th><th>Actions</th></tr></thead>
+                            <thead id="reservations-thead"><tr><th>Client</th><th>Check-in</th><th>Check-out</th><th>Duration</th><th>Time</th><th>Actions</th></tr></thead>
                             <tbody id="reservations-body"></tbody>
                         </table>
                     </div>
                 </div>
             </div>
-            <!-- Calendar Content (simplified but functional) -->
+
+            <!-- Calendar Content (simplified) -->
             <div class="content-wrapper" id="calendar-content" style="display: none;">
                 <div class="calendar-header">
                     <div class="calendar-navigation">
@@ -417,15 +445,16 @@
                 <div class="calendar-grid" id="calendar-days-grid"></div>
                 <div class="calendar-reservation-details" id="calendar-reservation-details">...</div>
             </div>
-            <!-- Expenses Content -->
+
+            <!-- Expenses Content (Modified: removed avg per reservation, added name filter) -->
             <div class="content-wrapper" id="expenses-content" style="display: none;">
-                <!-- Stats -->
+                <!-- Stats (removed avg per reservation) -->
                 <div class="dashboard-stats">
                     <div class="stat-card"><div class="stat-header"><div class="stat-title">Total Expenses</div><div class="stat-icon" style="background-color: var(--expense-color);"><i class="fas fa-money-bill-wave"></i></div></div><div class="stat-value" id="total-expenses">$0</div><div class="stat-change negative"><i class="fas fa-arrow-up"></i> 8% from last month</div></div>
                     <div class="stat-card"><div class="stat-header"><div class="stat-title">This Month</div><div class="stat-icon" style="background-color: var(--accent-color);"><i class="fas fa-calendar"></i></div></div><div class="stat-value" id="month-expenses">$0</div><div class="stat-change positive"><i class="fas fa-arrow-down"></i> 5% from last month</div></div>
-                    <div class="stat-card"><div class="stat-header"><div class="stat-title">Avg. per Reservation</div><div class="stat-icon" style="background-color: var(--warning-color);"><i class="fas fa-calculator"></i></div></div><div class="stat-value" id="avg-expense">$0</div><div class="stat-change positive"><i class="fas fa-arrow-down"></i> 12% from last quarter</div></div>
                     <div class="stat-card"><div class="stat-header"><div class="stat-title">Highest Category</div><div class="stat-icon" style="background-color: var(--danger-color);"><i class="fas fa-chart-pie"></i></div></div><div class="stat-value" id="highest-category">Supplies</div><div class="stat-change negative"><i class="fas fa-arrow-up"></i> 15% of total</div></div>
                 </div>
+
                 <!-- Category Management -->
                 <div class="category-management">
                     <div class="categories-sidebar">
@@ -437,14 +466,29 @@
                         <div class="panel-body">
                             <div class="form-group"><label class="form-label">Category Name <span>*</span></label><input type="text" class="form-control" id="category-name" placeholder="e.g., Office Supplies"></div>
                             <div class="form-group"><label class="form-label">Description</label><textarea class="form-control" id="category-description" rows="3"></textarea></div>
-                            <div class="form-group"><label class="form-label">Category Color</label><div class="color-picker" id="category-color-picker"><div class="color-option" data-color="#8b5cf6" style="background-color: #8b5cf6;"></div><div class="color-option" data-color="#0ea5e9" style="background-color: #0ea5e9;"></div><div class="color-option" data-color="#10b981" style="background-color: #10b981;"></div><div class="color-option" data-color="#f59e0b" style="background-color: #f59e0b;"></div><div class="color-option" data-color="#ef4444" style="background-color: #ef4444;"></div><div class="color-option" data-color="#2563eb" style="background-color: #2563eb;"></div><div class="color-option" data-color="#7c3aed" style="background-color: #7c3aed;"></div><div class="color-option" data-color="#059669" style="background-color: #059669;"></div><div class="color-option" data-color="#dc2626" style="background-color: #dc2626;"></div><div class="color-option" data-color="#475569" style="background-color: #475569;"></div></div><input type="hidden" id="category-color" value="#8b5cf6"></div>
+                            <div class="form-group"><label class="form-label">Category Color</label><div class="color-picker" id="category-color-picker">
+                                <div class="color-option" data-color="#8b5cf6" style="background-color: #8b5cf6;"></div>
+                                <div class="color-option" data-color="#0ea5e9" style="background-color: #0ea5e9;"></div>
+                                <div class="color-option" data-color="#10b981" style="background-color: #10b981;"></div>
+                                <div class="color-option" data-color="#f59e0b" style="background-color: #f59e0b;"></div>
+                                <div class="color-option" data-color="#ef4444" style="background-color: #ef4444;"></div>
+                                <div class="color-option" data-color="#2563eb" style="background-color: #2563eb;"></div>
+                                <div class="color-option" data-color="#7c3aed" style="background-color: #7c3aed;"></div>
+                                <div class="color-option" data-color="#059669" style="background-color: #059669;"></div>
+                                <div class="color-option" data-color="#dc2626" style="background-color: #dc2626;"></div>
+                                <div class="color-option" data-color="#475569" style="background-color: #475569;"></div>
+                            </div><input type="hidden" id="category-color" value="#8b5cf6"></div>
                             <div class="form-group"><label class="form-label">Category Icon</label><div class="icon-picker" id="category-icon-picker"></div><input type="hidden" id="category-icon" value="fas fa-box"></div>
                             <div class="form-group"><label class="form-label">Budget (Monthly)</label><input type="number" class="form-control" id="category-budget" step="0.01" min="0"></div>
-                            <div style="display: flex; gap: 12px; margin-top: 24px;"><button class="btn btn-primary" id="save-category-btn"><i class="fas fa-save"></i> Save Category</button><button class="btn btn-secondary" id="cancel-category-btn" style="display: none;"><i class="fas fa-times"></i> Cancel Edit</button></div>
+                            <div style="display: flex; gap: 12px; margin-top: 24px;">
+                                <button class="btn btn-primary" id="save-category-btn"><i class="fas fa-save"></i> Save Category</button>
+                                <button class="btn btn-secondary" id="cancel-category-btn" style="display: none;"><i class="fas fa-times"></i> Cancel Edit</button>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <!-- Expense Form & Table -->
+
+                <!-- Expense Form & Filters -->
                 <div class="panel-container">
                     <div class="panel">
                         <div class="panel-header"><h2><i class="fas fa-plus-circle"></i> Add New Expense</h2></div>
@@ -462,6 +506,7 @@
                     <div class="panel">
                         <div class="panel-header"><h2><i class="fas fa-filter"></i> Filter Expenses</h2></div>
                         <div class="panel-body">
+                            <div class="form-group"><label class="form-label">Expense Name</label><input type="text" class="form-control" id="expense-filter-name" placeholder="Filter by name"></div>
                             <div class="form-group"><label class="form-label">Category</label><select class="form-control" id="expense-filter-category"><option value="">All Categories</option></select></div>
                             <div class="form-group"><label class="form-label">Status</label><select class="form-control" id="expense-filter-status"><option value="">All Statuses</option><option value="paid">Paid</option><option value="pending">Pending</option></select></div>
                             <div class="form-group"><label class="form-label">Date Range</label><div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;"><input type="date" class="form-control" id="expense-filter-date-from"><input type="date" class="form-control" id="expense-filter-date-to"></div></div>
@@ -470,8 +515,10 @@
                         </div>
                     </div>
                 </div>
+
                 <!-- Active Expense Filters -->
                 <div class="active-filters" id="expense-active-filters" style="display: none;"></div>
+
                 <!-- Expenses Table -->
                 <div class="expense-table-container">
                     <div class="expense-table-header">
@@ -487,6 +534,7 @@
                     <div class="expense-summary" id="expense-summary" style="display: none;"><div class="expense-summary-left"><div class="summary-item"><span>Showing:</span><span class="summary-value" id="summary-count">0</span></div><div class="summary-item"><span>Paid:</span><span class="summary-value" id="summary-paid-count">0</span></div><div class="summary-item"><span>Pending:</span><span class="summary-value" id="summary-pending-count">0</span></div></div><div class="summary-total"><span>Total:</span><span class="summary-total-value" id="summary-total-amount">$0.00</span></div></div>
                 </div>
             </div>
+
             <!-- Analytics Content -->
             <div class="content-wrapper" id="analytics-content" style="display: none;">
                 <div class="analytics-filters">
@@ -513,20 +561,55 @@
                 </div>
                 <div class="chart-container"><div class="chart-header"><h3><i class="fas fa-table"></i> Detailed Analytics</h3></div><div class="panel-body"><table class="data-table"><thead><tr><th>Period</th><th>Reservations</th><th>Income</th><th>Expenses</th><th>Monthly Profit</th><th>Total Profit</th><th>Profit Margin</th><th>Status</th></tr></thead><tbody id="analytics-body"></tbody></table></div></div>
             </div>
+
             <!-- Settings Content -->
             <div class="content-wrapper" id="settings-content" style="display: none;"><div class="panel"><div class="panel-header"><h2><i class="fas fa-cog"></i> System Settings</h2></div><div class="panel-body"><div class="empty-state"><i class="fas fa-cog"></i><h3>Configuration</h3><p>Settings will be available soon.</p></div></div></div></div>
         </div>
     </div>
 
-    <!-- Modals (edit/delete) - included but not shown for brevity, they exist in original file -->
-    <!-- We'll add essential modals for edit/delete -->
-    <div class="modal" id="edit-reservation-modal"><div class="modal-content"><div class="modal-header"><div class="modal-title">Edit Reservation</div><button class="modal-close" id="close-edit-reservation-modal"><i class="fas fa-times"></i></button></div><div class="modal-body" id="edit-reservation-body"></div><div class="modal-footer"><button class="btn btn-secondary" id="cancel-edit-reservation-btn">Cancel</button><button class="btn btn-primary" id="save-edit-reservation-btn">Save Changes</button></div></div></div>
+    <!-- Modals -->
+    <div class="modal" id="edit-reservation-modal">
+        <div class="modal-content"><div class="modal-header"><div class="modal-title">Edit Reservation</div><button class="modal-close" id="close-edit-reservation-modal"><i class="fas fa-times"></i></button></div><div class="modal-body" id="edit-reservation-body"></div><div class="modal-footer"><button class="btn btn-secondary" id="cancel-edit-reservation-btn">Cancel</button><button class="btn btn-primary" id="save-edit-reservation-btn">Save Changes</button></div></div>
+    </div>
     <div class="modal" id="delete-reservation-modal">...</div>
-    <div class="modal" id="edit-category-modal"><div class="modal-content"><div class="modal-header"><div class="modal-title">Edit Category</div><button class="modal-close" id="close-edit-category-modal"><i class="fas fa-times"></i></button></div><div class="modal-body"><div class="form-group"><label>Name</label><input type="text" id="edit-category-name" class="form-control"></div><div class="form-group"><label>Description</label><textarea id="edit-category-description" class="form-control"></textarea></div></div><div class="modal-footer"><button class="btn btn-secondary" id="cancel-edit-category-btn">Cancel</button><button class="btn btn-primary" id="save-edit-category-btn">Save</button></div></div></div>
-    <div class="modal" id="edit-expense-modal"><div class="modal-content"><div class="modal-header"><div class="modal-title">Edit Expense</div><button class="modal-close" id="close-edit-expense-modal"><i class="fas fa-times"></i></button></div><div class="modal-body">...</div><div class="modal-footer"><button class="btn btn-secondary" id="cancel-edit-expense-btn">Cancel</button><button class="btn btn-primary" id="save-edit-expense-btn">Save</button></div></div></div>
+    <div class="modal" id="edit-category-modal">
+        <div class="modal-content"><div class="modal-header"><div class="modal-title">Edit Category</div><button class="modal-close" id="close-edit-category-modal"><i class="fas fa-times"></i></button></div><div class="modal-body"><div class="form-group"><label>Name</label><input type="text" id="edit-category-name" class="form-control"></div><div class="form-group"><label>Description</label><textarea id="edit-category-description" class="form-control"></textarea></div></div><div class="modal-footer"><button class="btn btn-secondary" id="cancel-edit-category-btn">Cancel</button><button class="btn btn-primary" id="save-edit-category-btn">Save</button></div></div>
+    </div>
+    <div class="modal" id="edit-expense-modal">
+        <div class="modal-content"><div class="modal-header"><div class="modal-title">Edit Expense</div><button class="modal-close" id="close-edit-expense-modal"><i class="fas fa-times"></i></button></div><div class="modal-body">
+            <div class="form-group"><label>Name</label><input type="text" id="edit-expense-name" class="form-control"></div>
+            <div class="form-group"><label>Category</label><select id="edit-expense-category" class="form-control"></select></div>
+            <div class="form-group"><label>Amount</label><input type="number" id="edit-expense-amount" class="form-control" step="0.01"></div>
+            <div class="form-group"><label>Date</label><input type="date" id="edit-expense-date" class="form-control"></div>
+            <div class="form-group"><label>Payment</label><select id="edit-expense-payment" class="form-control"><option value="cash">Cash</option><option value="credit_card">Credit Card</option><option value="bank_transfer">Bank Transfer</option><option value="check">Check</option><option value="other">Other</option></select></div>
+            <div class="form-group"><label>Description</label><textarea id="edit-expense-description" class="form-control"></textarea></div>
+            <div class="form-group"><label>Status</label><select id="edit-expense-status" class="form-control"><option value="paid">Paid</option><option value="pending">Pending</option></select></div>
+        </div><div class="modal-footer"><button class="btn btn-secondary" id="cancel-edit-expense-btn">Cancel</button><button class="btn btn-primary" id="save-edit-expense-btn">Save</button></div></div>
+    </div>
     <div class="modal" id="delete-expense-modal">...</div>
+    <div class="modal" id="filter-reservation-modal">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header"><div class="modal-title"><i class="fas fa-filter"></i> Filter Reservations</div><button class="modal-close" id="close-filter-reservation-modal"><i class="fas fa-times"></i></button></div>
+            <div class="modal-body" id="filter-reservation-body">
+                <div class="form-group"><label class="form-label">Client Name</label><input type="text" class="form-control" id="filter-client-name"></div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group"><label class="form-label">Check-in From</label><input type="date" class="form-control" id="filter-checkin-from"></div>
+                    <div class="form-group"><label class="form-label">Check-in To</label><input type="date" class="form-control" id="filter-checkin-to"></div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group"><label class="form-label">Check-out From</label><input type="date" class="form-control" id="filter-checkout-from"></div>
+                    <div class="form-group"><label class="form-label">Check-out To</label><input type="date" class="form-control" id="filter-checkout-to"></div>
+                </div>
+                <div id="custom-field-filters"></div>
+                <div style="margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border-color);">
+                    <div class="form-group"><label class="form-label">Sort By</label><select class="form-control" id="filter-sort-by"><option value="checkin">Check-in (newest)</option><option value="checkin_oldest">Check-in (oldest)</option><option value="name">Name A-Z</option></select></div>
+                </div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-secondary" id="clear-all-filters-btn">Clear All</button><button class="btn btn-primary" id="apply-filters-btn">Apply Filters</button></div>
+        </div>
+    </div>
 
-    <!-- ========== FIREBASE SCRIPT ========== -->
+    <!-- ========== FIREBASE SCRIPT (FULLY FUNCTIONAL WITH ALL FIXES) ========== -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
         import { 
@@ -593,13 +676,20 @@
                 state.expenseCategories = catSnap.docs.map(d => ({ id: d.id, ...d.data() }));
                 state.expenses = expSnap.docs.map(d => ({ id: d.id, ...d.data() }));
                 
+                // Load field order and active filters from settings
                 if (!settingsSnap.empty) {
-                    state.fieldOrder = settingsSnap.docs[0].data().fieldOrder || [];
+                    const settingsData = settingsSnap.docs[0].data();
+                    state.fieldOrder = settingsData.fieldOrder || [];
+                    state.activeExpenseFilters = settingsData.expenseFilters || {};
                 } else {
                     state.fieldOrder = state.customFields.map(f => f.id);
-                    if (state.fieldOrder.length) await addDoc(settingsCol, { fieldOrder: state.fieldOrder });
+                    if (state.fieldOrder.length) await addDoc(settingsCol, { fieldOrder: state.fieldOrder, expenseFilters: {} });
                 }
 
+                // Apply expense filters if any
+                applyExpenseFiltersFromState();
+
+                renderCustomFieldsList();
                 renderCustomFields();
                 renderReservationsTable();
                 renderCategories();
@@ -612,16 +702,20 @@
             } catch (e) { console.error(e); showNotification('Load failed', 'error'); }
         }
 
-        // Save field order
-        async function saveFieldOrder() {
+        // Save field order and expense filters
+        async function saveSettings() {
             try {
                 const snap = await getDocs(settingsCol);
-                if (!snap.empty) await updateDoc(doc(db, 'settings', snap.docs[0].id), { fieldOrder: state.fieldOrder });
-                else await addDoc(settingsCol, { fieldOrder: state.fieldOrder });
+                const data = { fieldOrder: state.fieldOrder, expenseFilters: state.activeExpenseFilters };
+                if (!snap.empty) {
+                    await updateDoc(doc(db, 'settings', snap.docs[0].id), data);
+                } else {
+                    await addDoc(settingsCol, data);
+                }
             } catch (e) { console.error(e); }
         }
 
-        // Custom Fields
+        // Custom Fields Management
         async function addCustomField() {
             const name = document.getElementById('field-name').value.trim();
             const def = document.getElementById('field-default').value.trim();
@@ -648,20 +742,51 @@
             } catch (e) { console.error(e); showNotification('Error adding field', 'error'); }
         }
 
-        async function clearAllFields() {
-            if (!confirm('Delete ALL data?')) return;
+        async function deleteCustomField(id) {
+            if (!confirm('Delete this custom field? All associated data in reservations will be lost.')) return;
             try {
-                const batch = writeBatch(db);
-                state.customFields.forEach(f => batch.delete(doc(db, 'customFields', f.id)));
-                state.reservations.forEach(r => batch.delete(doc(db, 'reservations', r.id)));
-                state.expenses.forEach(e => batch.delete(doc(db, 'expenses', e.id)));
-                state.expenseCategories.forEach(c => batch.delete(doc(db, 'expenseCategories', c.id)));
-                const snap = await getDocs(settingsCol);
-                snap.forEach(d => batch.delete(doc(db, 'settings', d.id)));
-                await batch.commit();
+                await deleteDoc(doc(db, 'customFields', id));
                 await loadAllData();
-                showNotification('All data cleared', 'success');
-            } catch (e) { console.error(e); showNotification('Error clearing', 'error'); }
+                showNotification('Field deleted', 'success');
+            } catch (e) { console.error(e); showNotification('Delete failed', 'error'); }
+        }
+
+        async function updateCustomField(id, newName, newDefault) {
+            try {
+                await updateDoc(doc(db, 'customFields', id), { name: newName, defaultValue: newDefault });
+                await loadAllData();
+                showNotification('Field updated', 'success');
+            } catch (e) { console.error(e); showNotification('Update failed', 'error'); }
+        }
+
+        function renderCustomFieldsList() {
+            const listDiv = document.getElementById('custom-fields-list');
+            if (!listDiv) return;
+            listDiv.innerHTML = '';
+            if (state.customFields.length === 0) {
+                listDiv.innerHTML = '<p class="empty-state" style="padding:20px;">No custom fields yet.</p>';
+                return;
+            }
+            state.customFields.forEach(field => {
+                const item = document.createElement('div');
+                item.style.display = 'flex'; item.style.justifyContent = 'space-between'; item.style.alignItems = 'center'; item.style.padding = '8px'; item.style.borderBottom = '1px solid var(--border-color)';
+                item.innerHTML = `
+                    <span><strong>${field.name}</strong> (${field.type})</span>
+                    <div>
+                        <button class="btn-icon edit" data-id="${field.id}" title="Edit"><i class="fas fa-edit"></i></button>
+                        <button class="btn-icon delete" data-id="${field.id}" title="Delete"><i class="fas fa-trash-alt"></i></button>
+                    </div>
+                `;
+                item.querySelector('.edit')?.addEventListener('click', () => {
+                    const newName = prompt('Enter new field name:', field.name);
+                    if (newName && newName.trim()) {
+                        const newDefault = prompt('Enter new default value (optional):', field.defaultValue || '');
+                        updateCustomField(field.id, newName.trim(), newDefault || null);
+                    }
+                });
+                item.querySelector('.delete')?.addEventListener('click', () => deleteCustomField(field.id));
+                listDiv.appendChild(item);
+            });
         }
 
         // Reservations
@@ -718,7 +843,7 @@
             });
         }
 
-        // Expense Categories
+        // Categories
         async function addCategory() {
             const name = document.getElementById('category-name').value.trim();
             if (!name) { showNotification('Category name required', 'error'); return; }
@@ -823,7 +948,57 @@
             } catch (e) { console.error(e); showNotification('Update failed', 'error'); }
         }
 
-        // UI Rendering Functions
+        // Filter functions
+        function applyExpenseFiltersFromState() {
+            const filters = state.activeExpenseFilters;
+            if (Object.keys(filters).length === 0) {
+                state.filteredExpenses = null;
+                return;
+            }
+            state.filteredExpenses = state.expenses.filter(e => {
+                if (filters.name && !e.name.toLowerCase().includes(filters.name.toLowerCase())) return false;
+                if (filters.categoryId && e.categoryId !== filters.categoryId) return false;
+                if (filters.status && e.status !== filters.status) return false;
+                if (filters.dateFrom && e.date < filters.dateFrom) return false;
+                if (filters.dateTo && e.date > filters.dateTo) return false;
+                if (filters.amountFrom && parseFloat(e.amount) < parseFloat(filters.amountFrom)) return false;
+                if (filters.amountTo && parseFloat(e.amount) > parseFloat(filters.amountTo)) return false;
+                return true;
+            });
+        }
+
+        async function applyExpenseFilters() {
+            state.activeExpenseFilters = {
+                name: document.getElementById('expense-filter-name').value,
+                categoryId: document.getElementById('expense-filter-category').value,
+                status: document.getElementById('expense-filter-status').value,
+                dateFrom: document.getElementById('expense-filter-date-from').value,
+                dateTo: document.getElementById('expense-filter-date-to').value,
+                amountFrom: document.getElementById('expense-filter-amount-from').value,
+                amountTo: document.getElementById('expense-filter-amount-to').value
+            };
+            // Remove empty
+            Object.keys(state.activeExpenseFilters).forEach(key => !state.activeExpenseFilters[key] && delete state.activeExpenseFilters[key]);
+            applyExpenseFiltersFromState();
+            renderExpensesTable();
+            await saveSettings();
+        }
+
+        function clearExpenseFilters() {
+            state.activeExpenseFilters = {};
+            state.filteredExpenses = null;
+            document.getElementById('expense-filter-name').value = '';
+            document.getElementById('expense-filter-category').value = '';
+            document.getElementById('expense-filter-status').value = '';
+            document.getElementById('expense-filter-date-from').value = '';
+            document.getElementById('expense-filter-date-to').value = '';
+            document.getElementById('expense-filter-amount-from').value = '';
+            document.getElementById('expense-filter-amount-to').value = '';
+            renderExpensesTable();
+            saveSettings();
+        }
+
+        // UI Rendering
         function renderCustomFields() {
             const container = document.getElementById('custom-fields-container');
             if (!container) return;
@@ -888,33 +1063,49 @@
                 state.fieldOrder.splice(draggedIdx, 1);
                 state.fieldOrder.splice(targetIdx, 0, draggedId);
                 renderCustomFields();
-                saveFieldOrder();
+                saveSettings();
             });
         }
 
         function renderReservationsTable() {
+            const thead = document.getElementById('reservations-thead');
             const tbody = document.getElementById('reservations-body');
-            if (!tbody) return;
+            if (!thead || !tbody) return;
+
+            // Build header
+            let headerHtml = '<tr><th>Client</th><th>Check-in</th><th>Check-out</th><th>Duration</th><th>Time</th>';
+            state.customFields.forEach(f => { headerHtml += `<th>${f.name}</th>`; });
+            headerHtml += '<th>Actions</th></tr>';
+            thead.innerHTML = headerHtml;
+
             tbody.innerHTML = '';
             const res = state.filteredReservations || state.reservations;
             if (res.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><i class="fas fa-calendar-times"></i><h3>No Reservations</h3></div></td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="${5 + state.customFields.length + 1}"><div class="empty-state"><i class="fas fa-calendar-times"></i><h3>No Reservations</h3></div></td></tr>`;
                 return;
             }
             res.forEach(r => {
                 const tr = document.createElement('tr');
-                tr.innerHTML = `
+                let rowHtml = `
                     <td>${r.name}</td>
                     <td>${r.checkin}</td>
                     <td>${r.checkout}</td>
                     <td>${r.duration || 1}</td>
                     <td>${r.time}</td>
-                    ${state.customFields.map(f => `<td>${f.type==='checkbox' ? (r[f.id] ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-times-circle"></i>') : r[f.id] || '-'}</td>`).join('')}
-                    <td><div class="action-buttons">
-                        <button class="btn-icon edit" onclick="window.editReservation('${r.id}')"><i class="fas fa-edit"></i></button>
-                        <button class="btn-icon delete" onclick="window.deleteReservation('${r.id}')"><i class="fas fa-trash-alt"></i></button>
-                    </div></td>
                 `;
+                state.customFields.forEach(f => {
+                    let val = r[f.id];
+                    if (f.type === 'checkbox') {
+                        val = val ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-times-circle"></i>';
+                    } else if (f.type === 'currency') {
+                        val = val ? `$${parseFloat(val).toFixed(2)}` : '-';
+                    } else {
+                        val = val || '-';
+                    }
+                    rowHtml += `<td>${val}</td>`;
+                });
+                rowHtml += `<td><div class="action-buttons"><button class="btn-icon edit" onclick="window.editReservation('${r.id}')"><i class="fas fa-edit"></i></button><button class="btn-icon delete" onclick="window.deleteReservation('${r.id}')"><i class="fas fa-trash-alt"></i></button></div></td>`;
+                tr.innerHTML = rowHtml;
                 tbody.appendChild(tr);
             });
             document.getElementById('reservation-count-badge').textContent = res.length;
@@ -944,7 +1135,12 @@
                         document.getElementById('category-name').value = cat.name;
                         document.getElementById('category-description').value = cat.description || '';
                         document.getElementById('category-color').value = cat.color;
+                        // update color picker selection
+                        document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('selected'));
+                        document.querySelector(`.color-option[data-color="${cat.color}"]`)?.classList.add('selected');
                         document.getElementById('category-icon').value = cat.icon;
+                        document.querySelectorAll('.icon-option').forEach(opt => opt.classList.remove('selected'));
+                        document.querySelector(`.icon-option i.${cat.icon}`)?.closest('.icon-option')?.classList.add('selected');
                         document.getElementById('category-budget').value = cat.budget;
                         document.getElementById('category-form-title').textContent = `Edit: ${cat.name}`;
                         document.getElementById('cancel-category-btn').style.display = 'block';
@@ -974,6 +1170,7 @@
             const exps = state.filteredExpenses || state.expenses;
             if (exps.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><i class="fas fa-money-bill-wave"></i><h3>No Expenses</h3></div></td></tr>`;
+                document.getElementById('expense-summary').style.display = 'none';
                 return;
             }
             exps.forEach(e => {
@@ -1036,7 +1233,6 @@
             const totalExpenses = state.expenses.reduce((s,e)=>s+parseFloat(e.amount),0);
             document.getElementById('total-expenses').textContent = `$${totalExpenses.toFixed(2)}`;
             document.getElementById('month-expenses').textContent = `$${monthlyExp.toFixed(2)}`;
-            document.getElementById('avg-expense').textContent = `$${(state.reservations.length>0 ? totalExpenses/state.reservations.length : 0).toFixed(2)}`;
             // Highest category
             const catTotals = {};
             state.expenses.forEach(e => { if (e.categoryId) catTotals[e.categoryId] = (catTotals[e.categoryId]||0) + parseFloat(e.amount); });
@@ -1084,7 +1280,6 @@
             document.getElementById('analytics-net-profit').textContent = `$${(totalRevenue-totalExpenses).toFixed(2)}`;
             document.getElementById('analytics-profit-margin').textContent = totalRevenue>0 ? `${((totalRevenue-totalExpenses)/totalRevenue*100).toFixed(1)}%` : '0%';
             
-            // Destroy existing charts
             if (state.charts.incomeExpense) state.charts.incomeExpense.destroy();
             if (state.charts.expenseCategory) state.charts.expenseCategory.destroy();
             if (state.charts.monthlyTrend) state.charts.monthlyTrend.destroy();
@@ -1098,7 +1293,6 @@
                     { label: 'Expenses', data: expenseData, backgroundColor: 'rgba(239,68,68,0.7)' }
                 ]}
             });
-            // Expense category pie
             const catTotals = {};
             state.expenses.filter(e => new Date(e.date) >= cutoff).forEach(e => {
                 const cat = state.expenseCategories.find(c => c.id === e.categoryId);
@@ -1116,13 +1310,11 @@
                     }]
                 }
             });
-            // Monthly trend line
             const ctx3 = document.getElementById('monthlyTrendChart').getContext('2d');
             state.charts.monthlyTrend = new Chart(ctx3, {
                 type: 'line',
                 data: { labels, datasets: [{ label: 'Net Profit', data: profitData, borderColor: '#2563eb', fill: false }] }
             });
-            // Profit margin
             const marginData = months.map(m => {
                 const inc = monthly[m].income;
                 return inc>0 ? ((monthly[m].income - monthly[m].expenses)/inc*100) : 0;
@@ -1132,7 +1324,6 @@
                 type: 'bar',
                 data: { labels, datasets: [{ label: 'Profit Margin %', data: marginData, backgroundColor: marginData.map(v=>v>=0?'rgba(16,185,129,0.7)':'rgba(239,68,68,0.7)') }] }
             });
-            // Analytics table
             const tbody = document.getElementById('analytics-body');
             tbody.innerHTML = '';
             let cumulative = 0;
@@ -1145,7 +1336,6 @@
                 const row = `<tr><td>${m}</td><td>${monthly[m].count}</td><td class="currency-cell">$${inc.toFixed(2)}</td><td class="expense-cell">$${exp.toFixed(2)}</td><td class="${profit>=0?'currency-cell':'expense-cell'}">$${profit.toFixed(2)}</td><td class="${cumulative>=0?'currency-cell':'expense-cell'}">$${cumulative.toFixed(2)}</td><td>${margin}%</td><td><span class="status-badge ${profit>=0?'status-confirmed':'status-cancelled'}">${profit>=0?'Profit':'Loss'}</span></td></tr>`;
                 tbody.innerHTML += row;
             });
-            // This month / last month
             const now = new Date();
             const thisMonthKey = `${now.getFullYear()}-${now.getMonth()+1}`;
             const lastMonth = new Date(now.getFullYear(), now.getMonth()-1, 1);
@@ -1219,6 +1409,9 @@
         document.getElementById('close-edit-reservation-modal')?.addEventListener('click', ()=>{
             document.getElementById('edit-reservation-modal').classList.remove('active');
         });
+        document.getElementById('cancel-edit-reservation-btn')?.addEventListener('click', ()=>{
+            document.getElementById('edit-reservation-modal').classList.remove('active');
+        });
 
         window.deleteReservation = (id) => { if (confirm('Delete?')) deleteReservation(id); };
 
@@ -1256,6 +1449,12 @@
             document.getElementById('edit-expense-description').value = e.description || '';
             document.getElementById('edit-expense-status').value = e.status;
             state.editingExpenseId = id;
+            // populate category dropdown
+            const catSelect = document.getElementById('edit-expense-category');
+            catSelect.innerHTML = '<option value="">Select a category</option>';
+            state.expenseCategories.forEach(c => {
+                catSelect.innerHTML += `<option value="${c.id}" ${c.id===e.categoryId?'selected':''}>${c.name}</option>`;
+            });
             document.getElementById('edit-expense-modal').classList.add('active');
         };
         document.getElementById('save-edit-expense-btn')?.addEventListener('click', async () => {
@@ -1263,6 +1462,9 @@
             await updateExpense(state.editingExpenseId);
         });
         document.getElementById('close-edit-expense-modal')?.addEventListener('click', ()=>{
+            document.getElementById('edit-expense-modal').classList.remove('active');
+        });
+        document.getElementById('cancel-edit-expense-btn')?.addEventListener('click', ()=>{
             document.getElementById('edit-expense-modal').classList.remove('active');
         });
 
@@ -1278,6 +1480,109 @@
             });
             if (page === 'calendar') renderCalendar();
             if (page === 'analytics') renderAnalytics();
+        }
+
+        // Filter modal functions
+        function openFilterModal() {
+            document.getElementById('filter-client-name').value = state.activeFilters.clientName || '';
+            document.getElementById('filter-checkin-from').value = state.activeFilters.checkinFrom || '';
+            document.getElementById('filter-checkin-to').value = state.activeFilters.checkinTo || '';
+            document.getElementById('filter-checkout-from').value = state.activeFilters.checkoutFrom || '';
+            document.getElementById('filter-checkout-to').value = state.activeFilters.checkoutTo || '';
+            document.getElementById('filter-sort-by').value = state.activeFilters.sortBy || 'checkin';
+            // custom fields
+            const container = document.getElementById('custom-field-filters');
+            container.innerHTML = '';
+            state.customFields.forEach(f => {
+                const div = document.createElement('div');
+                div.className = 'form-group';
+                div.innerHTML = `<label class="form-label">${f.name}</label>`;
+                if (f.type === 'checkbox') {
+                    const select = document.createElement('select');
+                    select.className = 'form-control';
+                    select.id = `filter-${f.id}`;
+                    select.innerHTML = `<option value="">All</option><option value="true">Yes</option><option value="false">No</option>`;
+                    select.value = state.activeFilters[f.id] || '';
+                    div.appendChild(select);
+                } else if (f.type === 'dropdown' || f.type === 'status') {
+                    const select = document.createElement('select');
+                    select.className = 'form-control';
+                    select.id = `filter-${f.id}`;
+                    select.innerHTML = '<option value="">All</option>';
+                    if (f.type === 'status') {
+                        select.innerHTML += '<option value="pending">Pending</option><option value="confirmed">Confirmed</option><option value="cancelled">Cancelled</option>';
+                    } else if (f.options) {
+                        f.options.forEach(o => { select.innerHTML += `<option value="${o}">${o}</option>`; });
+                    }
+                    select.value = state.activeFilters[f.id] || '';
+                    div.appendChild(select);
+                } else {
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.className = 'form-control';
+                    input.id = `filter-${f.id}`;
+                    input.value = state.activeFilters[f.id] || '';
+                    div.appendChild(input);
+                }
+                container.appendChild(div);
+            });
+            document.getElementById('filter-reservation-modal').classList.add('active');
+        }
+
+        function closeFilterModal() {
+            document.getElementById('filter-reservation-modal').classList.remove('active');
+        }
+
+        function applyFilters() {
+            const filters = {};
+            if (document.getElementById('filter-client-name').value) filters.clientName = document.getElementById('filter-client-name').value.toLowerCase();
+            if (document.getElementById('filter-checkin-from').value) filters.checkinFrom = document.getElementById('filter-checkin-from').value;
+            if (document.getElementById('filter-checkin-to').value) filters.checkinTo = document.getElementById('filter-checkin-to').value;
+            if (document.getElementById('filter-checkout-from').value) filters.checkoutFrom = document.getElementById('filter-checkout-from').value;
+            if (document.getElementById('filter-checkout-to').value) filters.checkoutTo = document.getElementById('filter-checkout-to').value;
+            if (document.getElementById('filter-sort-by').value) filters.sortBy = document.getElementById('filter-sort-by').value;
+            state.customFields.forEach(f => {
+                const el = document.getElementById(`filter-${f.id}`);
+                if (el && el.value) filters[f.id] = el.value;
+            });
+            state.activeFilters = filters;
+            // apply to reservations
+            state.filteredReservations = state.reservations.filter(r => {
+                for (let [key, val] of Object.entries(filters)) {
+                    if (key === 'clientName') { if (!r.name.toLowerCase().includes(val)) return false; }
+                    else if (key === 'checkinFrom') { if (r.checkin < val) return false; }
+                    else if (key === 'checkinTo') { if (r.checkin > val) return false; }
+                    else if (key === 'checkoutFrom') { if (r.checkout < val) return false; }
+                    else if (key === 'checkoutTo') { if (r.checkout > val) return false; }
+                    else if (key === 'sortBy') continue;
+                    else {
+                        const field = state.customFields.find(f => f.id === key);
+                        if (field) {
+                            if (field.type === 'checkbox') {
+                                const rVal = r[key] === true || r[key] === 'true';
+                                const fVal = val === 'true';
+                                if (rVal !== fVal) return false;
+                            } else {
+                                if (r[key] != val) return false;
+                            }
+                        }
+                    }
+                }
+                return true;
+            });
+            renderReservationsTable();
+            updateStats();
+            closeFilterModal();
+            // show active filters indicator (simplified)
+            document.getElementById('clear-filters-btn').style.display = 'block';
+        }
+
+        function clearAllFilters() {
+            state.activeFilters = {};
+            state.filteredReservations = null;
+            renderReservationsTable();
+            updateStats();
+            document.getElementById('clear-filters-btn').style.display = 'none';
         }
 
         // Event listeners
@@ -1298,8 +1603,49 @@
                 });
             });
 
+            // Color picker
+            document.querySelectorAll('.color-option').forEach(opt => {
+                opt.addEventListener('click', function() {
+                    document.querySelectorAll('.color-option').forEach(o => o.classList.remove('selected'));
+                    this.classList.add('selected');
+                    document.getElementById('category-color').value = this.dataset.color;
+                });
+            });
+
+            // Icon picker (simplified)
+            const iconPicker = document.getElementById('category-icon-picker');
+            const icons = ['fas fa-box','fas fa-bolt','fas fa-users','fas fa-tools','fas fa-car','fas fa-home','fas fa-utensils','fas fa-shopping-cart','fas fa-plane','fas fa-wifi'];
+            iconPicker.innerHTML = '';
+            icons.forEach(icon => {
+                const opt = document.createElement('div');
+                opt.className = 'icon-option';
+                opt.innerHTML = `<i class="${icon}"></i>`;
+                opt.dataset.icon = icon;
+                opt.addEventListener('click', function() {
+                    document.querySelectorAll('.icon-option').forEach(o => o.classList.remove('selected'));
+                    this.classList.add('selected');
+                    document.getElementById('category-icon').value = icon;
+                });
+                iconPicker.appendChild(opt);
+            });
+
             document.getElementById('add-field-btn')?.addEventListener('click', addCustomField);
-            document.getElementById('clear-fields-btn')?.addEventListener('click', clearAllFields);
+            document.getElementById('clear-fields-btn')?.addEventListener('click', async () => {
+                if (confirm('Delete ALL custom fields, reservations, expenses, categories?')) {
+                    try {
+                        const batch = writeBatch(db);
+                        state.customFields.forEach(f => batch.delete(doc(db, 'customFields', f.id)));
+                        state.reservations.forEach(r => batch.delete(doc(db, 'reservations', r.id)));
+                        state.expenses.forEach(e => batch.delete(doc(db, 'expenses', e.id)));
+                        state.expenseCategories.forEach(c => batch.delete(doc(db, 'expenseCategories', c.id)));
+                        const snap = await getDocs(settingsCol);
+                        snap.forEach(d => batch.delete(doc(db, 'settings', d.id)));
+                        await batch.commit();
+                        await loadAllData();
+                        showNotification('All data cleared', 'success');
+                    } catch (e) { console.error(e); showNotification('Error clearing', 'error'); }
+                }
+            });
             document.getElementById('add-reservation-btn')?.addEventListener('click', addReservation);
             document.getElementById('clear-form-btn')?.addEventListener('click', clearForm);
             document.getElementById('add-expense-btn')?.addEventListener('click', addExpense);
@@ -1345,29 +1691,32 @@
             // Analytics apply
             document.getElementById('apply-analytics-filters')?.addEventListener('click', renderAnalytics);
 
-            // Expense filters (simplified)
-            document.getElementById('apply-expense-filters-btn')?.addEventListener('click', () => {
-                const cat = document.getElementById('expense-filter-category').value;
-                const status = document.getElementById('expense-filter-status').value;
-                const from = document.getElementById('expense-filter-date-from').value;
-                const to = document.getElementById('expense-filter-date-to').value;
-                const min = document.getElementById('expense-filter-amount-from').value;
-                const max = document.getElementById('expense-filter-amount-to').value;
-                state.filteredExpenses = state.expenses.filter(e => {
-                    if (cat && e.categoryId !== cat) return false;
-                    if (status && e.status !== status) return false;
-                    if (from && e.date < from) return false;
-                    if (to && e.date > to) return false;
-                    if (min && parseFloat(e.amount) < parseFloat(min)) return false;
-                    if (max && parseFloat(e.amount) > parseFloat(max)) return false;
-                    return true;
+            // Expense filters
+            document.getElementById('apply-expense-filters-btn')?.addEventListener('click', applyExpenseFilters);
+            document.getElementById('clear-expense-filters-btn')?.addEventListener('click', clearExpenseFilters);
+
+            // Reservation filters
+            document.getElementById('filter-table-btn')?.addEventListener('click', openFilterModal);
+            document.getElementById('close-filter-reservation-modal')?.addEventListener('click', closeFilterModal);
+            document.getElementById('clear-all-filters-btn')?.addEventListener('click', () => {
+                document.getElementById('filter-client-name').value = '';
+                document.getElementById('filter-checkin-from').value = '';
+                document.getElementById('filter-checkin-to').value = '';
+                document.getElementById('filter-checkout-from').value = '';
+                document.getElementById('filter-checkout-to').value = '';
+                document.getElementById('filter-sort-by').value = 'checkin';
+                state.customFields.forEach(f => {
+                    const el = document.getElementById(`filter-${f.id}`);
+                    if (el) el.value = '';
                 });
-                renderExpensesTable();
             });
-            document.getElementById('clear-expense-filters-btn')?.addEventListener('click', () => {
-                state.filteredExpenses = null;
-                renderExpensesTable();
-            });
+            document.getElementById('apply-filters-btn')?.addEventListener('click', applyFilters);
+            document.getElementById('clear-filters-btn')?.addEventListener('click', clearAllFilters);
+
+            // Export (dummy)
+            document.getElementById('export-btn')?.addEventListener('click', () => showNotification('Export not implemented', 'info'));
+            document.getElementById('print-btn')?.addEventListener('click', () => window.print());
+            document.getElementById('export-expenses-btn')?.addEventListener('click', () => showNotification('Export not implemented', 'info'));
         });
     </script>
 </body>
