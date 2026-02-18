@@ -82,11 +82,11 @@
         .panel-header h2 i { color: var(--primary-color); }
         .panel-body { padding: 24px; }
         .form-group { margin-bottom: 20px; position: relative; }
-        .form-group.draggable { cursor: grab; border: 2px solid transparent; border-radius: var(--radius-md); padding: 12px; transition: all 0.2s ease; }
-        .form-group.draggable:hover { background-color: rgba(37, 99, 235, 0.03); border-color: rgba(37, 99, 235, 0.1); }
-        .form-group.draggable.dragging { opacity: 0.5; background-color: rgba(37, 99, 235, 0.05); border: 2px dashed var(--primary-color); }
+        .form-group.draggable { cursor: grab; border: 2px solid transparent; border-radius: var(--radius-md); padding: 12px; transition: all 0.2s ease; background-color: white; }
+        .form-group.draggable:hover { background-color: rgba(37, 99, 235, 0.03); border-color: rgba(37, 99, 235, 0.2); }
+        .form-group.draggable.dragging { opacity: 0.5; background-color: rgba(37, 99, 235, 0.1); border: 2px dashed var(--primary-color); }
         .form-group.draggable.drag-over { border: 2px dashed var(--success-color); background-color: rgba(16, 185, 129, 0.05); }
-        .drag-handle { position: absolute; left: -10px; top: 50%; transform: translateY(-50%); width: 24px; height: 24px; border-radius: 4px; background-color: var(--light-bg); border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; color: var(--text-secondary); cursor: grab; transition: var(--transition); z-index: 5; opacity: 0; }
+        .drag-handle { position: absolute; left: -10px; top: 50%; transform: translateY(-50%); width: 28px; height: 28px; border-radius: 50%; background-color: var(--light-bg); border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; color: var(--text-secondary); cursor: grab; transition: var(--transition); z-index: 5; opacity: 0.7; }
         .form-group.draggable:hover .drag-handle { opacity: 1; }
         .drag-handle:hover { background-color: var(--primary-color); color: white; border-color: var(--primary-color); }
         .drag-handle:active { cursor: grabbing; }
@@ -272,15 +272,13 @@
         .calendar-details-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border-color); }
         .calendar-details-date { font-size: 18px; font-weight: 700; color: var(--text-primary); }
         .calendar-reservation-list { display: flex; flex-direction: column; gap: 12px; }
-        .calendar-reservation-item { padding: 16px; border: 1px solid var(--border-color); border-radius: var(--radius-md); display: flex; justify-content: space-between; align-items: flex-start; transition: var(--transition); }
+        .calendar-reservation-item { padding: 16px; border: 1px solid var(--border-color); border-radius: var(--radius-md); display: flex; flex-direction: column; gap: 8px; transition: var(--transition); background-color: white; }
         .calendar-reservation-item:hover { background-color: var(--light-bg); }
-        .calendar-reservation-info { display: flex; flex-direction: column; gap: 8px; flex-grow: 1; }
-        .calendar-reservation-client { font-weight: 600; color: var(--text-primary); font-size: 16px; }
-        .calendar-reservation-time { font-size: 14px; color: var(--text-secondary); }
-        .calendar-reservation-duration { font-size: 13px; color: var(--primary-color); font-weight: 600; padding: 4px 8px; background-color: rgba(37, 99, 235, 0.1); border-radius: var(--radius-sm); display: inline-block; margin-top: 4px; }
-        .calendar-reservation-details-row { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 8px; }
-        .calendar-reservation-detail { font-size: 13px; color: var(--text-secondary); }
-        .calendar-reservation-detail strong { color: var(--text-primary); font-weight: 600; }
+        .calendar-reservation-header { display: flex; justify-content: space-between; align-items: center; }
+        .calendar-reservation-title { font-weight: 600; font-size: 16px; }
+        .calendar-reservation-detail-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; margin-top: 8px; }
+        .calendar-reservation-detail { font-size: 13px; }
+        .calendar-reservation-detail strong { color: var(--text-secondary); font-weight: 600; }
         .calendar-no-reservations { text-align: center; padding: 40px 20px; color: var(--text-secondary); }
         .calendar-view-switcher { display: flex; gap: 8px; margin-bottom: 20px; }
         .calendar-view-btn { padding: 8px 16px; border: 1px solid var(--border-color); background-color: var(--light-bg); border-radius: var(--radius-md); font-size: 13px; font-weight: 500; color: var(--text-secondary); cursor: pointer; transition: var(--transition); }
@@ -393,12 +391,15 @@
                             </div>
                         </div>
                     </div>
-                    <!-- Add Reservation Panel (Room Type dropdown, Transfer Amount, Meal Price) -->
+                    <!-- Add Reservation Panel (Room Type dropdown, Transfer Amount, Meal Price, Check-in/out times) -->
                     <div class="panel">
-                        <div class="panel-header"><h2><i class="fas fa-calendar-plus"></i> New Reservation</h2><div style="margin-top: 10px; font-size: 13px; color: var(--text-secondary);"><i class="fas fa-info-circle"></i> Drag and drop fields to reorder them</div></div>
+                        <div class="panel-header"><h2><i class="fas fa-calendar-plus"></i> New Reservation</h2><div style="margin-top: 10px; font-size: 13px; color: var(--text-secondary);"><i class="fas fa-info-circle"></i> Drag the <i class="fas fa-grip-vertical"></i> handle to reorder fields</div></div>
                         <div class="panel-body">
-                            <div class="reorder-instructions"><i class="fas fa-arrows-alt"></i><span>Drag the <i class="fas fa-grip-vertical" style="margin: 0 4px;"></i> handle on the left to reorder fields</span></div>
-                            <!-- Room Type dropdown (replaces Client Name) -->
+                            <div class="reorder-instructions">
+                                <i class="fas fa-arrows-alt"></i>
+                                <span>Drag the <i class="fas fa-grip-vertical" style="margin: 0 4px;"></i> handle on the left to reorder custom fields below</span>
+                            </div>
+                            <!-- Room Type dropdown -->
                             <div class="form-group"><label class="form-label">Room Type <span>*</span></label>
                                 <select class="form-control" id="reservation-room">
                                     <option value="">Select Room Type</option>
@@ -409,12 +410,15 @@
                                     <option value="Horizon">Horizon</option>
                                 </select>
                             </div>
-                            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
                                 <div class="form-group"><label class="form-label">Check-in Date <span>*</span></label><input type="date" class="form-control" id="reservation-checkin"></div>
                                 <div class="form-group"><label class="form-label">Check-out Date <span>*</span></label><input type="date" class="form-control" id="reservation-checkout"></div>
-                                <div class="form-group"><label class="form-label">Time <span>*</span></label><input type="time" class="form-control" id="reservation-time"></div>
                             </div>
-                            <!-- New fields: Transfer Amount and Meal Price -->
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+                                <div class="form-group"><label class="form-label">Check-in Time <span>*</span></label><input type="time" class="form-control" id="reservation-time"></div>
+                                <div class="form-group"><label class="form-label">Check-out Time <span>*</span></label><input type="time" class="form-control" id="reservation-checkout-time"></div>
+                            </div>
+                            <!-- Transfer and Meal -->
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
                                 <div class="form-group"><label class="form-label">Transfer Amount ($)</label><input type="number" class="form-control" id="reservation-transfer" step="0.01" min="0" value="0"></div>
                                 <div class="form-group"><label class="form-label">Meal Price ($)</label><input type="number" class="form-control" id="reservation-meal" step="0.01" min="0" value="0"></div>
@@ -442,14 +446,14 @@
                     </div>
                     <div class="table-wrapper">
                         <table class="data-table" id="reservations-table">
-                            <thead id="reservations-thead"><tr><th>Room Type</th><th>Check-in</th><th>Check-out</th><th>Duration</th><th>Time</th><th>Transfer ($)</th><th>Meal ($)</th><th>Actions</th></tr></thead>
+                            <thead id="reservations-thead"><tr><th>Room Type</th><th>Check-in</th><th>Check-out</th><th>Duration</th><th>Check-in Time</th><th>Check-out Time</th><th>Transfer ($)</th><th>Meal ($)</th><th>Actions</th></tr></thead>
                             <tbody id="reservations-body"></tbody>
                         </table>
                     </div>
                 </div>
             </div>
 
-            <!-- Calendar Content -->
+            <!-- Calendar Content (enhanced details) -->
             <div class="content-wrapper" id="calendar-content" style="display: none;">
                 <div class="calendar-header">
                     <div class="calendar-navigation">
@@ -568,7 +572,7 @@
                 </div>
             </div>
 
-            <!-- Analytics Content (with transfer and meal breakdown) -->
+            <!-- Analytics Content -->
             <div class="content-wrapper" id="analytics-content" style="display: none;">
                 <div class="analytics-filters">
                     <div class="filter-group"><label class="filter-label">Time Period</label><select class="form-control" id="analytics-period"><option value="30">Last 30 Days</option><option value="90">Last 90 Days</option><option value="180">Last 6 Months</option><option value="365">Last 12 Months</option><option value="all">All Time</option></select></div>
@@ -828,15 +832,16 @@
             });
         }
 
-        // Reservations (modified: includes transferAmount and mealPrice)
+        // Reservations (modified: includes transferAmount, mealPrice, checkinTime, checkoutTime)
         async function addReservation() {
             const room = document.getElementById('reservation-room').value;
             const checkin = document.getElementById('reservation-checkin').value;
             const checkout = document.getElementById('reservation-checkout').value;
-            const time = document.getElementById('reservation-time').value;
+            const time = document.getElementById('reservation-time').value; // check-in time
+            const checkoutTime = document.getElementById('reservation-checkout-time').value;
             const transferAmount = parseFloat(document.getElementById('reservation-transfer').value) || 0;
             const mealPrice = parseFloat(document.getElementById('reservation-meal').value) || 0;
-            if (!room || !checkin || !checkout || !time) { showNotification('Fill all required fields', 'error'); return; }
+            if (!room || !checkin || !checkout || !time || !checkoutTime) { showNotification('Fill all required fields', 'error'); return; }
             if (new Date(checkout) < new Date(checkin)) { showNotification('Check-out after check-in', 'error'); return; }
             const duration = calculateDuration(checkin, checkout);
             const newRes = { 
@@ -844,7 +849,8 @@
                 checkin, 
                 checkout, 
                 duration, 
-                time, 
+                time, // check-in time
+                checkoutTime,
                 transferAmount, 
                 mealPrice, 
                 createdAt: new Date().toISOString() 
@@ -884,6 +890,7 @@
             document.getElementById('reservation-checkin').value = today;
             document.getElementById('reservation-checkout').value = tomorrow;
             document.getElementById('reservation-time').value = '12:00';
+            document.getElementById('reservation-checkout-time').value = '10:00';
             document.getElementById('reservation-transfer').value = '0';
             document.getElementById('reservation-meal').value = '0';
             state.customFields.forEach(f => {
@@ -1111,7 +1118,6 @@
                 if (!target || target.dataset.id === draggedId) return;
                 const draggedIdx = state.fieldOrder.indexOf(draggedId);
                 const targetIdx = state.fieldOrder.indexOf(target.dataset.id);
-                // Remove and insert
                 state.fieldOrder.splice(draggedIdx, 1);
                 state.fieldOrder.splice(targetIdx, 0, draggedId);
                 renderCustomFields();
@@ -1125,7 +1131,7 @@
             const tbody = document.getElementById('reservations-body');
             if (!thead || !tbody) return;
 
-            let headerHtml = '<tr><th>Room Type</th><th>Check-in</th><th>Check-out</th><th>Duration</th><th>Time</th><th>Transfer ($)</th><th>Meal ($)</th>';
+            let headerHtml = '<tr><th>Room Type</th><th>Check-in</th><th>Check-out</th><th>Duration</th><th>Check-in Time</th><th>Check-out Time</th><th>Transfer ($)</th><th>Meal ($)</th>';
             state.customFields.forEach(f => { headerHtml += `<th>${f.name}</th>`; });
             headerHtml += '<th>Actions</th></tr>';
             thead.innerHTML = headerHtml;
@@ -1133,7 +1139,7 @@
             tbody.innerHTML = '';
             const res = state.filteredReservations || state.reservations;
             if (res.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="${7 + state.customFields.length + 1}"><div class="empty-state"><i class="fas fa-calendar-times"></i><h3>No Reservations</h3></div></td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="${8 + state.customFields.length + 1}"><div class="empty-state"><i class="fas fa-calendar-times"></i><h3>No Reservations</h3></div></td></tr>`;
                 return;
             }
             res.forEach(r => {
@@ -1143,7 +1149,8 @@
                     <td>${r.checkin}</td>
                     <td>${r.checkout}</td>
                     <td>${r.duration || 1}</td>
-                    <td>${r.time}</td>
+                    <td>${r.time || ''}</td>
+                    <td>${r.checkoutTime || ''}</td>
                     <td class="currency-cell">$${(r.transferAmount || 0).toFixed(2)}</td>
                     <td class="currency-cell">$${(r.mealPrice || 0).toFixed(2)}</td>
                 `;
@@ -1427,7 +1434,7 @@
             document.getElementById('last-month-net').textContent = `$${(((monthly[lastMonthKey]?.transfer||0)+(monthly[lastMonthKey]?.meal||0))-(monthly[lastMonthKey]?.expenses||0)).toFixed(2)}`;
         }
 
-        // Calendar (unchanged, but uses name for room)
+        // Calendar (enhanced details)
         function renderCalendar() {
             const grid = document.getElementById('calendar-days-grid');
             if (!grid) return;
@@ -1462,7 +1469,7 @@
                         else if (r.name === 'Villa') roomClass = 'reservation-room-vip';
                         else if (r.name === 'Horizon') roomClass = 'reservation-room-deluxe';
                         resDiv.className = `calendar-reservation ${roomClass}`;
-                        resDiv.innerHTML = `<div class="time">${r.time}</div><div class="name">${r.name}</div>`;
+                        resDiv.innerHTML = `<div class="time">${r.time || ''}</div><div class="name">${r.name}</div>`;
                         indicator.appendChild(resDiv);
                     });
                     if (dayReservations.length > 3) {
@@ -1493,10 +1500,33 @@
             dayRes.forEach(r => {
                 const item = document.createElement('div');
                 item.className = 'calendar-reservation-item';
-                item.innerHTML = `
-                    <div><strong>${r.name}</strong> ${r.time}</div>
-                    <div>${r.checkin} to ${r.checkout}</div>
+                // Build details grid
+                let detailsHtml = `
+                    <div class="calendar-reservation-header">
+                        <span class="calendar-reservation-title">${r.name}</span>
+                        <div class="action-buttons">
+                            <button class="btn-icon edit" onclick="window.editReservation('${r.id}')"><i class="fas fa-edit"></i></button>
+                            <button class="btn-icon delete" onclick="window.deleteReservation('${r.id}')"><i class="fas fa-trash-alt"></i></button>
+                        </div>
+                    </div>
+                    <div class="calendar-reservation-detail-grid">
+                        <div class="calendar-reservation-detail"><strong>Check-in:</strong> ${r.checkin} ${r.time || ''}</div>
+                        <div class="calendar-reservation-detail"><strong>Check-out:</strong> ${r.checkout} ${r.checkoutTime || ''}</div>
+                        <div class="calendar-reservation-detail"><strong>Duration:</strong> ${r.duration} nights</div>
+                        <div class="calendar-reservation-detail"><strong>Transfer:</strong> $${(r.transferAmount || 0).toFixed(2)}</div>
+                        <div class="calendar-reservation-detail"><strong>Meal:</strong> $${(r.mealPrice || 0).toFixed(2)}</div>
                 `;
+                // Add custom fields
+                state.customFields.forEach(f => {
+                    let val = r[f.id];
+                    if (val !== undefined && val !== null && val !== '') {
+                        if (f.type === 'checkbox') val = val ? 'Yes' : 'No';
+                        else if (f.type === 'currency') val = `$${parseFloat(val).toFixed(2)}`;
+                        detailsHtml += `<div class="calendar-reservation-detail"><strong>${f.name}:</strong> ${val}</div>`;
+                    }
+                });
+                detailsHtml += '</div>';
+                item.innerHTML = detailsHtml;
                 container.appendChild(item);
             });
         }
@@ -1540,9 +1570,10 @@
                         <option value="Horizon" ${r.name==='Horizon'?'selected':''}>Horizon</option>
                     </select>
                 </div>
-                <div class="form-group"><label>Check-in</label><input type="date" id="edit-checkin" class="form-control" value="${r.checkin}"></div>
-                <div class="form-group"><label>Check-out</label><input type="date" id="edit-checkout" class="form-control" value="${r.checkout}"></div>
-                <div class="form-group"><label>Time</label><input type="time" id="edit-time" class="form-control" value="${r.time}"></div>
+                <div class="form-group"><label>Check-in Date</label><input type="date" id="edit-checkin" class="form-control" value="${r.checkin}"></div>
+                <div class="form-group"><label>Check-out Date</label><input type="date" id="edit-checkout" class="form-control" value="${r.checkout}"></div>
+                <div class="form-group"><label>Check-in Time</label><input type="time" id="edit-time" class="form-control" value="${r.time || ''}"></div>
+                <div class="form-group"><label>Check-out Time</label><input type="time" id="edit-checkout-time" class="form-control" value="${r.checkoutTime || ''}"></div>
                 <div class="form-group"><label>Transfer Amount ($)</label><input type="number" id="edit-transfer" class="form-control" step="0.01" value="${r.transferAmount || 0}"></div>
                 <div class="form-group"><label>Meal Price ($)</label><input type="number" id="edit-meal" class="form-control" step="0.01" value="${r.mealPrice || 0}"></div>
                 ${state.customFields.map(f => `
@@ -1562,6 +1593,7 @@
                 checkin: document.getElementById('edit-checkin').value,
                 checkout: document.getElementById('edit-checkout').value,
                 time: document.getElementById('edit-time').value,
+                checkoutTime: document.getElementById('edit-checkout-time').value,
                 transferAmount: parseFloat(document.getElementById('edit-transfer').value) || 0,
                 mealPrice: parseFloat(document.getElementById('edit-meal').value) || 0,
                 duration: calculateDuration(document.getElementById('edit-checkin').value, document.getElementById('edit-checkout').value)
@@ -1755,7 +1787,8 @@
                 Checkin: r.checkin,
                 Checkout: r.checkout,
                 Duration: r.duration,
-                Time: r.time,
+                'Check-in Time': r.time,
+                'Check-out Time': r.checkoutTime,
                 Transfer: r.transferAmount || 0,
                 Meal: r.mealPrice || 0,
                 ...state.customFields.reduce((acc, f) => ({ ...acc, [f.name]: r[f.id] }), {})
@@ -1768,7 +1801,8 @@
                 Checkin: r.checkin,
                 Checkout: r.checkout,
                 Duration: r.duration,
-                Time: r.time,
+                'Check-in Time': r.time,
+                'Check-out Time': r.checkoutTime,
                 Transfer: r.transferAmount || 0,
                 Meal: r.mealPrice || 0,
                 ...state.customFields.reduce((acc, f) => ({ ...acc, [f.name]: r[f.id] }), {})
@@ -1841,6 +1875,8 @@
             const tomorrow = new Date(Date.now()+86400000).toISOString().split('T')[0];
             document.getElementById('reservation-checkin') && (document.getElementById('reservation-checkin').value = today);
             document.getElementById('reservation-checkout') && (document.getElementById('reservation-checkout').value = tomorrow);
+            document.getElementById('reservation-time') && (document.getElementById('reservation-time').value = '12:00');
+            document.getElementById('reservation-checkout-time') && (document.getElementById('reservation-checkout-time').value = '10:00');
             document.getElementById('expense-date') && (document.getElementById('expense-date').value = today);
             await loadAllData();
 
