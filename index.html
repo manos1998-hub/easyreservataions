@@ -299,7 +299,7 @@
         .reservation-duration-display { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background-color: rgba(37, 99, 235, 0.1); border-radius: 20px; font-size: 12px; font-weight: 600; color: var(--primary-color); margin-top: 8px; }
         .reservation-duration-display i { font-size: 11px; }
 
-        /* ===== Expense Section Panel Color Variations ===== */
+        /* ===== Expense Section Panel Color Variations (static defaults) ===== */
         #expenses-content .dashboard-stats .stat-card:nth-child(1) { background-color: #e6f0fa; }
         #expenses-content .dashboard-stats .stat-card:nth-child(2) { background-color: #fff3d6; }
         #expenses-content .dashboard-stats .stat-card:nth-child(3) { background-color: #e9f4e9; }
@@ -691,7 +691,7 @@
         </div>
     </div>
 
-    <!-- ========== FIREBASE SCRIPT (full working version) ========== -->
+    <!-- ========== FIREBASE SCRIPT ========== -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
         import { 
@@ -730,17 +730,17 @@
             panelColors: {} // store custom colors
         };
 
-        // Panel color definitions
+        // Panel color definitions (including headers for panels that have them)
         const panelDefinitions = [
             { id: 'dashboardStats', selector: '#dashboard-content .dashboard-stats .stat-card', label: 'Dashboard Stats Cards', default: '#ffffff' },
-            { id: 'customFieldsPanel', selector: '#dashboard-content .panel:first-child', label: 'Custom Fields Panel', default: '#ffffff' },
-            { id: 'newReservationPanel', selector: '#dashboard-content .panel:last-child', label: 'New Reservation Panel', default: '#ffffff' },
+            { id: 'customFieldsPanel', selector: '#dashboard-content .panel:first-child, #dashboard-content .panel:first-child .panel-header', label: 'Custom Fields Panel', default: '#ffffff' },
+            { id: 'newReservationPanel', selector: '#dashboard-content .panel:last-child, #dashboard-content .panel:last-child .panel-header', label: 'New Reservation Panel', default: '#ffffff' },
             { id: 'reservationsTable', selector: '#dashboard-content .table-container', label: 'Reservations Table', default: '#ffffff' },
             { id: 'calendarView', selector: '#calendar-content .calendar-grid', label: 'Calendar Grid', default: '#ffffff' },
             { id: 'expensesStats', selector: '#expenses-content .dashboard-stats .stat-card', label: 'Expenses Stats Cards', default: '#ffffff' },
-            { id: 'categoriesSidebar', selector: '#expenses-content .categories-sidebar', label: 'Categories Sidebar', default: '#ffffff' },
+            { id: 'categoriesSidebar', selector: '#expenses-content .categories-sidebar, #expenses-content .categories-sidebar .panel-header', label: 'Categories Sidebar', default: '#ffffff' },
             { id: 'addExpensePanel', selector: '#expenses-content .panel-container:last-of-type .panel:first-child, #expenses-content .panel-container:last-of-type .panel:first-child .panel-header', label: 'Add Expense Panel', default: '#ffffff' },
-            { id: 'filterExpensePanel', selector: '#expenses-content .panel-container:last-of-type .panel:last-child', label: 'Filter Expenses Panel', default: '#ffffff' },
+            { id: 'filterExpensePanel', selector: '#expenses-content .panel-container:last-of-type .panel:last-child, #expenses-content .panel-container:last-of-type .panel:last-child .panel-header', label: 'Filter Expenses Panel', default: '#ffffff' },
             { id: 'expensesTable', selector: '#expenses-content .expense-table-container', label: 'Expenses Table', default: '#ffffff' }
         ];
 
@@ -824,7 +824,7 @@
             showNotification('Colors reset to defaults', 'success');
         }
 
-        // Load all data (modified to load panelColors)
+        // Load all data
         async function loadAllData() {
             try {
                 const [customSnap, resSnap, catSnap, expSnap, settingsSnap] = await Promise.all([
@@ -872,7 +872,7 @@
             } catch (e) { console.error(e); showNotification('Load failed', 'error'); }
         }
 
-        // Save settings (original, now also used for fieldOrder)
+        // Save settings (field order)
         async function saveSettings() {
             try {
                 const snap = await getDocs(settingsCol);
@@ -885,7 +885,7 @@
             } catch (e) { console.error(e); }
         }
 
-        // Custom Fields
+        // Custom Fields (original functions – keep them unchanged)
         async function addCustomField() {
             const name = document.getElementById('field-name').value.trim();
             const def = document.getElementById('field-default').value.trim();
