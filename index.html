@@ -298,18 +298,6 @@
         .calendar-reservation-detail-item span { color: var(--text-primary); font-weight: 500; }
         .reservation-duration-display { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background-color: rgba(37, 99, 235, 0.1); border-radius: 20px; font-size: 12px; font-weight: 600; color: var(--primary-color); margin-top: 8px; }
         .reservation-duration-display i { font-size: 11px; }
-
-        /* ===== Expense Section Panel Color Variations (static defaults) ===== */
-        #expenses-content .dashboard-stats .stat-card:nth-child(1) { background-color: #e6f0fa; }
-        #expenses-content .dashboard-stats .stat-card:nth-child(2) { background-color: #fff3d6; }
-        #expenses-content .dashboard-stats .stat-card:nth-child(3) { background-color: #e9f4e9; }
-        #expenses-content .dashboard-stats .stat-card:nth-child(4) { background-color: #f0e7f5; }
-        #expenses-content .category-management .categories-sidebar { background-color: #fef9e7; }
-        #expenses-content .category-management .panel:last-of-type { background-color: #e0f2fe; }
-        #expenses-content .panel-container:last-of-type .panel:first-child { background-color: #fee9e7; }
-        #expenses-content .panel-container:last-of-type .panel:last-child { background-color: #dcfce7; }
-        #expenses-content .expense-table-container { background-color: #f3f4f6; }
-        #expenses-content .expense-summary { background-color: #e5e7eb; }
     </style>
 </head>
 <body>
@@ -536,7 +524,8 @@
 
                 <!-- Expense Form & Filters -->
                 <div class="panel-container">
-                    <div class="panel">
+                    <!-- Add New Expense Panel with light pink background -->
+                    <div class="panel" style="background-color: #ffe4ec;">
                         <div class="panel-header"><h2><i class="fas fa-plus-circle"></i> Add New Expense</h2></div>
                         <div class="panel-body">
                             <div class="form-group"><label class="form-label">Expense Name <span>*</span></label><input type="text" class="form-control" id="expense-name" placeholder="e.g., Office Supplies"></div>
@@ -623,21 +612,8 @@
                 </div>
             </div>
 
-            <!-- Settings Content with Color Customization -->
-            <div class="content-wrapper" id="settings-content" style="display: none;">
-                <div class="panel">
-                    <div class="panel-header"><h2><i class="fas fa-cog"></i> System Settings</h2></div>
-                    <div class="panel-body">
-                        <h3 style="margin-bottom:20px;">Panel Color Customization</h3>
-                        <p style="margin-bottom:20px;color:var(--text-secondary);">Choose background colors for each panel below. Changes are saved automatically.</p>
-                        <div id="panel-colors-form" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px;"></div>
-                        <div style="margin-top:30px;display:flex;gap:12px;">
-                            <button class="btn btn-primary" id="save-panel-colors"><i class="fas fa-save"></i> Save Colors</button>
-                            <button class="btn btn-secondary" id="reset-panel-colors"><i class="fas fa-undo"></i> Reset to Defaults</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <!-- Settings Content -->
+            <div class="content-wrapper" id="settings-content" style="display: none;"><div class="panel"><div class="panel-header"><h2><i class="fas fa-cog"></i> System Settings</h2></div><div class="panel-body"><div class="empty-state"><i class="fas fa-cog"></i><h3>Configuration</h3><p>Settings will be available soon.</p></div></div></div></div>
         </div>
     </div>
 
@@ -691,7 +667,7 @@
         </div>
     </div>
 
-    <!-- ========== FIREBASE SCRIPT ========== -->
+    <!-- ========== FIREBASE SCRIPT (full working version) ========== -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
         import { 
@@ -726,23 +702,8 @@
             fieldOrder: [], currentPage: 'dashboard', selectedCategoryId: null,
             editingCategoryId: null, deletingCategoryId: null,
             currentCalendarDate: new Date(), selectedCalendarDate: null, calendarView: 'month',
-            charts: {},
-            panelColors: {} // store custom colors
+            charts: {}
         };
-
-        // Panel color definitions (including headers for panels that have them)
-        const panelDefinitions = [
-            { id: 'dashboardStats', selector: '#dashboard-content .dashboard-stats .stat-card', label: 'Dashboard Stats Cards', default: '#ffffff' },
-            { id: 'customFieldsPanel', selector: '#dashboard-content .panel:first-child, #dashboard-content .panel:first-child .panel-header', label: 'Custom Fields Panel', default: '#ffffff' },
-            { id: 'newReservationPanel', selector: '#dashboard-content .panel:last-child, #dashboard-content .panel:last-child .panel-header', label: 'New Reservation Panel', default: '#ffffff' },
-            { id: 'reservationsTable', selector: '#dashboard-content .table-container', label: 'Reservations Table', default: '#ffffff' },
-            { id: 'calendarView', selector: '#calendar-content .calendar-grid', label: 'Calendar Grid', default: '#ffffff' },
-            { id: 'expensesStats', selector: '#expenses-content .dashboard-stats .stat-card', label: 'Expenses Stats Cards', default: '#ffffff' },
-            { id: 'categoriesSidebar', selector: '#expenses-content .categories-sidebar, #expenses-content .categories-sidebar .panel-header', label: 'Categories Sidebar', default: '#ffffff' },
-            { id: 'addExpensePanel', selector: '#expenses-content .panel-container:last-of-type .panel:first-child, #expenses-content .panel-container:last-of-type .panel:first-child .panel-header', label: 'Add Expense Panel', default: '#ffffff' },
-            { id: 'filterExpensePanel', selector: '#expenses-content .panel-container:last-of-type .panel:last-child, #expenses-content .panel-container:last-of-type .panel:last-child .panel-header', label: 'Filter Expenses Panel', default: '#ffffff' },
-            { id: 'expensesTable', selector: '#expenses-content .expense-table-container', label: 'Expenses Table', default: '#ffffff' }
-        ];
 
         // Helper functions
         function showNotification(msg, type = 'info') {
@@ -758,73 +719,7 @@
             return Math.max(0, Math.ceil((new Date(checkout) - new Date(checkin)) / (1000*60*60*24)));
         }
 
-        // Apply panel colors
-        function applyPanelColors() {
-            panelDefinitions.forEach(def => {
-                const color = state.panelColors[def.id] || def.default;
-                if (color) {
-                    document.querySelectorAll(def.selector).forEach(el => {
-                        el.style.backgroundColor = color;
-                    });
-                }
-            });
-        }
-
-        // Render color picker form in settings
-        function renderPanelColorForm() {
-            const container = document.getElementById('panel-colors-form');
-            if (!container) return;
-            container.innerHTML = '';
-            panelDefinitions.forEach(def => {
-                const color = state.panelColors[def.id] || def.default;
-                const div = document.createElement('div');
-                div.className = 'form-group';
-                div.innerHTML = `
-                    <label class="form-label" style="margin-bottom:4px;">${def.label}</label>
-                    <input type="color" class="form-control form-control-sm" data-panel-id="${def.id}" value="${color}" style="height:40px;padding:4px;">
-                `;
-                container.appendChild(div);
-            });
-            // Live preview
-            container.querySelectorAll('input[type="color"]').forEach(input => {
-                input.addEventListener('input', (e) => {
-                    const panelId = e.target.dataset.panelId;
-                    const newColor = e.target.value;
-                    state.panelColors[panelId] = newColor;
-                    applyPanelColors(); // live update
-                });
-            });
-        }
-
-        // Save panel colors to Firestore
-        async function savePanelColors() {
-            try {
-                const snap = await getDocs(settingsCol);
-                const data = { panelColors: state.panelColors };
-                if (!snap.empty) {
-                    await updateDoc(doc(db, 'settings', snap.docs[0].id), data);
-                } else {
-                    await addDoc(settingsCol, data);
-                }
-                showNotification('Panel colors saved', 'success');
-            } catch (e) {
-                console.error(e);
-                showNotification('Error saving colors', 'error');
-            }
-        }
-
-        // Reset to default colors
-        function resetPanelColors() {
-            panelDefinitions.forEach(def => {
-                state.panelColors[def.id] = def.default;
-            });
-            applyPanelColors();
-            renderPanelColorForm();
-            savePanelColors();
-            showNotification('Colors reset to defaults', 'success');
-        }
-
-        // Load all data
+        // Load data
         async function loadAllData() {
             try {
                 const [customSnap, resSnap, catSnap, expSnap, settingsSnap] = await Promise.all([
@@ -843,19 +738,10 @@
                     const settingsData = settingsSnap.docs[0].data();
                     state.fieldOrder = settingsData.fieldOrder || [];
                     state.activeExpenseFilters = settingsData.expenseFilters || {};
-                    state.panelColors = settingsData.panelColors || {};
                 } else {
                     state.fieldOrder = state.customFields.map(f => f.id);
-                    state.panelColors = {};
-                    if (state.fieldOrder.length) await addDoc(settingsCol, { fieldOrder: state.fieldOrder, expenseFilters: {}, panelColors: {} });
+                    if (state.fieldOrder.length) await addDoc(settingsCol, { fieldOrder: state.fieldOrder, expenseFilters: {} });
                 }
-
-                // Ensure defaults for panel colors
-                panelDefinitions.forEach(def => {
-                    if (!state.panelColors[def.id]) {
-                        state.panelColors[def.id] = def.default;
-                    }
-                });
 
                 applyExpenseFiltersFromState();
                 renderCustomFieldsList();
@@ -865,14 +751,13 @@
                 updateCategoryDropdowns();
                 renderExpensesTable();
                 updateStats();
-                applyPanelColors(); // apply colors after rendering
                 if (state.currentPage === 'calendar') renderCalendar();
                 if (state.currentPage === 'analytics') renderAnalytics();
                 showNotification('Data loaded', 'success');
             } catch (e) { console.error(e); showNotification('Load failed', 'error'); }
         }
 
-        // Save settings (field order)
+        // Save settings
         async function saveSettings() {
             try {
                 const snap = await getDocs(settingsCol);
@@ -885,7 +770,7 @@
             } catch (e) { console.error(e); }
         }
 
-        // Custom Fields (original functions – keep them unchanged)
+        // Custom Fields
         async function addCustomField() {
             const name = document.getElementById('field-name').value.trim();
             const def = document.getElementById('field-default').value.trim();
@@ -964,7 +849,7 @@
             const room = document.getElementById('reservation-room').value;
             const checkin = document.getElementById('reservation-checkin').value;
             const checkout = document.getElementById('reservation-checkout').value;
-            const time = document.getElementById('reservation-time').value;
+            const time = document.getElementById('reservation-time').value; // check-in time
             const checkoutTime = document.getElementById('reservation-checkout-time').value;
             const transferAmount = parseFloat(document.getElementById('reservation-transfer').value) || 0;
             const mealPrice = parseFloat(document.getElementById('reservation-meal').value) || 0;
@@ -976,7 +861,7 @@
                 checkin, 
                 checkout, 
                 duration, 
-                time, 
+                time, // check-in time
                 checkoutTime,
                 transferAmount, 
                 mealPrice, 
@@ -1228,7 +1113,7 @@
                 `;
                 container.appendChild(div);
             });
-            // drag & drop
+            // drag & drop - improved
             const handles = container.querySelectorAll('.drag-handle');
             handles.forEach(h => {
                 h.addEventListener('dragstart', e => {
@@ -1429,7 +1314,7 @@
             document.getElementById('highest-category').textContent = maxCat.name;
         }
 
-        // Analytics
+        // Analytics with transfer and meal breakdown
         function renderAnalytics() {
             const period = document.getElementById('analytics-period').value;
             const cutoff = period === 'all' ? new Date(0) : new Date(Date.now() - parseInt(period)*24*60*60*1000);
@@ -1561,7 +1446,7 @@
             document.getElementById('last-month-net').textContent = `$${(((monthly[lastMonthKey]?.transfer||0)+(monthly[lastMonthKey]?.meal||0))-(monthly[lastMonthKey]?.expenses||0)).toFixed(2)}`;
         }
 
-        // Calendar
+        // Calendar (enhanced details)
         function renderCalendar() {
             const grid = document.getElementById('calendar-days-grid');
             if (!grid) return;
@@ -1588,6 +1473,7 @@
                     indicator.className = 'calendar-reservation-indicator';
                     dayReservations.slice(0,3).forEach(r => {
                         const resDiv = document.createElement('div');
+                        // map room name to a class for color
                         let roomClass = 'reservation-pending';
                         if (r.name === 'Apartment 1') roomClass = 'reservation-room-single';
                         else if (r.name === 'Apartment 2') roomClass = 'reservation-room-double';
@@ -1626,6 +1512,7 @@
             dayRes.forEach(r => {
                 const item = document.createElement('div');
                 item.className = 'calendar-reservation-item';
+                // Build details grid
                 let detailsHtml = `
                     <div class="calendar-reservation-header">
                         <span class="calendar-reservation-title">${r.name}</span>
@@ -1641,6 +1528,7 @@
                         <div class="calendar-reservation-detail"><strong>Transfer:</strong> $${(r.transferAmount || 0).toFixed(2)}</div>
                         <div class="calendar-reservation-detail"><strong>Meal:</strong> $${(r.mealPrice || 0).toFixed(2)}</div>
                 `;
+                // Add custom fields
                 state.customFields.forEach(f => {
                     let val = r[f.id];
                     if (val !== undefined && val !== null && val !== '') {
@@ -1802,10 +1690,6 @@
             });
             if (page === 'calendar') renderCalendar();
             if (page === 'analytics') renderAnalytics();
-            if (page === 'settings') {
-                renderPanelColorForm();
-                applyPanelColors();
-            }
         }
 
         // Filter modal
@@ -2128,10 +2012,6 @@
 
             // Print
             document.getElementById('print-btn')?.addEventListener('click', () => window.print());
-
-            // Panel color save/reset
-            document.getElementById('save-panel-colors')?.addEventListener('click', savePanelColors);
-            document.getElementById('reset-panel-colors')?.addEventListener('click', resetPanelColors);
         });
     </script>
 </body>
