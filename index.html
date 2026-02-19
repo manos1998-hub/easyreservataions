@@ -298,6 +298,59 @@
         .calendar-reservation-detail-item span { color: var(--text-primary); font-weight: 500; }
         .reservation-duration-display { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background-color: rgba(37, 99, 235, 0.1); border-radius: 20px; font-size: 12px; font-weight: 600; color: var(--primary-color); margin-top: 8px; }
         .reservation-duration-display i { font-size: 11px; }
+
+        /* ===== Expense Section Panel Color Variations ===== */
+/* Stats cards: each a different light pastel */
+#expenses-content .dashboard-stats .stat-card:nth-child(1) {
+    background-color: #e6f0fa; /* soft blue */
+}
+#expenses-content .dashboard-stats .stat-card:nth-child(2) {
+    background-color: #fff3d6; /* soft orange */
+}
+#expenses-content .dashboard-stats .stat-card:nth-child(3) {
+    background-color: #e9f4e9; /* soft green */
+}
+#expenses-content .dashboard-stats .stat-card:nth-child(4) {
+    background-color: #f0e7f5; /* soft purple */
+}
+
+/* Category management panels (left sidebar, right edit panel) */
+#expenses-content .category-management .categories-sidebar {
+    background-color: #fef9e7; /* light yellow */
+}
+#expenses-content .category-management .panel:last-of-type {
+    background-color: #e0f2fe; /* light cyan */
+}
+
+/* Add Expense panel (first panel in second panel-container) */
+#expenses-content .panel-container:last-of-type .panel:first-child {
+    background-color: #fee9e7; /* light pink */
+}
+
+/* Filter Expenses panel (second panel in second panel-container) */
+#expenses-content .panel-container:last-of-type .panel:last-child {
+    background-color: #dcfce7; /* light mint */
+}
+
+/* Expenses table panel (main table container) */
+#expenses-content .expense-table-container {
+    background-color: #f3f4f6; /* very light gray */
+}
+
+/* Expense summary bar (at bottom of table) */
+#expenses-content .expense-summary {
+    background-color: #e5e7eb; /* slightly darker gray for contrast */
+}
+
+/* Keep text readable – ensure no contrast issues */
+#expenses-content .stat-card,
+#expenses-content .panel,
+#expenses-content .categories-sidebar,
+#expenses-content .expense-table-container,
+#expenses-content .expense-summary {
+    transition: background-color 0.2s ease;
+}
+        
     </style>
 </head>
 <body>
