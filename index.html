@@ -314,9 +314,10 @@
             <div class="nav-menu">
                 <a href="#" class="nav-item active" id="dashboard-tab-btn"><i class="fas fa-home"></i>Dashboard</a>
                 <a href="#" class="nav-item" id="calendar-tab-btn"><i class="fas fa-calendar"></i>Calendar</a>
-                <!-- NEW Transfer Analytics Tab -->
                 <a href="#" class="nav-item" id="transfer-analytics-tab-btn"><i class="fas fa-truck"></i>Transfer Analytics</a>
                 <a href="#" class="nav-item" id="expenses-tab-btn"><i class="fas fa-money-bill-wave"></i>Expenses</a>
+                <!-- NEW Reservations Stats Tab -->
+                <a href="#" class="nav-item" id="reservations-stats-tab-btn"><i class="fas fa-chart-pie"></i>Reservations Stats</a>
                 <a href="#" class="nav-item" id="analytics-tab-btn"><i class="fas fa-chart-bar"></i>Analytics</a>
                 <a href="#" class="nav-item" id="settings-tab-btn"><i class="fas fa-cog"></i>Settings</a>
             </div>
@@ -673,6 +674,69 @@
                 </div>
             </div>
 
+            <!-- NEW Reservations Stats Content -->
+            <div class="content-wrapper" id="reservations-stats-content" style="display: none;">
+                <!-- Two panels: Commission and No Commission -->
+                <div class="panel-container">
+                    <!-- Commission Panel -->
+                    <div class="panel">
+                        <div class="panel-header"><h2><i class="fas fa-percentage"></i> Commission</h2></div>
+                        <div class="panel-body">
+                            <!-- Form to add commission stat -->
+                            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+                                <input type="month" class="form-control" id="commission-month" placeholder="Month (YYYY-MM)">
+                                <input type="number" class="form-control" id="commission-income" placeholder="Total Income" step="0.01">
+                                <input type="number" class="form-control" id="commission-stays" placeholder="Total Stays" step="1">
+                            </div>
+                            <button class="btn btn-primary" id="add-commission-btn"><i class="fas fa-plus"></i> Add Commission Record</button>
+                            <!-- Table of commission stats -->
+                            <div class="table-wrapper" style="margin-top: 20px;">
+                                <table class="data-table" id="commission-table">
+                                    <thead><tr><th>Month</th><th>Total Income</th><th>Total Stays</th><th>Actions</th></tr></thead>
+                                    <tbody id="commission-body"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- No Commission Panel -->
+                    <div class="panel">
+                        <div class="panel-header"><h2><i class="fas fa-times-circle"></i> No Commission</h2></div>
+                        <div class="panel-body">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+                                <input type="month" class="form-control" id="no-commission-month" placeholder="Month (YYYY-MM)">
+                                <input type="number" class="form-control" id="no-commission-income" placeholder="Total Income" step="0.01">
+                                <input type="number" class="form-control" id="no-commission-stays" placeholder="Total Stays" step="1">
+                            </div>
+                            <button class="btn btn-primary" id="add-no-commission-btn"><i class="fas fa-plus"></i> Add No Commission Record</button>
+                            <div class="table-wrapper" style="margin-top: 20px;">
+                                <table class="data-table" id="no-commission-table">
+                                    <thead><tr><th>Month</th><th>Total Income</th><th>Total Stays</th><th>Actions</th></tr></thead>
+                                    <tbody id="no-commission-body"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Third Panel: Transfer and Meal Income -->
+                <div class="panel" style="margin-top: 24px;">
+                    <div class="panel-header"><h2><i class="fas fa-truck"></i> Transfer & Meal Income</h2></div>
+                    <div class="panel-body">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+                            <input type="month" class="form-control" id="transfer-meal-month" placeholder="Month (YYYY-MM)">
+                            <input type="number" class="form-control" id="transfer-meal-transfer" placeholder="Transfer Income" step="0.01">
+                            <input type="number" class="form-control" id="transfer-meal-meal" placeholder="Meal Income" step="0.01">
+                        </div>
+                        <button class="btn btn-primary" id="add-transfer-meal-btn"><i class="fas fa-plus"></i> Add Transfer/Meal Record</button>
+                        <div class="table-wrapper" style="margin-top: 20px;">
+                            <table class="data-table" id="transfer-meal-table">
+                                <thead><tr><th>Month</th><th>Transfer Income</th><th>Meal Income</th><th>Actions</th></tr></thead>
+                                <tbody id="transfer-meal-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Analytics Content (with horizontal scroll for table) -->
             <div class="content-wrapper" id="analytics-content" style="display: none;">
                 <div class="analytics-filters">
@@ -791,10 +855,16 @@
         const expenseCategoriesCol = collection(db, 'expenseCategories');
         const expensesCol = collection(db, 'expenses');
         const settingsCol = collection(db, 'settings');
+        // NEW: collections for reservations stats
+        const commissionStatsCol = collection(db, 'commissionStats');
+        const noCommissionStatsCol = collection(db, 'noCommissionStats');
+        const transferMealStatsCol = collection(db, 'transferMealStats');
 
         // State
         const state = {
             customFields: [], reservations: [], expenseCategories: [], expenses: [],
+            // NEW arrays
+            commissionStats: [], noCommissionStats: [], transferMealStats: [],
             selectedFieldType: 'text', editingReservationId: null, editingExpenseId: null,
             deletingReservationId: null, deletingExpenseId: null,
             activeFilters: {}, activeExpenseFilters: {},
@@ -823,17 +893,24 @@
         // Load data
         async function loadAllData() {
             try {
-                const [customSnap, resSnap, catSnap, expSnap, settingsSnap] = await Promise.all([
+                const [customSnap, resSnap, catSnap, expSnap, settingsSnap, commSnap, noCommSnap, tmSnap] = await Promise.all([
                     getDocs(query(customFieldsCol, orderBy('createdAt'))),
                     getDocs(query(reservationsCol, orderBy('createdAt', 'desc'))),
                     getDocs(query(expenseCategoriesCol, orderBy('createdAt'))),
                     getDocs(query(expensesCol, orderBy('createdAt', 'desc'))),
-                    getDocs(settingsCol)
+                    getDocs(settingsCol),
+                    getDocs(query(commissionStatsCol, orderBy('month', 'desc'))),
+                    getDocs(query(noCommissionStatsCol, orderBy('month', 'desc'))),
+                    getDocs(query(transferMealStatsCol, orderBy('month', 'desc')))
                 ]);
                 state.customFields = customSnap.docs.map(d => ({ id: d.id, ...d.data() }));
                 state.reservations = resSnap.docs.map(d => ({ id: d.id, ...d.data() }));
                 state.expenseCategories = catSnap.docs.map(d => ({ id: d.id, ...d.data() }));
                 state.expenses = expSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+                // NEW
+                state.commissionStats = commSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+                state.noCommissionStats = noCommSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+                state.transferMealStats = tmSnap.docs.map(d => ({ id: d.id, ...d.data() }));
                 
                 if (!settingsSnap.empty) {
                     const settingsData = settingsSnap.docs[0].data();
@@ -852,6 +929,11 @@
                 updateCategoryDropdowns();
                 renderExpensesTable();
                 updateStats();
+                // NEW renders
+                renderCommissionStats();
+                renderNoCommissionStats();
+                renderTransferMealStats();
+
                 if (state.currentPage === 'calendar') renderCalendar();
                 if (state.currentPage === 'analytics') renderAnalytics();
                 if (state.currentPage === 'transfer-analytics') {
@@ -1761,6 +1843,151 @@
             });
         }
 
+        // NEW: Reservations Stats functions
+        async function addCommissionStat() {
+            const month = document.getElementById('commission-month').value;
+            const income = parseFloat(document.getElementById('commission-income').value) || 0;
+            const stays = parseInt(document.getElementById('commission-stays').value) || 0;
+            if (!month || income === 0 || stays === 0) {
+                showNotification('Please fill month, income and stays', 'error');
+                return;
+            }
+            const newStat = { month, income, stays, createdAt: new Date().toISOString() };
+            try {
+                await addDoc(commissionStatsCol, newStat);
+                await loadAllData();
+                document.getElementById('commission-month').value = '';
+                document.getElementById('commission-income').value = '';
+                document.getElementById('commission-stays').value = '';
+                showNotification('Commission record added', 'success');
+            } catch (e) { console.error(e); showNotification('Error adding', 'error'); }
+        }
+
+        async function deleteCommissionStat(id) {
+            if (!confirm('Delete this record?')) return;
+            try {
+                await deleteDoc(doc(db, 'commissionStats', id));
+                await loadAllData();
+                showNotification('Record deleted', 'success');
+            } catch (e) { console.error(e); showNotification('Delete failed', 'error'); }
+        }
+
+        function renderCommissionStats() {
+            const tbody = document.getElementById('commission-body');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            if (state.commissionStats.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state">No commission records</div></td></tr>';
+                return;
+            }
+            state.commissionStats.forEach(stat => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${stat.month}</td>
+                    <td class="currency-cell">$${stat.income.toFixed(2)}</td>
+                    <td>${stat.stays}</td>
+                    <td><div class="action-buttons"><button class="btn-icon delete" onclick="window.deleteCommissionStat('${stat.id}')"><i class="fas fa-trash-alt"></i></button></div></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function addNoCommissionStat() {
+            const month = document.getElementById('no-commission-month').value;
+            const income = parseFloat(document.getElementById('no-commission-income').value) || 0;
+            const stays = parseInt(document.getElementById('no-commission-stays').value) || 0;
+            if (!month || income === 0 || stays === 0) {
+                showNotification('Please fill month, income and stays', 'error');
+                return;
+            }
+            const newStat = { month, income, stays, createdAt: new Date().toISOString() };
+            try {
+                await addDoc(noCommissionStatsCol, newStat);
+                await loadAllData();
+                document.getElementById('no-commission-month').value = '';
+                document.getElementById('no-commission-income').value = '';
+                document.getElementById('no-commission-stays').value = '';
+                showNotification('No commission record added', 'success');
+            } catch (e) { console.error(e); showNotification('Error adding', 'error'); }
+        }
+
+        async function deleteNoCommissionStat(id) {
+            if (!confirm('Delete this record?')) return;
+            try {
+                await deleteDoc(doc(db, 'noCommissionStats', id));
+                await loadAllData();
+                showNotification('Record deleted', 'success');
+            } catch (e) { console.error(e); showNotification('Delete failed', 'error'); }
+        }
+
+        function renderNoCommissionStats() {
+            const tbody = document.getElementById('no-commission-body');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            if (state.noCommissionStats.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state">No no-commission records</div></td></tr>';
+                return;
+            }
+            state.noCommissionStats.forEach(stat => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${stat.month}</td>
+                    <td class="currency-cell">$${stat.income.toFixed(2)}</td>
+                    <td>${stat.stays}</td>
+                    <td><div class="action-buttons"><button class="btn-icon delete" onclick="window.deleteNoCommissionStat('${stat.id}')"><i class="fas fa-trash-alt"></i></button></div></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function addTransferMealStat() {
+            const month = document.getElementById('transfer-meal-month').value;
+            const transfer = parseFloat(document.getElementById('transfer-meal-transfer').value) || 0;
+            const meal = parseFloat(document.getElementById('transfer-meal-meal').value) || 0;
+            if (!month) {
+                showNotification('Please select month', 'error');
+                return;
+            }
+            const newStat = { month, transfer, meal, createdAt: new Date().toISOString() };
+            try {
+                await addDoc(transferMealStatsCol, newStat);
+                await loadAllData();
+                document.getElementById('transfer-meal-month').value = '';
+                document.getElementById('transfer-meal-transfer').value = '';
+                document.getElementById('transfer-meal-meal').value = '';
+                showNotification('Transfer/Meal record added', 'success');
+            } catch (e) { console.error(e); showNotification('Error adding', 'error'); }
+        }
+
+        async function deleteTransferMealStat(id) {
+            if (!confirm('Delete this record?')) return;
+            try {
+                await deleteDoc(doc(db, 'transferMealStats', id));
+                await loadAllData();
+                showNotification('Record deleted', 'success');
+            } catch (e) { console.error(e); showNotification('Delete failed', 'error'); }
+        }
+
+        function renderTransferMealStats() {
+            const tbody = document.getElementById('transfer-meal-body');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            if (state.transferMealStats.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state">No transfer/meal records</div></td></tr>';
+                return;
+            }
+            state.transferMealStats.forEach(stat => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${stat.month}</td>
+                    <td class="currency-cell">$${stat.transfer.toFixed(2)}</td>
+                    <td class="currency-cell">$${stat.meal.toFixed(2)}</td>
+                    <td><div class="action-buttons"><button class="btn-icon delete" onclick="window.deleteTransferMealStat('${stat.id}')"><i class="fas fa-trash-alt"></i></button></div></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
         // Export functions
         function exportToCSV(data, filename) {
             if (!data || data.length === 0) { showNotification('No data to export', 'error'); return; }
@@ -1901,7 +2128,7 @@
         // Navigation
         function showPage(page) {
             state.currentPage = page;
-            ['dashboard','calendar','transfer-analytics','expenses','analytics','settings'].forEach(p => {
+            ['dashboard','calendar','transfer-analytics','expenses','reservations-stats','analytics','settings'].forEach(p => {
                 const el = document.getElementById(`${p}-content`);
                 if (el) el.style.display = p === page ? 'block' : 'none';
                 document.getElementById(`${p}-tab-btn`)?.classList.toggle('active', p === page);
@@ -1911,6 +2138,11 @@
             if (page === 'transfer-analytics') {
                 populateTransferRoomFilter();
                 renderTransferAnalytics();
+            }
+            if (page === 'reservations-stats') {
+                renderCommissionStats();
+                renderNoCommissionStats();
+                renderTransferMealStats();
             }
         }
 
@@ -2209,6 +2441,7 @@
             document.getElementById('calendar-tab-btn')?.addEventListener('click', () => showPage('calendar'));
             document.getElementById('transfer-analytics-tab-btn')?.addEventListener('click', () => showPage('transfer-analytics'));
             document.getElementById('expenses-tab-btn')?.addEventListener('click', () => showPage('expenses'));
+            document.getElementById('reservations-stats-tab-btn')?.addEventListener('click', () => showPage('reservations-stats'));
             document.getElementById('analytics-tab-btn')?.addEventListener('click', () => showPage('analytics'));
             document.getElementById('settings-tab-btn')?.addEventListener('click', () => showPage('settings'));
 
@@ -2269,9 +2502,19 @@
             document.getElementById('apply-filters-btn')?.addEventListener('click', applyFilters);
             document.getElementById('clear-filters-btn')?.addEventListener('click', clearAllFilters);
 
+            // NEW: Reservations Stats buttons
+            document.getElementById('add-commission-btn')?.addEventListener('click', addCommissionStat);
+            document.getElementById('add-no-commission-btn')?.addEventListener('click', addNoCommissionStat);
+            document.getElementById('add-transfer-meal-btn')?.addEventListener('click', addTransferMealStat);
+
             // Print
             document.getElementById('print-btn')?.addEventListener('click', () => window.print());
         });
+
+        // Expose delete functions for new stats
+        window.deleteCommissionStat = deleteCommissionStat;
+        window.deleteNoCommissionStat = deleteNoCommissionStat;
+        window.deleteTransferMealStat = deleteTransferMealStat;
     </script>
 </body>
 </html>
