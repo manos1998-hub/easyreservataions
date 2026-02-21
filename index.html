@@ -314,6 +314,8 @@
             <div class="nav-menu">
                 <a href="#" class="nav-item active" id="dashboard-tab-btn"><i class="fas fa-home"></i>Dashboard</a>
                 <a href="#" class="nav-item" id="calendar-tab-btn"><i class="fas fa-calendar"></i>Calendar</a>
+                <!-- NEW Transfer Analytics Tab -->
+                <a href="#" class="nav-item" id="transfer-analytics-tab-btn"><i class="fas fa-truck"></i>Transfer Analytics</a>
                 <a href="#" class="nav-item" id="expenses-tab-btn"><i class="fas fa-money-bill-wave"></i>Expenses</a>
                 <a href="#" class="nav-item" id="analytics-tab-btn"><i class="fas fa-chart-bar"></i>Analytics</a>
                 <a href="#" class="nav-item" id="settings-tab-btn"><i class="fas fa-cog"></i>Settings</a>
@@ -477,6 +479,82 @@
                         <button class="btn btn-primary btn-sm" id="add-reservation-from-calendar"><i class="fas fa-plus"></i> Add</button>
                     </div>
                     <div class="calendar-reservation-list" id="selected-date-reservations"></div>
+                </div>
+            </div>
+
+            <!-- NEW Transfer Analytics Content -->
+            <div class="content-wrapper" id="transfer-analytics-content" style="display: none;">
+                <div class="analytics-stats" id="transfer-stats-cards">
+                    <div class="analytics-stat-card">
+                        <div class="analytics-stat-header">
+                            <div class="analytics-stat-title">Total Transfer Revenue</div>
+                            <div class="analytics-stat-icon" style="background-color: var(--primary-color);"><i class="fas fa-truck"></i></div>
+                        </div>
+                        <div class="analytics-stat-value" id="transfer-total">$0</div>
+                        <div class="analytics-stat-subtitle">From all reservations</div>
+                    </div>
+                    <div class="analytics-stat-card">
+                        <div class="analytics-stat-header">
+                            <div class="analytics-stat-title">Average Transfer</div>
+                            <div class="analytics-stat-icon" style="background-color: var(--success-color);"><i class="fas fa-chart-line"></i></div>
+                        </div>
+                        <div class="analytics-stat-value" id="transfer-average">$0</div>
+                        <div class="analytics-stat-subtitle">Per reservation</div>
+                    </div>
+                    <div class="analytics-stat-card">
+                        <div class="analytics-stat-header">
+                            <div class="analytics-stat-title">Number of Transfers</div>
+                            <div class="analytics-stat-icon" style="background-color: var(--warning-color);"><i class="fas fa-calculator"></i></div>
+                        </div>
+                        <div class="analytics-stat-value" id="transfer-count">0</div>
+                        <div class="analytics-stat-subtitle">Reservations with transfer > 0</div>
+                    </div>
+                    <div class="analytics-stat-card">
+                        <div class="analytics-stat-header">
+                            <div class="analytics-stat-title">Top Room Type</div>
+                            <div class="analytics-stat-icon" style="background-color: var(--expense-color);"><i class="fas fa-door-open"></i></div>
+                        </div>
+                        <div class="analytics-stat-value" id="transfer-top-room">-</div>
+                        <div class="analytics-stat-subtitle">By total transfer amount</div>
+                    </div>
+                </div>
+
+                <div class="panel-container">
+                    <!-- Transfer by Room Type (Pie Chart) -->
+                    <div class="chart-container">
+                        <div class="chart-header"><h3><i class="fas fa-chart-pie"></i> Transfer by Room Type</h3></div>
+                        <div class="chart-body"><canvas id="transferRoomChart"></canvas></div>
+                    </div>
+                    <!-- Monthly Transfer Trend (Line Chart) -->
+                    <div class="chart-container">
+                        <div class="chart-header"><h3><i class="fas fa-chart-line"></i> Monthly Transfer Trend</h3></div>
+                        <div class="chart-body"><canvas id="transferMonthlyChart"></canvas></div>
+                    </div>
+                </div>
+
+                <!-- Detailed Transfers Table -->
+                <div class="table-container">
+                    <div class="table-header">
+                        <div class="table-title"><i class="fas fa-truck"></i> All Transfers <span id="transfer-table-count" style="background-color: var(--primary-color); color: white; padding: 4px 10px; border-radius: 20px; font-size: 13px; margin-left: 10px;">0</span></div>
+                        <div class="table-actions">
+                            <button class="btn btn-secondary btn-sm" id="export-transfers-btn"><i class="fas fa-file-excel"></i> Export</button>
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table class="data-table" id="transfer-table">
+                            <thead>
+                                <tr>
+                                    <th>Room Type</th>
+                                    <th>Check-in</th>
+                                    <th>Check-out</th>
+                                    <th>Transfer ($)</th>
+                                    <th>Meal ($)</th>
+                                    <th>Duration</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transfer-table-body"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
@@ -667,7 +745,7 @@
         </div>
     </div>
 
-    <!-- ========== FIREBASE SCRIPT (full working version) ========== -->
+    <!-- ========== FIREBASE SCRIPT (full working version with Transfer Analytics) ========== -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
         import { 
@@ -753,6 +831,7 @@
                 updateStats();
                 if (state.currentPage === 'calendar') renderCalendar();
                 if (state.currentPage === 'analytics') renderAnalytics();
+                if (state.currentPage === 'transfer-analytics') renderTransferAnalytics();
                 showNotification('Data loaded', 'success');
             } catch (e) { console.error(e); showNotification('Load failed', 'error'); }
         }
@@ -1543,6 +1622,95 @@
             });
         }
 
+        // NEW: Transfer Analytics Rendering
+        function renderTransferAnalytics() {
+            const reservations = state.reservations;
+            const transfers = reservations.filter(r => (r.transferAmount || 0) > 0);
+            const totalTransfer = transfers.reduce((sum, r) => sum + (r.transferAmount || 0), 0);
+            const avgTransfer = transfers.length ? (totalTransfer / transfers.length) : 0;
+            document.getElementById('transfer-total').textContent = `$${totalTransfer.toFixed(2)}`;
+            document.getElementById('transfer-average').textContent = `$${avgTransfer.toFixed(2)}`;
+            document.getElementById('transfer-count').textContent = transfers.length;
+            document.getElementById('transfer-table-count').textContent = transfers.length;
+
+            // Top room type by total transfer
+            const roomTotals = {};
+            transfers.forEach(r => {
+                const room = r.name || 'Unknown';
+                roomTotals[room] = (roomTotals[room] || 0) + (r.transferAmount || 0);
+            });
+            let topRoom = 'None';
+            let topAmount = 0;
+            for (let [room, amt] of Object.entries(roomTotals)) {
+                if (amt > topAmount) { topRoom = room; topAmount = amt; }
+            }
+            document.getElementById('transfer-top-room').textContent = topRoom;
+
+            // Transfer by room type (pie chart)
+            const roomLabels = Object.keys(roomTotals);
+            const roomData = Object.values(roomTotals);
+            if (state.charts.transferRoom) state.charts.transferRoom.destroy();
+            const ctxRoom = document.getElementById('transferRoomChart')?.getContext('2d');
+            if (ctxRoom) {
+                state.charts.transferRoom = new Chart(ctxRoom, {
+                    type: 'pie',
+                    data: {
+                        labels: roomLabels,
+                        datasets: [{
+                            data: roomData,
+                            backgroundColor: ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#0ea5e9', '#7c3aed']
+                        }]
+                    }
+                });
+            }
+
+            // Monthly transfer trend
+            const monthly = {};
+            transfers.forEach(r => {
+                const d = new Date(r.checkin);
+                const monthKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+                monthly[monthKey] = (monthly[monthKey] || 0) + (r.transferAmount || 0);
+            });
+            const sortedMonths = Object.keys(monthly).sort();
+            const monthLabels = sortedMonths.map(m => {
+                const [y, mo] = m.split('-');
+                return new Date(y, mo-1).toLocaleString('default', { month:'short' }) + ' ' + y;
+            });
+            const monthValues = sortedMonths.map(m => monthly[m]);
+            if (state.charts.transferMonthly) state.charts.transferMonthly.destroy();
+            const ctxMonthly = document.getElementById('transferMonthlyChart')?.getContext('2d');
+            if (ctxMonthly) {
+                state.charts.transferMonthly = new Chart(ctxMonthly, {
+                    type: 'line',
+                    data: {
+                        labels: monthLabels,
+                        datasets: [{
+                            label: 'Transfer Amount ($)',
+                            data: monthValues,
+                            borderColor: '#2563eb',
+                            fill: false
+                        }]
+                    }
+                });
+            }
+
+            // Transfer table
+            const tbody = document.getElementById('transfer-table-body');
+            tbody.innerHTML = '';
+            transfers.forEach(r => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${r.name || ''}</td>
+                    <td>${r.checkin || ''}</td>
+                    <td>${r.checkout || ''}</td>
+                    <td class="currency-cell">$${(r.transferAmount || 0).toFixed(2)}</td>
+                    <td class="currency-cell">$${(r.mealPrice || 0).toFixed(2)}</td>
+                    <td>${r.duration || 1}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
         // Export functions
         function exportToCSV(data, filename) {
             if (!data || data.length === 0) { showNotification('No data to export', 'error'); return; }
@@ -1683,13 +1851,14 @@
         // Navigation
         function showPage(page) {
             state.currentPage = page;
-            ['dashboard','calendar','expenses','analytics','settings'].forEach(p => {
+            ['dashboard','calendar','transfer-analytics','expenses','analytics','settings'].forEach(p => {
                 const el = document.getElementById(`${p}-content`);
                 if (el) el.style.display = p === page ? 'block' : 'none';
                 document.getElementById(`${p}-tab-btn`)?.classList.toggle('active', p === page);
             });
             if (page === 'calendar') renderCalendar();
             if (page === 'analytics') renderAnalytics();
+            if (page === 'transfer-analytics') renderTransferAnalytics();
         }
 
         // Filter modal
@@ -1871,6 +2040,20 @@
             exportToCSV(data, 'analytics.csv');
         });
 
+        // Export transfers
+        document.getElementById('export-transfers-btn')?.addEventListener('click', () => {
+            const transfers = state.reservations.filter(r => (r.transferAmount || 0) > 0);
+            const data = transfers.map(r => ({
+                Room: r.name,
+                Checkin: r.checkin,
+                Checkout: r.checkout,
+                Transfer: r.transferAmount || 0,
+                Meal: r.mealPrice || 0,
+                Duration: r.duration || 1
+            }));
+            exportToCSV(data, 'transfers.csv');
+        });
+
         // Refresh buttons
         document.getElementById('refresh-table-btn')?.addEventListener('click', () => {
             renderReservationsTable();
@@ -1961,6 +2144,7 @@
             // Navigation
             document.getElementById('dashboard-tab-btn')?.addEventListener('click', () => showPage('dashboard'));
             document.getElementById('calendar-tab-btn')?.addEventListener('click', () => showPage('calendar'));
+            document.getElementById('transfer-analytics-tab-btn')?.addEventListener('click', () => showPage('transfer-analytics'));
             document.getElementById('expenses-tab-btn')?.addEventListener('click', () => showPage('expenses'));
             document.getElementById('analytics-tab-btn')?.addEventListener('click', () => showPage('analytics'));
             document.getElementById('settings-tab-btn')?.addEventListener('click', () => showPage('settings'));
