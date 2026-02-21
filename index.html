@@ -674,17 +674,24 @@
                 </div>
             </div>
 
-            <!-- NEW Reservations Stats Content -->
+            <!-- NEW Reservations Stats Content (modified) -->
             <div class="content-wrapper" id="reservations-stats-content" style="display: none;">
                 <!-- Two panels: Commission and No Commission -->
                 <div class="panel-container">
-                    <!-- Commission Panel -->
+                    <!-- Commission Panel (now with room) -->
                     <div class="panel">
                         <div class="panel-header"><h2><i class="fas fa-percentage"></i> Commission</h2></div>
                         <div class="panel-body">
                             <!-- Form to add commission stat -->
-                            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px;">
                                 <input type="month" class="form-control" id="commission-month" placeholder="Month (YYYY-MM)">
+                                <select class="form-control" id="commission-room">
+                                    <option value="">Select Room</option>
+                                    <option value="Apartment 1">Apartment 1</option>
+                                    <option value="Apartment 2">Apartment 2</option>
+                                    <option value="Studio">Studio</option>
+                                    <option value="Villa">Villa</option>
+                                </select>
                                 <input type="number" class="form-control" id="commission-income" placeholder="Total Income" step="0.01">
                                 <input type="number" class="form-control" id="commission-stays" placeholder="Total Stays" step="1">
                             </div>
@@ -692,47 +699,49 @@
                             <!-- Table of commission stats -->
                             <div class="table-wrapper" style="margin-top: 20px;">
                                 <table class="data-table" id="commission-table">
-                                    <thead><tr><th>Month</th><th>Total Income</th><th>Total Stays</th><th>Actions</th></tr></thead>
+                                    <thead><tr><th>Month</th><th>Room</th><th>Total Income</th><th>Total Stays</th><th>Actions</th></tr></thead>
                                     <tbody id="commission-body"></tbody>
                                 </table>
                             </div>
                         </div>
                     </div>
-                    <!-- No Commission Panel -->
+                    <!-- No Commission Panel (now with room) -->
                     <div class="panel">
                         <div class="panel-header"><h2><i class="fas fa-times-circle"></i> No Commission</h2></div>
                         <div class="panel-body">
-                            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px;">
                                 <input type="month" class="form-control" id="no-commission-month" placeholder="Month (YYYY-MM)">
+                                <select class="form-control" id="no-commission-room">
+                                    <option value="">Select Room</option>
+                                    <option value="Apartment 1">Apartment 1</option>
+                                    <option value="Apartment 2">Apartment 2</option>
+                                    <option value="Studio">Studio</option>
+                                    <option value="Villa">Villa</option>
+                                </select>
                                 <input type="number" class="form-control" id="no-commission-income" placeholder="Total Income" step="0.01">
                                 <input type="number" class="form-control" id="no-commission-stays" placeholder="Total Stays" step="1">
                             </div>
                             <button class="btn btn-primary" id="add-no-commission-btn"><i class="fas fa-plus"></i> Add No Commission Record</button>
                             <div class="table-wrapper" style="margin-top: 20px;">
                                 <table class="data-table" id="no-commission-table">
-                                    <thead><tr><th>Month</th><th>Total Income</th><th>Total Stays</th><th>Actions</th></tr></thead>
+                                    <thead><tr><th>Month</th><th>Room</th><th>Total Income</th><th>Total Stays</th><th>Actions</th></tr></thead>
                                     <tbody id="no-commission-body"></tbody>
                                 </table>
                             </div>
                         </div>
                     </div>
                 </div>
-                <!-- Third Panel: Transfer and Meal Income -->
+                <!-- Third Panel: Transfer and Meal Income (now auto from reservations) -->
                 <div class="panel" style="margin-top: 24px;">
-                    <div class="panel-header"><h2><i class="fas fa-truck"></i> Transfer & Meal Income</h2></div>
+                    <div class="panel-header"><h2><i class="fas fa-truck"></i> Transfer & Meal Income (from reservations)</h2></div>
                     <div class="panel-body">
-                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px;">
-                            <input type="month" class="form-control" id="transfer-meal-month" placeholder="Month (YYYY-MM)">
-                            <input type="number" class="form-control" id="transfer-meal-transfer" placeholder="Transfer Income" step="0.01">
-                            <input type="number" class="form-control" id="transfer-meal-meal" placeholder="Meal Income" step="0.01">
-                        </div>
-                        <button class="btn btn-primary" id="add-transfer-meal-btn"><i class="fas fa-plus"></i> Add Transfer/Meal Record</button>
-                        <div class="table-wrapper" style="margin-top: 20px;">
-                            <table class="data-table" id="transfer-meal-table">
-                                <thead><tr><th>Month</th><th>Transfer Income</th><th>Meal Income</th><th>Actions</th></tr></thead>
-                                <tbody id="transfer-meal-body"></tbody>
+                        <div class="table-wrapper">
+                            <table class="data-table" id="transfer-meal-auto-table">
+                                <thead><tr><th>Month</th><th>Transfer Income</th><th>Meal Income</th><th>Total</th></tr></thead>
+                                <tbody id="transfer-meal-auto-body"></tbody>
                             </table>
                         </div>
+                        <button class="btn btn-secondary btn-sm" id="refresh-transfer-meal-btn" style="margin-top: 10px;"><i class="fas fa-sync-alt"></i> Refresh</button>
                     </div>
                 </div>
             </div>
@@ -831,7 +840,7 @@
         </div>
     </div>
 
-    <!-- ========== FIREBASE SCRIPT (full working version with Transfer Analytics and custom color picker) ========== -->
+    <!-- ========== FIREBASE SCRIPT (full working version with updated Reservations Stats) ========== -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
         import { 
@@ -855,16 +864,16 @@
         const expenseCategoriesCol = collection(db, 'expenseCategories');
         const expensesCol = collection(db, 'expenses');
         const settingsCol = collection(db, 'settings');
-        // NEW: collections for reservations stats
+        // NEW: collections for reservations stats (now with room)
         const commissionStatsCol = collection(db, 'commissionStats');
         const noCommissionStatsCol = collection(db, 'noCommissionStats');
-        const transferMealStatsCol = collection(db, 'transferMealStats');
+        // Note: transferMealStats collection is no longer used for manual entry; we keep it for backward compatibility but won't use.
 
         // State
         const state = {
             customFields: [], reservations: [], expenseCategories: [], expenses: [],
             // NEW arrays
-            commissionStats: [], noCommissionStats: [], transferMealStats: [],
+            commissionStats: [], noCommissionStats: [], // transferMealStats no longer used
             selectedFieldType: 'text', editingReservationId: null, editingExpenseId: null,
             deletingReservationId: null, deletingExpenseId: null,
             activeFilters: {}, activeExpenseFilters: {},
@@ -893,15 +902,14 @@
         // Load data
         async function loadAllData() {
             try {
-                const [customSnap, resSnap, catSnap, expSnap, settingsSnap, commSnap, noCommSnap, tmSnap] = await Promise.all([
+                const [customSnap, resSnap, catSnap, expSnap, settingsSnap, commSnap, noCommSnap] = await Promise.all([
                     getDocs(query(customFieldsCol, orderBy('createdAt'))),
                     getDocs(query(reservationsCol, orderBy('createdAt', 'desc'))),
                     getDocs(query(expenseCategoriesCol, orderBy('createdAt'))),
                     getDocs(query(expensesCol, orderBy('createdAt', 'desc'))),
                     getDocs(settingsCol),
                     getDocs(query(commissionStatsCol, orderBy('month', 'desc'))),
-                    getDocs(query(noCommissionStatsCol, orderBy('month', 'desc'))),
-                    getDocs(query(transferMealStatsCol, orderBy('month', 'desc')))
+                    getDocs(query(noCommissionStatsCol, orderBy('month', 'desc')))
                 ]);
                 state.customFields = customSnap.docs.map(d => ({ id: d.id, ...d.data() }));
                 state.reservations = resSnap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -910,7 +918,6 @@
                 // NEW
                 state.commissionStats = commSnap.docs.map(d => ({ id: d.id, ...d.data() }));
                 state.noCommissionStats = noCommSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-                state.transferMealStats = tmSnap.docs.map(d => ({ id: d.id, ...d.data() }));
                 
                 if (!settingsSnap.empty) {
                     const settingsData = settingsSnap.docs[0].data();
@@ -932,7 +939,7 @@
                 // NEW renders
                 renderCommissionStats();
                 renderNoCommissionStats();
-                renderTransferMealStats();
+                renderTransferMealAuto(); // new auto table
 
                 if (state.currentPage === 'calendar') renderCalendar();
                 if (state.currentPage === 'analytics') renderAnalytics();
@@ -957,7 +964,7 @@
             } catch (e) { console.error(e); }
         }
 
-        // Custom Fields
+        // Custom Fields (same as before)
         async function addCustomField() {
             const name = document.getElementById('field-name').value.trim();
             const def = document.getElementById('field-default').value.trim();
@@ -1031,7 +1038,7 @@
             });
         }
 
-        // Reservations
+        // Reservations (same as before)
         async function addReservation() {
             const room = document.getElementById('reservation-room').value;
             const checkin = document.getElementById('reservation-checkin').value;
@@ -1101,7 +1108,7 @@
             });
         }
 
-        // Categories
+        // Categories (same as before)
         async function addCategory() {
             const name = document.getElementById('category-name').value.trim();
             if (!name) { showNotification('Category name required', 'error'); return; }
@@ -1153,7 +1160,7 @@
             } catch (e) { console.error(e); showNotification('Delete failed', 'error'); }
         }
 
-        // Expenses
+        // Expenses (same as before)
         async function addExpense() {
             const name = document.getElementById('expense-name').value.trim();
             const catId = document.getElementById('expense-category').value;
@@ -1206,7 +1213,7 @@
             } catch (e) { console.error(e); showNotification('Update failed', 'error'); }
         }
 
-        // Filters
+        // Filters (same as before)
         function applyExpenseFiltersFromState() {
             const filters = state.activeExpenseFilters;
             if (Object.keys(filters).length === 0) {
@@ -1255,7 +1262,7 @@
             saveSettings();
         }
 
-        // UI Rendering
+        // UI Rendering (same as before)
         function renderCustomFields() {
             const container = document.getElementById('custom-fields-container');
             if (!container) return;
@@ -1504,7 +1511,7 @@
             document.getElementById('highest-category').textContent = maxCat.name;
         }
 
-        // Analytics with transfer and meal breakdown
+        // Analytics (same as before)
         function renderAnalytics() {
             const period = document.getElementById('analytics-period').value;
             const cutoff = period === 'all' ? new Date(0) : new Date(Date.now() - parseInt(period)*24*60*60*1000);
@@ -1636,7 +1643,7 @@
             document.getElementById('last-month-net').textContent = `$${(((monthly[lastMonthKey]?.transfer||0)+(monthly[lastMonthKey]?.meal||0))-(monthly[lastMonthKey]?.expenses||0)).toFixed(2)}`;
         }
 
-        // Calendar (enhanced details)
+        // Calendar (same as before)
         function renderCalendar() {
             const grid = document.getElementById('calendar-days-grid');
             if (!grid) return;
@@ -1733,7 +1740,7 @@
             });
         }
 
-        // NEW: Populate room filter dropdown in transfer analytics
+        // Transfer Analytics (same as before)
         function populateTransferRoomFilter() {
             const rooms = [...new Set(state.reservations.map(r => r.name).filter(Boolean))];
             const select = document.getElementById('transfer-filter-room');
@@ -1748,7 +1755,6 @@
             select.value = state.transferFilterRoom || '';
         }
 
-        // NEW: Transfer Analytics Rendering (with filter)
         function renderTransferAnalytics() {
             const reservations = state.reservations;
             let transfers = reservations.filter(r => (r.transferAmount || 0) > 0);
@@ -1843,20 +1849,22 @@
             });
         }
 
-        // NEW: Reservations Stats functions
+        // NEW: Reservations Stats functions (updated with room)
         async function addCommissionStat() {
             const month = document.getElementById('commission-month').value;
+            const room = document.getElementById('commission-room').value;
             const income = parseFloat(document.getElementById('commission-income').value) || 0;
             const stays = parseInt(document.getElementById('commission-stays').value) || 0;
-            if (!month || income === 0 || stays === 0) {
-                showNotification('Please fill month, income and stays', 'error');
+            if (!month || !room || income === 0 || stays === 0) {
+                showNotification('Please fill month, room, income and stays', 'error');
                 return;
             }
-            const newStat = { month, income, stays, createdAt: new Date().toISOString() };
+            const newStat = { month, room, income, stays, createdAt: new Date().toISOString() };
             try {
                 await addDoc(commissionStatsCol, newStat);
                 await loadAllData();
                 document.getElementById('commission-month').value = '';
+                document.getElementById('commission-room').value = '';
                 document.getElementById('commission-income').value = '';
                 document.getElementById('commission-stays').value = '';
                 showNotification('Commission record added', 'success');
@@ -1877,13 +1885,14 @@
             if (!tbody) return;
             tbody.innerHTML = '';
             if (state.commissionStats.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state">No commission records</div></td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state">No commission records</div></td></tr>';
                 return;
             }
             state.commissionStats.forEach(stat => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td>${stat.month}</td>
+                    <td>${stat.room || ''}</td>
                     <td class="currency-cell">$${stat.income.toFixed(2)}</td>
                     <td>${stat.stays}</td>
                     <td><div class="action-buttons"><button class="btn-icon delete" onclick="window.deleteCommissionStat('${stat.id}')"><i class="fas fa-trash-alt"></i></button></div></td>
@@ -1894,17 +1903,19 @@
 
         async function addNoCommissionStat() {
             const month = document.getElementById('no-commission-month').value;
+            const room = document.getElementById('no-commission-room').value;
             const income = parseFloat(document.getElementById('no-commission-income').value) || 0;
             const stays = parseInt(document.getElementById('no-commission-stays').value) || 0;
-            if (!month || income === 0 || stays === 0) {
-                showNotification('Please fill month, income and stays', 'error');
+            if (!month || !room || income === 0 || stays === 0) {
+                showNotification('Please fill month, room, income and stays', 'error');
                 return;
             }
-            const newStat = { month, income, stays, createdAt: new Date().toISOString() };
+            const newStat = { month, room, income, stays, createdAt: new Date().toISOString() };
             try {
                 await addDoc(noCommissionStatsCol, newStat);
                 await loadAllData();
                 document.getElementById('no-commission-month').value = '';
+                document.getElementById('no-commission-room').value = '';
                 document.getElementById('no-commission-income').value = '';
                 document.getElementById('no-commission-stays').value = '';
                 showNotification('No commission record added', 'success');
@@ -1925,13 +1936,14 @@
             if (!tbody) return;
             tbody.innerHTML = '';
             if (state.noCommissionStats.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state">No no-commission records</div></td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state">No no-commission records</div></td></tr>';
                 return;
             }
             state.noCommissionStats.forEach(stat => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td>${stat.month}</td>
+                    <td>${stat.room || ''}</td>
                     <td class="currency-cell">$${stat.income.toFixed(2)}</td>
                     <td>${stat.stays}</td>
                     <td><div class="action-buttons"><button class="btn-icon delete" onclick="window.deleteNoCommissionStat('${stat.id}')"><i class="fas fa-trash-alt"></i></button></div></td>
@@ -1940,55 +1952,41 @@
             });
         }
 
-        async function addTransferMealStat() {
-            const month = document.getElementById('transfer-meal-month').value;
-            const transfer = parseFloat(document.getElementById('transfer-meal-transfer').value) || 0;
-            const meal = parseFloat(document.getElementById('transfer-meal-meal').value) || 0;
-            if (!month) {
-                showNotification('Please select month', 'error');
-                return;
-            }
-            const newStat = { month, transfer, meal, createdAt: new Date().toISOString() };
-            try {
-                await addDoc(transferMealStatsCol, newStat);
-                await loadAllData();
-                document.getElementById('transfer-meal-month').value = '';
-                document.getElementById('transfer-meal-transfer').value = '';
-                document.getElementById('transfer-meal-meal').value = '';
-                showNotification('Transfer/Meal record added', 'success');
-            } catch (e) { console.error(e); showNotification('Error adding', 'error'); }
-        }
-
-        async function deleteTransferMealStat(id) {
-            if (!confirm('Delete this record?')) return;
-            try {
-                await deleteDoc(doc(db, 'transferMealStats', id));
-                await loadAllData();
-                showNotification('Record deleted', 'success');
-            } catch (e) { console.error(e); showNotification('Delete failed', 'error'); }
-        }
-
-        function renderTransferMealStats() {
-            const tbody = document.getElementById('transfer-meal-body');
+        // NEW: Auto Transfer/Meal table from reservations
+        function renderTransferMealAuto() {
+            const tbody = document.getElementById('transfer-meal-auto-body');
             if (!tbody) return;
+            // Group reservations by month (YYYY-MM)
+            const monthly = {};
+            state.reservations.forEach(r => {
+                if (!r.checkin) return;
+                const d = new Date(r.checkin);
+                const monthKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+                if (!monthly[monthKey]) monthly[monthKey] = { transfer: 0, meal: 0 };
+                monthly[monthKey].transfer += r.transferAmount || 0;
+                monthly[monthKey].meal += r.mealPrice || 0;
+            });
+            const sortedMonths = Object.keys(monthly).sort().reverse(); // most recent first
             tbody.innerHTML = '';
-            if (state.transferMealStats.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state">No transfer/meal records</div></td></tr>';
+            if (sortedMonths.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state">No reservation data</div></td></tr>';
                 return;
             }
-            state.transferMealStats.forEach(stat => {
+            sortedMonths.forEach(month => {
+                const data = monthly[month];
+                const total = data.transfer + data.meal;
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td>${stat.month}</td>
-                    <td class="currency-cell">$${stat.transfer.toFixed(2)}</td>
-                    <td class="currency-cell">$${stat.meal.toFixed(2)}</td>
-                    <td><div class="action-buttons"><button class="btn-icon delete" onclick="window.deleteTransferMealStat('${stat.id}')"><i class="fas fa-trash-alt"></i></button></div></td>
+                    <td>${month}</td>
+                    <td class="currency-cell">$${data.transfer.toFixed(2)}</td>
+                    <td class="currency-cell">$${data.meal.toFixed(2)}</td>
+                    <td class="currency-cell">$${total.toFixed(2)}</td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
-        // Export functions
+        // Export functions (same as before)
         function exportToCSV(data, filename) {
             if (!data || data.length === 0) { showNotification('No data to export', 'error'); return; }
             const headers = Object.keys(data[0]);
@@ -2010,7 +2008,7 @@
             window.URL.revokeObjectURL(url);
         }
 
-        // Modal functions (edit reservation updated)
+        // Modal functions (edit reservation, etc. - same as before)
         window.editReservation = (id) => {
             const r = state.reservations.find(r => r.id === id);
             if (!r) return;
@@ -2142,11 +2140,11 @@
             if (page === 'reservations-stats') {
                 renderCommissionStats();
                 renderNoCommissionStats();
-                renderTransferMealStats();
+                renderTransferMealAuto();
             }
         }
 
-        // Filter modal
+        // Filter modal (same as before)
         function openFilterModal() {
             document.getElementById('filter-room').value = state.activeFilters.room || '';
             document.getElementById('filter-checkin-from').value = state.activeFilters.checkinFrom || '';
@@ -2246,7 +2244,7 @@
             document.getElementById('clear-filters-btn').style.display = 'none';
         }
 
-        // Export handlers
+        // Export handlers (same as before)
         document.getElementById('export-dashboard-btn')?.addEventListener('click', () => {
             const data = state.reservations.map(r => ({
                 Room: r.name,
@@ -2505,7 +2503,11 @@
             // NEW: Reservations Stats buttons
             document.getElementById('add-commission-btn')?.addEventListener('click', addCommissionStat);
             document.getElementById('add-no-commission-btn')?.addEventListener('click', addNoCommissionStat);
-            document.getElementById('add-transfer-meal-btn')?.addEventListener('click', addTransferMealStat);
+            // Refresh button for auto transfer/meal
+            document.getElementById('refresh-transfer-meal-btn')?.addEventListener('click', () => {
+                renderTransferMealAuto();
+                showNotification('Transfer/Meal data refreshed', 'success');
+            });
 
             // Print
             document.getElementById('print-btn')?.addEventListener('click', () => window.print());
@@ -2514,7 +2516,6 @@
         // Expose delete functions for new stats
         window.deleteCommissionStat = deleteCommissionStat;
         window.deleteNoCommissionStat = deleteNoCommissionStat;
-        window.deleteTransferMealStat = deleteTransferMealStat;
     </script>
 </body>
 </html>
