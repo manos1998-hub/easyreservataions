@@ -189,7 +189,7 @@
         .category-name { font-weight: 600; color: var(--text-primary); }
         .category-actions { display: flex; gap: 8px; opacity: 0; transition: var(--transition); }
         .category-item:hover .category-actions { opacity: 1; }
-        .color-picker { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+        .color-picker { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 8px; }
         .color-option { width: 32px; height: 32px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: var(--transition); }
         .color-option:hover { transform: scale(1.1); }
         .color-option.selected { border-color: var(--text-primary); transform: scale(1.1); }
@@ -532,6 +532,20 @@
                     </div>
                 </div>
 
+                <!-- Filter by Room Type for the table -->
+                <div class="analytics-filters" style="margin-bottom: 20px;">
+                    <div class="filter-group">
+                        <label class="filter-label">Filter by Room Type</label>
+                        <select class="form-control" id="transfer-filter-room">
+                            <option value="">All Rooms</option>
+                        </select>
+                    </div>
+                    <div class="filter-group" style="justify-content: flex-end;">
+                        <button class="btn btn-primary" id="apply-transfer-filter"><i class="fas fa-filter"></i> Apply</button>
+                        <button class="btn btn-secondary" id="clear-transfer-filter"><i class="fas fa-times"></i> Clear</button>
+                    </div>
+                </div>
+
                 <!-- Detailed Transfers Table -->
                 <div class="table-container">
                     <div class="table-header">
@@ -558,7 +572,7 @@
                 </div>
             </div>
 
-            <!-- Expenses Content (unchanged) -->
+            <!-- Expenses Content (with custom color picker) -->
             <div class="content-wrapper" id="expenses-content" style="display: none;">
                 <!-- Stats -->
                 <div class="dashboard-stats">
@@ -578,18 +592,26 @@
                         <div class="panel-body">
                             <div class="form-group"><label class="form-label">Category Name <span>*</span></label><input type="text" class="form-control" id="category-name" placeholder="e.g., Office Supplies"></div>
                             <div class="form-group"><label class="form-label">Description</label><textarea class="form-control" id="category-description" rows="3"></textarea></div>
-                            <div class="form-group"><label class="form-label">Category Color</label><div class="color-picker" id="category-color-picker">
-                                <div class="color-option" data-color="#8b5cf6" style="background-color: #8b5cf6;"></div>
-                                <div class="color-option" data-color="#0ea5e9" style="background-color: #0ea5e9;"></div>
-                                <div class="color-option" data-color="#10b981" style="background-color: #10b981;"></div>
-                                <div class="color-option" data-color="#f59e0b" style="background-color: #f59e0b;"></div>
-                                <div class="color-option" data-color="#ef4444" style="background-color: #ef4444;"></div>
-                                <div class="color-option" data-color="#2563eb" style="background-color: #2563eb;"></div>
-                                <div class="color-option" data-color="#7c3aed" style="background-color: #7c3aed;"></div>
-                                <div class="color-option" data-color="#059669" style="background-color: #059669;"></div>
-                                <div class="color-option" data-color="#dc2626" style="background-color: #dc2626;"></div>
-                                <div class="color-option" data-color="#475569" style="background-color: #475569;"></div>
-                            </div><input type="hidden" id="category-color" value="#8b5cf6"></div>
+                            <!-- Custom Color Picker -->
+                            <div class="form-group">
+                                <label class="form-label">Category Color</label>
+                                <div class="color-picker" id="category-color-picker">
+                                    <!-- Preset colors -->
+                                    <div class="color-option" data-color="#8b5cf6" style="background-color: #8b5cf6;"></div>
+                                    <div class="color-option" data-color="#0ea5e9" style="background-color: #0ea5e9;"></div>
+                                    <div class="color-option" data-color="#10b981" style="background-color: #10b981;"></div>
+                                    <div class="color-option" data-color="#f59e0b" style="background-color: #f59e0b;"></div>
+                                    <div class="color-option" data-color="#ef4444" style="background-color: #ef4444;"></div>
+                                    <div class="color-option" data-color="#2563eb" style="background-color: #2563eb;"></div>
+                                    <div class="color-option" data-color="#7c3aed" style="background-color: #7c3aed;"></div>
+                                    <div class="color-option" data-color="#059669" style="background-color: #059669;"></div>
+                                    <div class="color-option" data-color="#dc2626" style="background-color: #dc2626;"></div>
+                                    <div class="color-option" data-color="#475569" style="background-color: #475569;"></div>
+                                    <!-- Native color picker -->
+                                    <input type="color" id="category-color-custom" value="#8b5cf6" style="width: 40px; height: 40px; border: 2px solid transparent; border-radius: 50%; cursor: pointer; padding: 0; margin-left: 8px;" title="Pick custom color">
+                                </div>
+                                <input type="hidden" id="category-color" value="#8b5cf6">
+                            </div>
                             <div class="form-group"><label class="form-label">Category Icon</label><div class="icon-picker" id="category-icon-picker"></div><input type="hidden" id="category-icon" value="fas fa-box"></div>
                             <div class="form-group"><label class="form-label">Budget (Monthly)</label><input type="number" class="form-control" id="category-budget" step="0.01" min="0"></div>
                             <div style="display: flex; gap: 12px; margin-top: 24px;">
@@ -745,7 +767,7 @@
         </div>
     </div>
 
-    <!-- ========== FIREBASE SCRIPT (full working version with Transfer Analytics) ========== -->
+    <!-- ========== FIREBASE SCRIPT (full working version with Transfer Analytics and custom color picker) ========== -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
         import { 
@@ -780,7 +802,8 @@
             fieldOrder: [], currentPage: 'dashboard', selectedCategoryId: null,
             editingCategoryId: null, deletingCategoryId: null,
             currentCalendarDate: new Date(), selectedCalendarDate: null, calendarView: 'month',
-            charts: {}
+            charts: {},
+            transferFilterRoom: '' // for filtering transfers by room
         };
 
         // Helper functions
@@ -831,7 +854,10 @@
                 updateStats();
                 if (state.currentPage === 'calendar') renderCalendar();
                 if (state.currentPage === 'analytics') renderAnalytics();
-                if (state.currentPage === 'transfer-analytics') renderTransferAnalytics();
+                if (state.currentPage === 'transfer-analytics') {
+                    populateTransferRoomFilter();
+                    renderTransferAnalytics();
+                }
                 showNotification('Data loaded', 'success');
             } catch (e) { console.error(e); showNotification('Load failed', 'error'); }
         }
@@ -1287,8 +1313,11 @@
                         document.getElementById('category-name').value = cat.name;
                         document.getElementById('category-description').value = cat.description || '';
                         document.getElementById('category-color').value = cat.color;
+                        // Update preset and custom color picker
                         document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('selected'));
-                        document.querySelector(`.color-option[data-color="${cat.color}"]`)?.classList.add('selected');
+                        const matchingPreset = document.querySelector(`.color-option[data-color="${cat.color}"]`);
+                        if (matchingPreset) matchingPreset.classList.add('selected');
+                        document.getElementById('category-color-custom').value = cat.color;
                         document.getElementById('category-icon').value = cat.icon;
                         document.querySelectorAll('.icon-option').forEach(opt => opt.classList.remove('selected'));
                         document.querySelector(`.icon-option i.${cat.icon}`)?.closest('.icon-option')?.classList.add('selected');
@@ -1622,10 +1651,31 @@
             });
         }
 
-        // NEW: Transfer Analytics Rendering
+        // NEW: Populate room filter dropdown in transfer analytics
+        function populateTransferRoomFilter() {
+            const rooms = [...new Set(state.reservations.map(r => r.name).filter(Boolean))];
+            const select = document.getElementById('transfer-filter-room');
+            select.innerHTML = '<option value="">All Rooms</option>';
+            rooms.forEach(room => {
+                const option = document.createElement('option');
+                option.value = room;
+                option.textContent = room;
+                select.appendChild(option);
+            });
+            // Set selected value from state
+            select.value = state.transferFilterRoom || '';
+        }
+
+        // NEW: Transfer Analytics Rendering (with filter)
         function renderTransferAnalytics() {
             const reservations = state.reservations;
-            const transfers = reservations.filter(r => (r.transferAmount || 0) > 0);
+            let transfers = reservations.filter(r => (r.transferAmount || 0) > 0);
+            
+            // Apply room filter
+            if (state.transferFilterRoom) {
+                transfers = transfers.filter(r => r.name === state.transferFilterRoom);
+            }
+
             const totalTransfer = transfers.reduce((sum, r) => sum + (r.transferAmount || 0), 0);
             const avgTransfer = transfers.length ? (totalTransfer / transfers.length) : 0;
             document.getElementById('transfer-total').textContent = `$${totalTransfer.toFixed(2)}`;
@@ -1633,9 +1683,9 @@
             document.getElementById('transfer-count').textContent = transfers.length;
             document.getElementById('transfer-table-count').textContent = transfers.length;
 
-            // Top room type by total transfer
+            // Top room type by total transfer (based on all transfers, not filtered)
             const roomTotals = {};
-            transfers.forEach(r => {
+            reservations.filter(r => (r.transferAmount || 0) > 0).forEach(r => {
                 const room = r.name || 'Unknown';
                 roomTotals[room] = (roomTotals[room] || 0) + (r.transferAmount || 0);
             });
@@ -1646,12 +1696,12 @@
             }
             document.getElementById('transfer-top-room').textContent = topRoom;
 
-            // Transfer by room type (pie chart)
-            const roomLabels = Object.keys(roomTotals);
-            const roomData = Object.values(roomTotals);
+            // Transfer by room type (pie chart) - based on all transfers (unfiltered) for overview.
             if (state.charts.transferRoom) state.charts.transferRoom.destroy();
             const ctxRoom = document.getElementById('transferRoomChart')?.getContext('2d');
             if (ctxRoom) {
+                const roomLabels = Object.keys(roomTotals);
+                const roomData = Object.values(roomTotals);
                 state.charts.transferRoom = new Chart(ctxRoom, {
                     type: 'pie',
                     data: {
@@ -1664,7 +1714,7 @@
                 });
             }
 
-            // Monthly transfer trend
+            // Monthly transfer trend - based on filtered transfers (if filter applied)
             const monthly = {};
             transfers.forEach(r => {
                 const d = new Date(r.checkin);
@@ -1694,7 +1744,7 @@
                 });
             }
 
-            // Transfer table
+            // Transfer table (filtered)
             const tbody = document.getElementById('transfer-table-body');
             tbody.innerHTML = '';
             transfers.forEach(r => {
@@ -1858,7 +1908,10 @@
             });
             if (page === 'calendar') renderCalendar();
             if (page === 'analytics') renderAnalytics();
-            if (page === 'transfer-analytics') renderTransferAnalytics();
+            if (page === 'transfer-analytics') {
+                populateTransferRoomFilter();
+                renderTransferAnalytics();
+            }
         }
 
         // Filter modal
@@ -2089,8 +2142,18 @@
                     document.querySelectorAll('.color-option').forEach(o => o.classList.remove('selected'));
                     this.classList.add('selected');
                     document.getElementById('category-color').value = this.dataset.color;
+                    document.getElementById('category-color-custom').value = this.dataset.color;
                 });
             });
+            // Custom color picker
+            const customColorInput = document.getElementById('category-color-custom');
+            if (customColorInput) {
+                customColorInput.addEventListener('input', function() {
+                    document.getElementById('category-color').value = this.value;
+                    // Remove selected class from preset options
+                    document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('selected'));
+                });
+            }
 
             const iconPicker = document.getElementById('category-icon-picker');
             const icons = ['fas fa-box','fas fa-bolt','fas fa-users','fas fa-tools','fas fa-car','fas fa-home','fas fa-utensils','fas fa-shopping-cart','fas fa-plane','fas fa-wifi'];
@@ -2167,6 +2230,18 @@
             document.getElementById('add-reservation-from-calendar')?.addEventListener('click', () => {
                 showPage('dashboard');
                 if (state.selectedCalendarDate) document.getElementById('reservation-checkin').value = state.selectedCalendarDate;
+            });
+
+            // Transfer Analytics filter buttons
+            document.getElementById('apply-transfer-filter')?.addEventListener('click', () => {
+                const room = document.getElementById('transfer-filter-room').value;
+                state.transferFilterRoom = room;
+                renderTransferAnalytics();
+            });
+            document.getElementById('clear-transfer-filter')?.addEventListener('click', () => {
+                document.getElementById('transfer-filter-room').value = '';
+                state.transferFilterRoom = '';
+                renderTransferAnalytics();
             });
 
             // Analytics apply
