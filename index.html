@@ -755,7 +755,7 @@
                                 <thead>
                                     <tr>
                                         <th>Period</th>
-                                        <th>Reservations</th>
+                                        <!-- Reservations column removed -->
                                         <th>Transfer</th>
                                         <th>Meal</th>
                                         <th>Commission</th>
@@ -990,36 +990,23 @@
             document.getElementById('highest-category').textContent = maxCat.name;
         }
 
-        // ========== FIXED renderAnalytics (includes manual stays in nights) ==========
+        // ========== FIXED renderAnalytics – Reservations column removed, nights only from commission/no‑commission ==========
         function renderAnalytics() {
             const period = document.getElementById('analytics-period').value;
             const cutoff = period === 'all' ? new Date(0) : new Date(Date.now() - parseInt(period) * 24 * 60 * 60 * 1000);
 
             let monthly = {};
 
-            // Process reservations for income and nights
+            // Process reservations for income only (no nights, no count)
             state.reservations.forEach(r => {
                 const checkin = new Date(r.checkin);
-                const checkout = new Date(r.checkout);
                 if (checkin >= cutoff) {
-                    let current = new Date(checkin);
-                    while (current < checkout) {
-                        const year = current.getFullYear();
-                        const month = current.getMonth();
-                        const monthKey = `${year}-${String(month + 1).padStart(2, '0')}`;
-                        if (!monthly[monthKey]) {
-                            monthly[monthKey] = { transfer: 0, meal: 0, commission: 0, nocommission: 0, expenses: 0, count: 0, nights: 0 };
-                        }
-                        monthly[monthKey].nights += 1;
-                        current.setDate(current.getDate() + 1);
-                    }
                     const monthKey = `${checkin.getFullYear()}-${String(checkin.getMonth() + 1).padStart(2, '0')}`;
                     if (!monthly[monthKey]) {
-                        monthly[monthKey] = { transfer: 0, meal: 0, commission: 0, nocommission: 0, expenses: 0, count: 0, nights: 0 };
+                        monthly[monthKey] = { transfer: 0, meal: 0, commission: 0, nocommission: 0, expenses: 0, nights: 0 };
                     }
                     monthly[monthKey].transfer += r.transferAmount || 0;
                     monthly[monthKey].meal += r.mealPrice || 0;
-                    monthly[monthKey].count += 1;
                 }
             });
 
@@ -1029,7 +1016,7 @@
                 if (d >= cutoff) {
                     const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
                     if (!monthly[monthKey]) {
-                        monthly[monthKey] = { transfer: 0, meal: 0, commission: 0, nocommission: 0, expenses: 0, count: 0, nights: 0 };
+                        monthly[monthKey] = { transfer: 0, meal: 0, commission: 0, nocommission: 0, expenses: 0, nights: 0 };
                     }
                     monthly[monthKey].expenses += parseFloat(e.amount) || 0;
                 }
@@ -1042,7 +1029,7 @@
                 if (d >= cutoff) {
                     const monthKey = c.month;
                     if (!monthly[monthKey]) {
-                        monthly[monthKey] = { transfer: 0, meal: 0, commission: 0, nocommission: 0, expenses: 0, count: 0, nights: 0 };
+                        monthly[monthKey] = { transfer: 0, meal: 0, commission: 0, nocommission: 0, expenses: 0, nights: 0 };
                     }
                     monthly[monthKey].commission += c.income || 0;
                     monthly[monthKey].nights += c.stays || 0;
@@ -1056,7 +1043,7 @@
                 if (d >= cutoff) {
                     const monthKey = nc.month;
                     if (!monthly[monthKey]) {
-                        monthly[monthKey] = { transfer: 0, meal: 0, commission: 0, nocommission: 0, expenses: 0, count: 0, nights: 0 };
+                        monthly[monthKey] = { transfer: 0, meal: 0, commission: 0, nocommission: 0, expenses: 0, nights: 0 };
                     }
                     monthly[monthKey].nocommission += nc.income || 0;
                     monthly[monthKey].nights += nc.stays || 0;
@@ -1158,7 +1145,7 @@
                 }
             });
 
-            // Detailed table with nights and occupancy
+            // Detailed table with nights and occupancy (Reservations column removed)
             const tbody = document.getElementById('analytics-body');
             tbody.innerHTML = '';
             let cumulative = 0;
@@ -1181,7 +1168,6 @@
 
                 const row = `<tr>
                     <td>${m}</td>
-                    <td>${monthly[m].count}</td>
                     <td class="currency-cell">$${transfer.toFixed(2)}</td>
                     <td class="currency-cell">$${meal.toFixed(2)}</td>
                     <td class="currency-cell">$${commission.toFixed(2)}</td>
@@ -2340,21 +2326,21 @@
             const period = document.getElementById('analytics-period').value;
             const cutoff = period === 'all' ? new Date(0) : new Date(Date.now() - parseInt(period)*24*60*60*1000);
             let monthly = {};
+            // Process reservations for income only (no nights, no count)
             state.reservations.forEach(r => {
                 const d = new Date(r.checkin);
                 if (d >= cutoff) {
                     const monthKey = `${d.getFullYear()}-${d.getMonth()+1}`;
-                    monthly[monthKey] = monthly[monthKey] || { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, count:0, nights:0 };
+                    if (!monthly[monthKey]) monthly[monthKey] = { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, nights:0 };
                     monthly[monthKey].transfer += r.transferAmount || 0;
                     monthly[monthKey].meal += r.mealPrice || 0;
-                    monthly[monthKey].count += 1;
                 }
             });
             state.expenses.forEach(e => {
                 const d = new Date(e.date);
                 if (d >= cutoff) {
                     const monthKey = `${d.getFullYear()}-${d.getMonth()+1}`;
-                    monthly[monthKey] = monthly[monthKey] || { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, count:0, nights:0 };
+                    if (!monthly[monthKey]) monthly[monthKey] = { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, nights:0 };
                     monthly[monthKey].expenses += parseFloat(e.amount)||0;
                 }
             });
@@ -2363,7 +2349,7 @@
                 const d = new Date(year, month-1, 1);
                 if (d >= cutoff) {
                     const monthKey = c.month;
-                    monthly[monthKey] = monthly[monthKey] || { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, count:0, nights:0 };
+                    if (!monthly[monthKey]) monthly[monthKey] = { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, nights:0 };
                     monthly[monthKey].commission += c.income || 0;
                     monthly[monthKey].nights += c.stays || 0;
                 }
@@ -2373,7 +2359,7 @@
                 const d = new Date(year, month-1, 1);
                 if (d >= cutoff) {
                     const monthKey = nc.month;
-                    monthly[monthKey] = monthly[monthKey] || { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, count:0, nights:0 };
+                    if (!monthly[monthKey]) monthly[monthKey] = { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, nights:0 };
                     monthly[monthKey].nocommission += nc.income || 0;
                     monthly[monthKey].nights += nc.stays || 0;
                 }
@@ -2387,7 +2373,7 @@
                 const occupancy = maxNights > 0 ? ((nights / maxNights) * 100).toFixed(1) : '0.0';
                 return {
                     Period: m,
-                    Reservations: monthly[m].count,
+                    // Reservations column removed
                     Transfer: monthly[m].transfer.toFixed(2),
                     Meal: monthly[m].meal.toFixed(2),
                     Commission: monthly[m].commission.toFixed(2),
