@@ -1472,8 +1472,8 @@
         }
 
         function updateStats() {
-            const tot = state.filteredReservations?.length || state.reservations.length;
-            document.getElementById('total-reservations').textContent = tot;
+            const transferCount = (state.filteredReservations || state.reservations).filter(r => (r.transferAmount || 0) > 0).length;
+            document.getElementById('total-reservations').textContent = transferCount;
             document.getElementById('reservation-count-badge').textContent = tot;
             const pending = state.reservations.filter(r => {
                 for (let f of state.customFields) {
