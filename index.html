@@ -124,6 +124,7 @@
         .category-badge { display: inline-flex; align-items: center; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
         .currency-cell { font-weight: 600; color: var(--success-color); }
         .expense-cell { font-weight: 600; color: var(--danger-color); }
+        .personal-expense-cell { font-weight: 600; color: #ff6b6b; } /* new style for personal expenses */
         .checkbox-cell { text-align: center; }
         .checkbox-cell i.fa-check-circle { color: var(--success-color); }
         .checkbox-cell i.fa-times-circle { color: var(--danger-color); }
@@ -768,9 +769,9 @@
 
             <!-- Analytics Content (with Nights and Occupancy) - Time period changed to months -->
             <div class="content-wrapper" id="analytics-content" style="display: none;">
-                <!-- ========== NEW ANALYTICS FILTERS WITH MONTH SELECTOR ========== -->
+                <!-- ========== ANALYTICS FILTERS WITH MONTH SELECTOR ========== -->
                 <div class="analytics-filters">
-                    <!-- Month selector (new) -->
+                    <!-- Month selector -->
                     <div class="filter-group">
                         <label class="filter-label">Month</label>
                         <select class="form-control" id="analytics-month-select" style="width:120px;">
@@ -804,7 +805,7 @@
                         <button class="btn btn-secondary" id="clear-month-filter"><i class="fas fa-times"></i> Clear Month</button>
                     </div>
 
-                    <!-- Existing period filter (keep it) -->
+                    <!-- Existing period filter -->
                     <div class="filter-group">
                         <label class="filter-label">Time Period (months)</label>
                         <select class="form-control" id="analytics-period">
@@ -830,7 +831,7 @@
                     <div class="analytics-stat-card"><div class="analytics-stat-header"><div class="analytics-stat-title">Meal Income</div><div class="analytics-stat-icon" style="background-color: var(--warning-color);"><i class="fas fa-utensils"></i></div></div><div class="analytics-stat-value" id="analytics-meal-income">$0</div><div class="analytics-stat-subtitle">From meals</div></div>
                     <div class="analytics-stat-card"><div class="analytics-stat-header"><div class="analytics-stat-title">Commission Income</div><div class="analytics-stat-icon" style="background-color: var(--expense-color);"><i class="fas fa-percentage"></i></div></div><div class="analytics-stat-value" id="analytics-commission-income">$0</div><div class="analytics-stat-subtitle">From commission</div></div>
                     <div class="analytics-stat-card"><div class="analytics-stat-header"><div class="analytics-stat-title">No Commission Income</div><div class="analytics-stat-icon" style="background-color: var(--accent-color);"><i class="fas fa-times-circle"></i></div></div><div class="analytics-stat-value" id="analytics-nocommission-income">$0</div><div class="analytics-stat-subtitle">From no commission</div></div>
-                    <div class="analytics-stat-card"><div class="analytics-stat-header"><div class="analytics-stat-title">Total Expenses</div><div class="analytics-stat-icon" style="background-color: var(--danger-color);"><i class="fas fa-money-bill-wave"></i></div></div><div class="analytics-stat-value" id="analytics-total-expenses">$0</div><div class="analytics-stat-subtitle">All expenses</div></div>
+                    <div class="analytics-stat-card"><div class="analytics-stat-header"><div class="analytics-stat-title">Expenses</div><div class="analytics-stat-icon" style="background-color: var(--danger-color);"><i class="fas fa-money-bill-wave"></i></div></div><div class="analytics-stat-value" id="analytics-total-expenses">$0</div><div class="analytics-stat-subtitle">All expenses</div></div>
                 </div>
                 <div class="comparison-cards">
                     <div class="comparison-card"><div class="comparison-header"><div class="comparison-title">This Month</div><div class="comparison-value" id="this-month-profit">$0</div></div><div class="comparison-details"><div class="comparison-row"><div class="comparison-label">Income</div><div class="comparison-amount income-amount" id="this-month-income">$0</div></div><div class="comparison-row"><div class="comparison-label">Expenses</div><div class="comparison-amount expense-amount" id="this-month-expenses">$0</div></div><div class="comparison-row"><div class="comparison-label">Net Profit</div><div class="comparison-amount" id="this-month-net">$0</div></div></div></div>
@@ -852,7 +853,6 @@
                                 <thead>
                                     <tr>
                                         <th>Period</th>
-                                        <!-- Reservations column removed -->
                                         <th>Transfer</th>
                                         <th>Meal</th>
                                         <th>Commission</th>
@@ -860,7 +860,8 @@
                                         <th>Total Income</th>
                                         <th>Expenses</th>
                                         <th>Profit</th>
-                                        <th>Cumulative</th>
+                                        <th>Personal Expenses</th>
+                                        <th>Cumulative (after personal)</th>
                                         <th>Margin</th>
                                         <th>Nights</th>
                                         <th>Occupancy %</th>
@@ -872,7 +873,7 @@
                     </div>
                 </div>
 
-                <!-- NEW: Multi-Year Comparison Panel -->
+                <!-- Multi-Year Comparison Panel -->
                 <div class="panel" style="margin-top: 24px;">
                     <div class="panel-header"><h2><i class="fas fa-chart-bar"></i> Multi-Year Comparison</h2></div>
                     <div class="panel-body">
@@ -929,6 +930,8 @@
                                             <th>Total Income</th>
                                             <th>Expenses</th>
                                             <th>Profit</th>
+                                            <th>Personal Expenses</th>
+                                            <th>Net after Personal</th>
                                             <th>Nights</th>
                                             <th>Occupancy %</th>
                                         </tr>
@@ -995,7 +998,7 @@
         </div>
     </div>
 
-    <!-- ========== FIREBASE SCRIPT (with month-based period) ========== -->
+    <!-- ========== FIREBASE SCRIPT (with month-based period and personal expenses) ========== -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
         import { 
@@ -1039,7 +1042,7 @@
             noCommissionFilters: { month: '', room: '' },
             // Year comparison filter
             yearCompare: { start: null, end: null },
-            // NEW: Analytics month filter
+            // Analytics month filter
             selectedAnalyticsMonth: null,
             selectedAnalyticsYear: null,
         };
@@ -1100,7 +1103,7 @@
                 renderCommissionSummary();
                 renderNoCommissionSummary();
 
-                // NEW: populate analytics year dropdown
+                // populate analytics year dropdown
                 populateAnalyticsYearSelect();
 
                 if (state.currentPage === 'calendar') renderCalendar();
@@ -1117,7 +1120,7 @@
             } catch (e) { console.error(e); showNotification('Load failed', 'error'); }
         }
 
-        // NEW: populate year dropdown for analytics month selector
+        // populate year dropdown for analytics month selector
         function populateAnalyticsYearSelect() {
             const years = new Set();
             state.reservations.forEach(r => r.checkin && years.add(new Date(r.checkin).getFullYear()));
@@ -1131,7 +1134,7 @@
             sorted.forEach(y => select.innerHTML += `<option value="${y}">${y}</option>`);
         }
 
-        // NEW: helper to get filtered data (respects month or period filter)
+        // helper to get filtered data (respects month or period filter) with personal expenses
         function getAnalyticsFilteredData() {
             const monthFilterActive = state.selectedAnalyticsMonth && state.selectedAnalyticsYear;
             let startDate, endDate;
@@ -1151,6 +1154,10 @@
                 endDate = new Date(); // now
             }
 
+            // Find personal category id
+            const personalCat = state.expenseCategories.find(c => c.name === 'PERSONAL');
+            const personalCatId = personalCat ? personalCat.id : null;
+
             const monthly = {};
 
             // Reservations (using checkin date)
@@ -1159,7 +1166,7 @@
                 const d = new Date(r.checkin);
                 if (d >= startDate && (!monthFilterActive || d <= endDate)) {
                     const monthKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-                    if (!monthly[monthKey]) monthly[monthKey] = { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, nights:0 };
+                    if (!monthly[monthKey]) monthly[monthKey] = { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, personalExpenses:0, nights:0 };
                     monthly[monthKey].transfer += r.transferAmount || 0;
                     monthly[monthKey].meal += r.mealPrice || 0;
                 }
@@ -1171,8 +1178,12 @@
                 const d = new Date(e.date);
                 if (d >= startDate && (!monthFilterActive || d <= endDate)) {
                     const monthKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-                    if (!monthly[monthKey]) monthly[monthKey] = { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, nights:0 };
-                    monthly[monthKey].expenses += parseFloat(e.amount) || 0;
+                    if (!monthly[monthKey]) monthly[monthKey] = { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, personalExpenses:0, nights:0 };
+                    const amount = parseFloat(e.amount) || 0;
+                    monthly[monthKey].expenses += amount;
+                    if (e.categoryId === personalCatId) {
+                        monthly[monthKey].personalExpenses += amount;
+                    }
                 }
             });
 
@@ -1183,7 +1194,7 @@
                 const d = new Date(y, m-1, 1);
                 if (d >= startDate && (!monthFilterActive || d <= endDate)) {
                     const monthKey = c.month;
-                    if (!monthly[monthKey]) monthly[monthKey] = { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, nights:0 };
+                    if (!monthly[monthKey]) monthly[monthKey] = { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, personalExpenses:0, nights:0 };
                     monthly[monthKey].commission += c.income || 0;
                     monthly[monthKey].nights += c.stays || 0;
                 }
@@ -1196,7 +1207,7 @@
                 const d = new Date(y, m-1, 1);
                 if (d >= startDate && (!monthFilterActive || d <= endDate)) {
                     const monthKey = nc.month;
-                    if (!monthly[monthKey]) monthly[monthKey] = { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, nights:0 };
+                    if (!monthly[monthKey]) monthly[monthKey] = { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, personalExpenses:0, nights:0 };
                     monthly[monthKey].nocommission += nc.income || 0;
                     monthly[monthKey].nights += nc.stays || 0;
                 }
@@ -1217,7 +1228,7 @@
             } catch (e) { console.error(e); }
         }
 
-        // ========== FIXED updateStats ==========
+        // updateStats remains unchanged
         function updateStats() {
             const transferCount = (state.filteredReservations || state.reservations).filter(r => (r.transferAmount || 0) > 0).length;
             document.getElementById('total-reservations').textContent = transferCount;
@@ -1262,7 +1273,7 @@
             document.getElementById('highest-category').textContent = maxCat.name;
         }
 
-        // ========== NEW renderAnalytics – with month filter support ==========
+        // renderAnalytics with personal expenses separation
         function renderAnalytics() {
             const monthly = getAnalyticsFilteredData();
             const months = Object.keys(monthly).sort();
@@ -1277,6 +1288,7 @@
             const commissionData = months.map(m => monthly[m].commission);
             const nocommissionData = months.map(m => monthly[m].nocommission);
             const expenseData = months.map(m => monthly[m].expenses);
+            const personalExpenseData = months.map(m => monthly[m].personalExpenses);
             const totalIncomeData = months.map(m => monthly[m].transfer + monthly[m].meal + monthly[m].commission + monthly[m].nocommission);
             const nightsData = months.map(m => monthly[m].nights || 0);
 
@@ -1285,13 +1297,15 @@
             const totalCommission = commissionData.reduce((a, b) => a + b, 0);
             const totalNoCommission = nocommissionData.reduce((a, b) => a + b, 0);
             const totalRevenue = totalTransfer + totalMeal + totalCommission + totalNoCommission;
+            const totalExpenses = expenseData.reduce((a, b) => a + b, 0);
+            const totalPersonal = personalExpenseData.reduce((a, b) => a + b, 0);
 
             document.getElementById('analytics-total-revenue').textContent = `$${totalRevenue.toFixed(2)}`;
             document.getElementById('analytics-transfer-income').textContent = `$${totalTransfer.toFixed(2)}`;
             document.getElementById('analytics-meal-income').textContent = `$${totalMeal.toFixed(2)}`;
             document.getElementById('analytics-commission-income').textContent = `$${totalCommission.toFixed(2)}`;
             document.getElementById('analytics-nocommission-income').textContent = `$${totalNoCommission.toFixed(2)}`;
-            document.getElementById('analytics-total-expenses').textContent = `$${state.expenses.reduce((s, e) => s + parseFloat(e.amount), 0).toFixed(2)}`;
+            document.getElementById('analytics-total-expenses').textContent = `$${totalExpenses.toFixed(2)}`;
 
             // Destroy old charts
             if (state.charts.incomeExpense) state.charts.incomeExpense.destroy();
@@ -1299,7 +1313,7 @@
             if (state.charts.monthlyTrend) state.charts.monthlyTrend.destroy();
             if (state.charts.profitMargin) state.charts.profitMargin.destroy();
 
-            // Income vs Expenses
+            // Income vs Expenses (total expenses, not personal)
             const ctx1 = document.getElementById('incomeExpenseChart').getContext('2d');
             state.charts.incomeExpense = new Chart(ctx1, {
                 type: 'bar',
@@ -1311,7 +1325,7 @@
                 }
             });
 
-            // Expense by Category
+            // Expense by Category (still total expenses)
             const catTotals = {};
             const monthFilterActive = state.selectedAnalyticsMonth && state.selectedAnalyticsYear;
             const filteredExpenses = monthFilterActive
@@ -1319,7 +1333,7 @@
                     const d = new Date(e.date);
                     return d.getFullYear() === state.selectedAnalyticsYear && d.getMonth() + 1 === state.selectedAnalyticsMonth;
                   })
-                : state.expenses; // period filter is already applied in getAnalyticsFilteredData, but for pie we need all expenses in period
+                : state.expenses;
             filteredExpenses.forEach(e => {
                 const cat = state.expenseCategories.find(c => c.id === e.categoryId);
                 const name = cat ? cat.name : 'Uncategorized';
@@ -1337,7 +1351,7 @@
                 }
             });
 
-            // Monthly Revenue by Type
+            // Monthly Revenue by Type (same as before)
             const ctx3 = document.getElementById('monthlyTrendChart').getContext('2d');
             state.charts.monthlyTrend = new Chart(ctx3, {
                 type: 'line',
@@ -1351,7 +1365,7 @@
                 }
             });
 
-            // Profit Margin
+            // Profit Margin (using total expenses)
             const marginData = months.map(m => {
                 const total = monthly[m].transfer + monthly[m].meal + monthly[m].commission + monthly[m].nocommission;
                 return total > 0 ? ((total - monthly[m].expenses) / total * 100) : 0;
@@ -1368,10 +1382,10 @@
                 }
             });
 
-            // Detailed table with nights and occupancy
+            // Detailed table with personal expenses
             const tbody = document.getElementById('analytics-body');
             tbody.innerHTML = '';
-            let cumulative = 0;
+            let cumulativeNet = 0; // after personal expenses
             months.forEach(m => {
                 const [y, mo] = m.split('-').map(Number);
                 const days = new Date(y, mo, 0).getDate();
@@ -1381,11 +1395,14 @@
                 const meal = monthly[m].meal;
                 const commission = monthly[m].commission;
                 const nocommission = monthly[m].nocommission;
-                const total = transfer + meal + commission + nocommission;
-                const exp = monthly[m].expenses;
-                const profit = total - exp;
-                cumulative += profit;
-                const margin = total > 0 ? (profit / total * 100).toFixed(1) : '0.0';
+                const totalIncome = transfer + meal + commission + nocommission;
+                const totalExp = monthly[m].expenses;
+                const personalExp = monthly[m].personalExpenses;
+                const regularExp = totalExp - personalExp;
+                const profit = totalIncome - regularExp; // profit before personal
+                const net = profit - personalExp; // after personal
+                cumulativeNet += net;
+                const margin = totalIncome > 0 ? (profit / totalIncome * 100).toFixed(1) : '0.0';
                 const nights = monthly[m].nights || 0;
                 const occupancy = maxNights > 0 ? ((nights / maxNights) * 100).toFixed(1) : '0.0';
 
@@ -1395,10 +1412,11 @@
                     <td class="currency-cell">$${meal.toFixed(2)}</td>
                     <td class="currency-cell">$${commission.toFixed(2)}</td>
                     <td class="currency-cell">$${nocommission.toFixed(2)}</td>
-                    <td class="currency-cell">$${total.toFixed(2)}</td>
-                    <td class="expense-cell">$${exp.toFixed(2)}</td>
+                    <td class="currency-cell">$${totalIncome.toFixed(2)}</td>
+                    <td class="expense-cell">$${totalExp.toFixed(2)}</td>
                     <td class="${profit >= 0 ? 'currency-cell' : 'expense-cell'}">$${profit.toFixed(2)}</td>
-                    <td class="${cumulative >= 0 ? 'currency-cell' : 'expense-cell'}">$${cumulative.toFixed(2)}</td>
+                    <td class="personal-expense-cell">$${personalExp.toFixed(2)}</td>
+                    <td class="${cumulativeNet >= 0 ? 'currency-cell' : 'expense-cell'}">$${cumulativeNet.toFixed(2)}</td>
                     <td>${margin}%</td>
                     <td>${nights}</td>
                     <td>${occupancy}%</td>
@@ -1412,16 +1430,20 @@
                 const thisMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
                 const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
                 const lastMonthKey = `${lastMonth.getFullYear()}-${String(lastMonth.getMonth() + 1).padStart(2, '0')}`;
-                const thisMonthData = monthly[thisMonthKey] || { transfer: 0, meal: 0, commission: 0, nocommission: 0, expenses: 0 };
-                const lastMonthData = monthly[lastMonthKey] || { transfer: 0, meal: 0, commission: 0, nocommission: 0, expenses: 0 };
+                const thisMonthData = monthly[thisMonthKey] || { transfer: 0, meal: 0, commission: 0, nocommission: 0, expenses: 0, personalExpenses: 0 };
+                const lastMonthData = monthly[lastMonthKey] || { transfer: 0, meal: 0, commission: 0, nocommission: 0, expenses: 0, personalExpenses: 0 };
                 const thisMonthIncome = thisMonthData.transfer + thisMonthData.meal + thisMonthData.commission + thisMonthData.nocommission;
                 const lastMonthIncome = lastMonthData.transfer + lastMonthData.meal + lastMonthData.commission + lastMonthData.nocommission;
+                const thisMonthRegular = thisMonthData.expenses - thisMonthData.personalExpenses;
+                const lastMonthRegular = lastMonthData.expenses - lastMonthData.personalExpenses;
+                const thisMonthProfit = thisMonthIncome - thisMonthRegular;
+                const lastMonthProfit = lastMonthIncome - lastMonthRegular;
                 document.getElementById('this-month-income').textContent = `$${thisMonthIncome.toFixed(2)}`;
                 document.getElementById('this-month-expenses').textContent = `$${thisMonthData.expenses.toFixed(2)}`;
-                document.getElementById('this-month-net').textContent = `$${(thisMonthIncome - thisMonthData.expenses).toFixed(2)}`;
+                document.getElementById('this-month-net').textContent = `$${thisMonthProfit.toFixed(2)}`;
                 document.getElementById('last-month-income').textContent = `$${lastMonthIncome.toFixed(2)}`;
                 document.getElementById('last-month-expenses').textContent = `$${lastMonthData.expenses.toFixed(2)}`;
-                document.getElementById('last-month-net').textContent = `$${(lastMonthIncome - lastMonthData.expenses).toFixed(2)}`;
+                document.getElementById('last-month-net').textContent = `$${lastMonthProfit.toFixed(2)}`;
             } else {
                 // Hide month comparison when a specific month is selected
                 document.getElementById('this-month-income').textContent = '$0';
@@ -1433,7 +1455,7 @@
             }
         }
 
-        // ========== COMMISSION / NO COMMISSION FUNCTIONS ==========
+        // ========== COMMISSION / NO COMMISSION FUNCTIONS (unchanged) ==========
         async function addCommissionStat() {
             const month = document.getElementById('commission-month').value;
             const room = document.getElementById('commission-room').value;
@@ -2701,13 +2723,15 @@
 
         function getYearlyData(startYear, endYear) {
             const yearly = {};
+            const personalCat = state.expenseCategories.find(c => c.name === 'PERSONAL');
+            const personalCatId = personalCat ? personalCat.id : null;
             // Process reservations
             state.reservations.forEach(r => {
                 if (!r.checkin) return;
                 const d = new Date(r.checkin);
                 const year = d.getFullYear();
                 if (year >= startYear && year <= endYear) {
-                    if (!yearly[year]) yearly[year] = { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, nights:0 };
+                    if (!yearly[year]) yearly[year] = { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, personalExpenses:0, nights:0 };
                     yearly[year].transfer += r.transferAmount || 0;
                     yearly[year].meal += r.mealPrice || 0;
                 }
@@ -2718,8 +2742,12 @@
                 const d = new Date(e.date);
                 const year = d.getFullYear();
                 if (year >= startYear && year <= endYear) {
-                    if (!yearly[year]) yearly[year] = { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, nights:0 };
-                    yearly[year].expenses += parseFloat(e.amount) || 0;
+                    if (!yearly[year]) yearly[year] = { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, personalExpenses:0, nights:0 };
+                    const amount = parseFloat(e.amount) || 0;
+                    yearly[year].expenses += amount;
+                    if (e.categoryId === personalCatId) {
+                        yearly[year].personalExpenses += amount;
+                    }
                 }
             });
             // Process commission stats
@@ -2727,7 +2755,7 @@
                 if (!c.month) return;
                 const [y, m] = c.month.split('-').map(Number);
                 if (y >= startYear && y <= endYear) {
-                    if (!yearly[y]) yearly[y] = { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, nights:0 };
+                    if (!yearly[y]) yearly[y] = { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, personalExpenses:0, nights:0 };
                     yearly[y].commission += c.income || 0;
                     yearly[y].nights += c.stays || 0;
                 }
@@ -2737,7 +2765,7 @@
                 if (!nc.month) return;
                 const [y, m] = nc.month.split('-').map(Number);
                 if (y >= startYear && y <= endYear) {
-                    if (!yearly[y]) yearly[y] = { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, nights:0 };
+                    if (!yearly[y]) yearly[y] = { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, personalExpenses:0, nights:0 };
                     yearly[y].nocommission += nc.income || 0;
                     yearly[y].nights += nc.stays || 0;
                 }
@@ -2757,11 +2785,12 @@
 
             // Stats cards
             const statsContainer = document.getElementById('year-compare-stats');
-            let totalIncome = 0, totalExpenses = 0, totalNights = 0, totalPossibleNights = 0;
+            let totalIncome = 0, totalExpenses = 0, totalPersonal = 0, totalNights = 0, totalPossibleNights = 0;
             years.forEach(y => {
                 const data = yearly[y];
                 totalIncome += data.transfer + data.meal + data.commission + data.nocommission;
                 totalExpenses += data.expenses;
+                totalPersonal += data.personalExpenses;
                 totalNights += data.nights || 0;
                 // Calculate max nights per year (assuming 4 rooms)
                 let yearNights = 0;
@@ -2771,10 +2800,14 @@
                 }
                 totalPossibleNights += yearNights;
             });
+            const regularExpenses = totalExpenses - totalPersonal;
+            const totalProfit = totalIncome - regularExpenses;
+            const totalNet = totalProfit - totalPersonal;
             const occupancy = totalPossibleNights > 0 ? ((totalNights / totalPossibleNights) * 100).toFixed(1) : '0.0';
             statsContainer.innerHTML = `
                 <div class="analytics-stat-card"><div class="analytics-stat-header"><div class="analytics-stat-title">Total Income</div><div class="analytics-stat-icon" style="background:#10b981"><i class="fas fa-dollar-sign"></i></div></div><div class="analytics-stat-value">$${totalIncome.toFixed(2)}</div><div class="analytics-stat-subtitle">${years.length} year(s)</div></div>
-                <div class="analytics-stat-card"><div class="analytics-stat-header"><div class="analytics-stat-title">Total Expenses</div><div class="analytics-stat-icon" style="background:#ef4444"><i class="fas fa-money-bill-wave"></i></div></div><div class="analytics-stat-value">$${totalExpenses.toFixed(2)}</div><div class="analytics-stat-subtitle">Profit $${(totalIncome-totalExpenses).toFixed(2)}</div></div>
+                <div class="analytics-stat-card"><div class="analytics-stat-header"><div class="analytics-stat-title">Total Expenses</div><div class="analytics-stat-icon" style="background:#ef4444"><i class="fas fa-money-bill-wave"></i></div></div><div class="analytics-stat-value">$${totalExpenses.toFixed(2)}</div><div class="analytics-stat-subtitle">(Regular: $${regularExpenses.toFixed(2)})</div></div>
+                <div class="analytics-stat-card"><div class="analytics-stat-header"><div class="analytics-stat-title">Total Personal</div><div class="analytics-stat-icon" style="background:#ff6b6b"><i class="fas fa-user"></i></div></div><div class="analytics-stat-value">$${totalPersonal.toFixed(2)}</div><div class="analytics-stat-subtitle">Net after personal: $${totalNet.toFixed(2)}</div></div>
                 <div class="analytics-stat-card"><div class="analytics-stat-header"><div class="analytics-stat-title">Total Nights</div><div class="analytics-stat-icon" style="background:#8b5cf6"><i class="fas fa-moon"></i></div></div><div class="analytics-stat-value">${totalNights}</div><div class="analytics-stat-subtitle">Avg ${(totalNights/years.length).toFixed(0)}/year</div></div>
                 <div class="analytics-stat-card"><div class="analytics-stat-header"><div class="analytics-stat-title">Occupancy</div><div class="analytics-stat-icon" style="background:#2563eb"><i class="fas fa-percent"></i></div></div><div class="analytics-stat-value">${occupancy}%</div><div class="analytics-stat-subtitle">over selected period</div></div>
             `;
@@ -2803,7 +2836,7 @@
                 });
             }
 
-            // Yearly Expenses
+            // Yearly Expenses (total)
             const ctxExpense = document.getElementById('yearlyExpenseChart')?.getContext('2d');
             if (ctxExpense) {
                 state.charts.yearlyExpense = new Chart(ctxExpense, {
@@ -2858,13 +2891,15 @@
                 });
             }
 
-            // Yearly table
+            // Yearly table with personal expenses
             const tbody = document.getElementById('yearly-comparison-body');
             tbody.innerHTML = '';
             years.forEach(y => {
                 const data = yearly[y];
-                const total = data.transfer + data.meal + data.commission + data.nocommission;
-                const profit = total - data.expenses;
+                const totalIncome = data.transfer + data.meal + data.commission + data.nocommission;
+                const regularExp = data.expenses - data.personalExpenses;
+                const profit = totalIncome - regularExp;
+                const net = profit - data.personalExpenses;
                 // Calculate max nights per year
                 let maxNights = 0;
                 for (let m = 1; m <= 12; m++) {
@@ -2878,9 +2913,11 @@
                     <td class="currency-cell">$${data.meal.toFixed(2)}</td>
                     <td class="currency-cell">$${data.commission.toFixed(2)}</td>
                     <td class="currency-cell">$${data.nocommission.toFixed(2)}</td>
-                    <td class="currency-cell">$${total.toFixed(2)}</td>
+                    <td class="currency-cell">$${totalIncome.toFixed(2)}</td>
                     <td class="expense-cell">$${data.expenses.toFixed(2)}</td>
                     <td class="${profit>=0?'currency-cell':'expense-cell'}">$${profit.toFixed(2)}</td>
+                    <td class="personal-expense-cell">$${data.personalExpenses.toFixed(2)}</td>
+                    <td class="${net>=0?'currency-cell':'expense-cell'}">$${net.toFixed(2)}</td>
                     <td>${data.nights || 0}</td>
                     <td>${occupancy}%</td>
                 </tr>`;
@@ -2932,7 +2969,7 @@
             });
             exportToCSV(data, 'expenses.csv');
         });
-        // Updated export-analytics-btn
+        // Updated export-analytics-btn with personal expenses
         document.getElementById('export-analytics-btn')?.addEventListener('click', () => {
             const monthly = getAnalyticsFilteredData();
             const months = Object.keys(monthly).sort();
@@ -2942,15 +2979,20 @@
                 const maxNights = days * 4;
                 const nights = monthly[m].nights || 0;
                 const occupancy = maxNights > 0 ? ((nights / maxNights) * 100).toFixed(1) : '0.0';
+                const totalIncome = monthly[m].transfer + monthly[m].meal + monthly[m].commission + monthly[m].nocommission;
+                const regularExp = monthly[m].expenses - monthly[m].personalExpenses;
+                const profit = totalIncome - regularExp;
                 return {
                     Period: m,
                     Transfer: monthly[m].transfer.toFixed(2),
                     Meal: monthly[m].meal.toFixed(2),
                     Commission: monthly[m].commission.toFixed(2),
                     NoCommission: monthly[m].nocommission.toFixed(2),
-                    TotalIncome: (monthly[m].transfer + monthly[m].meal + monthly[m].commission + monthly[m].nocommission).toFixed(2),
+                    TotalIncome: totalIncome.toFixed(2),
                     Expenses: monthly[m].expenses.toFixed(2),
-                    Profit: (monthly[m].transfer + monthly[m].meal + monthly[m].commission + monthly[m].nocommission - monthly[m].expenses).toFixed(2),
+                    Profit: profit.toFixed(2),
+                    PersonalExpenses: monthly[m].personalExpenses.toFixed(2),
+                    NetAfterPersonal: (profit - monthly[m].personalExpenses).toFixed(2),
                     Nights: nights,
                     Occupancy: occupancy + '%'
                 };
@@ -3149,7 +3191,7 @@
             // Multi-year comparison
             document.getElementById('apply-year-compare')?.addEventListener('click', renderYearlyComparison);
 
-            // NEW: Month filter buttons
+            // Month filter buttons
             document.getElementById('apply-month-filter')?.addEventListener('click', () => {
                 const month = document.getElementById('analytics-month-select').value;
                 const year = document.getElementById('analytics-year-select').value;
