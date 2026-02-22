@@ -8,7 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        /* ========== FULL ORIGINAL STYLES ========== */
+        /* ========== FULL ORIGINAL STYLES (unchanged) ========== */
         :root {
             --primary-color: #2563eb;
             --primary-dark: #1d4ed8;
@@ -651,7 +651,7 @@
                 </div>
             </div>
 
-            <!-- NEW Reservations Stats Content -->
+            <!-- NEW Reservations Stats Content (modified with filters and summaries) -->
             <div class="content-wrapper" id="reservations-stats-content" style="display: none;">
                 <div class="panel-container">
                     <!-- Commission Panel -->
@@ -671,14 +671,37 @@
                                 <input type="number" class="form-control" id="commission-stays" placeholder="Total Stays" step="1">
                             </div>
                             <button class="btn btn-primary" id="add-commission-btn"><i class="fas fa-plus"></i> Add Commission Record</button>
+
+                            <!-- NEW: Filter row -->
+                            <div class="commission-filters" style="display: flex; gap: 10px; margin: 15px 0; flex-wrap: wrap;">
+                                <input type="month" id="commission-filter-month" class="form-control" style="width: auto;" placeholder="Filter by month">
+                                <select id="commission-filter-room" class="form-control" style="width: auto;">
+                                    <option value="">All Rooms</option>
+                                </select>
+                                <button class="btn btn-secondary btn-sm" id="apply-commission-filters"><i class="fas fa-filter"></i> Apply</button>
+                                <button class="btn btn-secondary btn-sm" id="clear-commission-filters"><i class="fas fa-times"></i> Clear</button>
+                            </div>
+
                             <div class="table-wrapper" style="margin-top: 20px;">
                                 <table class="data-table" id="commission-table">
                                     <thead><tr><th>Month</th><th>Room</th><th>Total Income</th><th>Total Stays</th><th>Actions</th></tr></thead>
                                     <tbody id="commission-body"></tbody>
                                 </table>
                             </div>
+
+                            <!-- NEW: Summary table -->
+                            <div class="commission-summary" style="margin-top: 30px;">
+                                <h4>Commission Summary by Room & Month</h4>
+                                <div class="table-wrapper">
+                                    <table class="data-table" id="commission-summary-table">
+                                        <thead><tr><th>Month</th><th>Room</th><th>Total Income</th><th>Total Stays</th><th>Occupancy %</th></tr></thead>
+                                        <tbody id="commission-summary-body"></tbody>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
                     </div>
+
                     <!-- No Commission Panel -->
                     <div class="panel">
                         <div class="panel-header"><h2><i class="fas fa-times-circle"></i> No Commission</h2></div>
@@ -696,16 +719,39 @@
                                 <input type="number" class="form-control" id="no-commission-stays" placeholder="Total Stays" step="1">
                             </div>
                             <button class="btn btn-primary" id="add-no-commission-btn"><i class="fas fa-plus"></i> Add No Commission Record</button>
+
+                            <!-- NEW: Filter row -->
+                            <div class="no-commission-filters" style="display: flex; gap: 10px; margin: 15px 0; flex-wrap: wrap;">
+                                <input type="month" id="no-commission-filter-month" class="form-control" style="width: auto;" placeholder="Filter by month">
+                                <select id="no-commission-filter-room" class="form-control" style="width: auto;">
+                                    <option value="">All Rooms</option>
+                                </select>
+                                <button class="btn btn-secondary btn-sm" id="apply-no-commission-filters"><i class="fas fa-filter"></i> Apply</button>
+                                <button class="btn btn-secondary btn-sm" id="clear-no-commission-filters"><i class="fas fa-times"></i> Clear</button>
+                            </div>
+
                             <div class="table-wrapper" style="margin-top: 20px;">
                                 <table class="data-table" id="no-commission-table">
                                     <thead><tr><th>Month</th><th>Room</th><th>Total Income</th><th>Total Stays</th><th>Actions</th></tr></thead>
                                     <tbody id="no-commission-body"></tbody>
                                 </table>
                             </div>
+
+                            <!-- NEW: Summary table -->
+                            <div class="no-commission-summary" style="margin-top: 30px;">
+                                <h4>No Commission Summary by Room & Month</h4>
+                                <div class="table-wrapper">
+                                    <table class="data-table" id="no-commission-summary-table">
+                                        <thead><tr><th>Month</th><th>Room</th><th>Total Income</th><th>Total Stays</th><th>Occupancy %</th></tr></thead>
+                                        <tbody id="no-commission-summary-body"></tbody>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <!-- Third Panel: Transfer and Meal Income (auto from reservations) -->
+
+                <!-- Third Panel: Transfer and Meal Income (unchanged) -->
                 <div class="panel" style="margin-top: 24px;">
                     <div class="panel-header"><h2><i class="fas fa-truck"></i> Transfer & Meal Income (from reservations)</h2></div>
                     <div class="panel-body">
@@ -830,7 +876,7 @@
         </div>
     </div>
 
-    <!-- ========== FIREBASE SCRIPT (full working version with all fixes) ========== -->
+    <!-- ========== FIREBASE SCRIPT (with new features) ========== -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
         import { 
@@ -868,7 +914,10 @@
             editingCategoryId: null, deletingCategoryId: null,
             currentCalendarDate: new Date(), selectedCalendarDate: null, calendarView: 'month',
             charts: {},
-            transferFilterRoom: ''
+            transferFilterRoom: '',
+            // New filter states for commission/no‑commission
+            commissionFilters: { month: '', room: '' },
+            noCommissionFilters: { month: '', room: '' }
         };
 
         function showNotification(msg, type = 'info') {
@@ -922,6 +971,10 @@
                 renderCommissionStats();
                 renderNoCommissionStats();
                 renderTransferMealAuto();
+                populateCommissionRoomFilter();
+                populateNoCommissionRoomFilter();
+                renderCommissionSummary();
+                renderNoCommissionSummary();
 
                 if (state.currentPage === 'calendar') renderCalendar();
                 if (state.currentPage === 'analytics') renderAnalytics();
@@ -1231,25 +1284,101 @@
             } catch (e) { console.error(e); showNotification('Delete failed', 'error'); }
         }
 
+        function populateCommissionRoomFilter() {
+            const rooms = [...new Set(state.commissionStats.map(s => s.room).filter(Boolean))];
+            const select = document.getElementById('commission-filter-room');
+            if (select) {
+                select.innerHTML = '<option value="">All Rooms</option>';
+                rooms.forEach(room => {
+                    const option = document.createElement('option');
+                    option.value = room;
+                    option.textContent = room;
+                    select.appendChild(option);
+                });
+            }
+        }
+
+        function getFilteredCommissionStats() {
+            let filtered = state.commissionStats;
+            if (state.commissionFilters.month) {
+                filtered = filtered.filter(s => s.month === state.commissionFilters.month);
+            }
+            if (state.commissionFilters.room) {
+                filtered = filtered.filter(s => s.room === state.commissionFilters.room);
+            }
+            return filtered;
+        }
+
         function renderCommissionStats() {
             const tbody = document.getElementById('commission-body');
             if (!tbody) return;
+            const filtered = getFilteredCommissionStats();
             tbody.innerHTML = '';
-            if (state.commissionStats.length === 0) {
+            if (filtered.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state">No commission records</div></td></tr>';
                 return;
             }
-            state.commissionStats.forEach(stat => {
+            filtered.forEach(stat => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td>${stat.month}</td>
                     <td>${stat.room || ''}</td>
-                    <td class="currency-cell">$${stat.income.toFixed(2)}</td>
-                    <td>${stat.stays}</td>
+                    <td class="currency-cell">$${(stat.income || 0).toFixed(2)}</td>
+                    <td>${stat.stays || 0}</td>
                     <td><div class="action-buttons"><button class="btn-icon delete" onclick="window.deleteCommissionStat('${stat.id}')"><i class="fas fa-trash-alt"></i></button></div></td>
                 `;
                 tbody.appendChild(tr);
             });
+        }
+
+        function renderCommissionSummary() {
+            const tbody = document.getElementById('commission-summary-body');
+            if (!tbody) return;
+            const filtered = getFilteredCommissionStats();
+            const grouped = {};
+            filtered.forEach(s => {
+                const key = s.month + '|' + s.room;
+                if (!grouped[key]) {
+                    grouped[key] = { month: s.month, room: s.room, income: 0, stays: 0 };
+                }
+                grouped[key].income += s.income || 0;
+                grouped[key].stays += s.stays || 0;
+            });
+            const sorted = Object.values(grouped).sort((a,b) => a.month.localeCompare(b.month) || a.room.localeCompare(b.room));
+            tbody.innerHTML = '';
+            if (sorted.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state">No data</div></td></tr>';
+                return;
+            }
+            sorted.forEach(item => {
+                const [year, month] = item.month.split('-').map(Number);
+                const daysInMonth = new Date(year, month, 0).getDate();
+                const occupancy = item.stays > 0 ? ((item.stays / daysInMonth) * 100).toFixed(1) : '0.0';
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${item.month}</td>
+                    <td>${item.room}</td>
+                    <td class="currency-cell">$${item.income.toFixed(2)}</td>
+                    <td>${item.stays}</td>
+                    <td>${occupancy}%</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function applyCommissionFilters() {
+            state.commissionFilters.month = document.getElementById('commission-filter-month').value;
+            state.commissionFilters.room = document.getElementById('commission-filter-room').value;
+            renderCommissionStats();
+            renderCommissionSummary();
+        }
+
+        function clearCommissionFilters() {
+            state.commissionFilters = { month: '', room: '' };
+            document.getElementById('commission-filter-month').value = '';
+            document.getElementById('commission-filter-room').value = '';
+            renderCommissionStats();
+            renderCommissionSummary();
         }
 
         async function addNoCommissionStat() {
@@ -1282,25 +1411,101 @@
             } catch (e) { console.error(e); showNotification('Delete failed', 'error'); }
         }
 
+        function populateNoCommissionRoomFilter() {
+            const rooms = [...new Set(state.noCommissionStats.map(s => s.room).filter(Boolean))];
+            const select = document.getElementById('no-commission-filter-room');
+            if (select) {
+                select.innerHTML = '<option value="">All Rooms</option>';
+                rooms.forEach(room => {
+                    const option = document.createElement('option');
+                    option.value = room;
+                    option.textContent = room;
+                    select.appendChild(option);
+                });
+            }
+        }
+
+        function getFilteredNoCommissionStats() {
+            let filtered = state.noCommissionStats;
+            if (state.noCommissionFilters.month) {
+                filtered = filtered.filter(s => s.month === state.noCommissionFilters.month);
+            }
+            if (state.noCommissionFilters.room) {
+                filtered = filtered.filter(s => s.room === state.noCommissionFilters.room);
+            }
+            return filtered;
+        }
+
         function renderNoCommissionStats() {
             const tbody = document.getElementById('no-commission-body');
             if (!tbody) return;
+            const filtered = getFilteredNoCommissionStats();
             tbody.innerHTML = '';
-            if (state.noCommissionStats.length === 0) {
+            if (filtered.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state">No no-commission records</div></td></tr>';
                 return;
             }
-            state.noCommissionStats.forEach(stat => {
+            filtered.forEach(stat => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td>${stat.month}</td>
                     <td>${stat.room || ''}</td>
-                    <td class="currency-cell">$${stat.income.toFixed(2)}</td>
-                    <td>${stat.stays}</td>
+                    <td class="currency-cell">$${(stat.income || 0).toFixed(2)}</td>
+                    <td>${stat.stays || 0}</td>
                     <td><div class="action-buttons"><button class="btn-icon delete" onclick="window.deleteNoCommissionStat('${stat.id}')"><i class="fas fa-trash-alt"></i></button></div></td>
                 `;
                 tbody.appendChild(tr);
             });
+        }
+
+        function renderNoCommissionSummary() {
+            const tbody = document.getElementById('no-commission-summary-body');
+            if (!tbody) return;
+            const filtered = getFilteredNoCommissionStats();
+            const grouped = {};
+            filtered.forEach(s => {
+                const key = s.month + '|' + s.room;
+                if (!grouped[key]) {
+                    grouped[key] = { month: s.month, room: s.room, income: 0, stays: 0 };
+                }
+                grouped[key].income += s.income || 0;
+                grouped[key].stays += s.stays || 0;
+            });
+            const sorted = Object.values(grouped).sort((a,b) => a.month.localeCompare(b.month) || a.room.localeCompare(b.room));
+            tbody.innerHTML = '';
+            if (sorted.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state">No data</div></td></tr>';
+                return;
+            }
+            sorted.forEach(item => {
+                const [year, month] = item.month.split('-').map(Number);
+                const daysInMonth = new Date(year, month, 0).getDate();
+                const occupancy = item.stays > 0 ? ((item.stays / daysInMonth) * 100).toFixed(1) : '0.0';
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${item.month}</td>
+                    <td>${item.room}</td>
+                    <td class="currency-cell">$${item.income.toFixed(2)}</td>
+                    <td>${item.stays}</td>
+                    <td>${occupancy}%</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function applyNoCommissionFilters() {
+            state.noCommissionFilters.month = document.getElementById('no-commission-filter-month').value;
+            state.noCommissionFilters.room = document.getElementById('no-commission-filter-room').value;
+            renderNoCommissionStats();
+            renderNoCommissionSummary();
+        }
+
+        function clearNoCommissionFilters() {
+            state.noCommissionFilters = { month: '', room: '' };
+            document.getElementById('no-commission-filter-month').value = '';
+            document.getElementById('no-commission-filter-room').value = '';
+            renderNoCommissionStats();
+            renderNoCommissionSummary();
         }
 
         function renderTransferMealAuto() {
@@ -2569,6 +2774,12 @@
                 renderTransferMealAuto();
                 showNotification('Transfer/Meal data refreshed', 'success');
             });
+
+            // New commission filter buttons
+            document.getElementById('apply-commission-filters')?.addEventListener('click', applyCommissionFilters);
+            document.getElementById('clear-commission-filters')?.addEventListener('click', clearCommissionFilters);
+            document.getElementById('apply-no-commission-filters')?.addEventListener('click', applyNoCommissionFilters);
+            document.getElementById('clear-no-commission-filters')?.addEventListener('click', clearNoCommissionFilters);
 
             // Print
             document.getElementById('print-btn')?.addEventListener('click', () => window.print());
