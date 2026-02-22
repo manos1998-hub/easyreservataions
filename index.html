@@ -779,7 +779,8 @@
                         <!-- Added table-wrapper for horizontal scroll on mobile -->
                         <div class="table-wrapper">
                             <table class="data-table" id="analytics-table">
-                                <thead><tr><th>Period</th><th>Reservations</th><th>Transfer</th><th>Meal</th><th>Commission</th><th>No Commission</th><th>Total Income</th><th>Expenses</th><th>Profit</th><th>Cumulative</th><th>Margin</th></tr></thead>
+                                <thead><tr><th>Period</th><th>Reservations</th><th>Transfer</th><th>Meal</th><th>Commission</th><th>No Commission</th><th>Total Income</th><th>Expenses</th><th>Profit</th><th>Cumulative</th><th>Margin</th><th>Nights</th><th>Occupancy %</th></tr>                            
+                                </thead>
                                 <tbody id="analytics-body"></tbody>
                             </table>
                         </div>
@@ -1510,82 +1511,108 @@
             const period = document.getElementById('analytics-period').value;
             const cutoff = period === 'all' ? new Date(0) : new Date(Date.now() - parseInt(period)*24*60*60*1000);
             
-            // Monthly data from reservations
-            let monthly = {};
-            let totalTransfer = 0, totalMeal = 0;
+            let monthly = {}; // each month will have transfer, meal, commission, nocommission, expenses, count, nights
+        
+            // Helper to get days in month
+            function daysInMonth(year, month) {
+                return new Date(year, month + 1, 0).getDate();
+            }
+        
+            // Process reservations for income and nights
             state.reservations.forEach(r => {
-                const d = new Date(r.checkin);
-                if (d >= cutoff) {
-                    const monthKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-                    const transfer = r.transferAmount || 0;
-                    const meal = r.mealPrice || 0;
-                    totalTransfer += transfer;
-                    totalMeal += meal;
-                    if (!monthly[monthKey]) monthly[monthKey] = { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, count:0 };
-                    monthly[monthKey].transfer += transfer;
-                    monthly[monthKey].meal += meal;
+                const checkin = new Date(r.checkin);
+                const checkout = new Date(r.checkout);
+                if (checkin >= cutoff) {
+                    // For each night (day from checkin to checkout-1)
+                    let current = new Date(checkin);
+                    while (current < checkout) {
+                        const year = current.getFullYear();
+                        const month = current.getMonth();
+                        const monthKey = `${year}-${String(month+1).padStart(2,'0')}`;
+                        if (!monthly[monthKey]) {
+                            monthly[monthKey] = { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, count:0, nights:0 };
+                        }
+                        monthly[monthKey].nights += 1; // one night for this day
+                        current.setDate(current.getDate() + 1);
+                    }
+                    // Add income (we attribute all income to check-in month for simplicity, as before)
+                    const monthKey = `${checkin.getFullYear()}-${String(checkin.getMonth()+1).padStart(2,'0')}`;
+                    if (!monthly[monthKey]) {
+                        monthly[monthKey] = { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, count:0, nights:0 };
+                    }
+                    monthly[monthKey].transfer += r.transferAmount || 0;
+                    monthly[monthKey].meal += r.mealPrice || 0;
                     monthly[monthKey].count += 1;
                 }
             });
-
-            // Monthly expenses
+        
+            // Process expenses
             state.expenses.forEach(e => {
                 const d = new Date(e.date);
                 if (d >= cutoff) {
                     const monthKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-                    if (!monthly[monthKey]) monthly[monthKey] = { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, count:0 };
+                    if (!monthly[monthKey]) {
+                        monthly[monthKey] = { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, count:0, nights:0 };
+                    }
                     monthly[monthKey].expenses += parseFloat(e.amount)||0;
                 }
             });
-
-            // Monthly commission and no commission
-            let totalCommission = 0, totalNoCommission = 0;
+        
+            // Process commission and no commission stats
             state.commissionStats.forEach(c => {
-                const [year, month] = c.month.split('-');
-                const d = new Date(parseInt(year), parseInt(month)-1, 1);
+                const [year, month] = c.month.split('-').map(Number);
+                const d = new Date(year, month-1, 1);
                 if (d >= cutoff) {
-                    const monthKey = c.month; // already YYYY-MM
-                    if (!monthly[monthKey]) monthly[monthKey] = { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, count:0 };
+                    const monthKey = c.month;
+                    if (!monthly[monthKey]) {
+                        monthly[monthKey] = { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, count:0, nights:0 };
+                    }
                     monthly[monthKey].commission += c.income || 0;
-                    totalCommission += c.income || 0;
                 }
             });
             state.noCommissionStats.forEach(nc => {
-                const [year, month] = nc.month.split('-');
-                const d = new Date(parseInt(year), parseInt(month)-1, 1);
+                const [year, month] = nc.month.split('-').map(Number);
+                const d = new Date(year, month-1, 1);
                 if (d >= cutoff) {
                     const monthKey = nc.month;
-                    if (!monthly[monthKey]) monthly[monthKey] = { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, count:0 };
+                    if (!monthly[monthKey]) {
+                        monthly[monthKey] = { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, count:0, nights:0 };
+                    }
                     monthly[monthKey].nocommission += nc.income || 0;
-                    totalNoCommission += nc.income || 0;
                 }
             });
-
+        
             const months = Object.keys(monthly).sort();
             const labels = months.map(m => { let [y,mo]=m.split('-'); return new Date(y,mo-1).toLocaleString('default',{month:'short'})+' '+y; });
+        
             const transferData = months.map(m => monthly[m].transfer);
             const mealData = months.map(m => monthly[m].meal);
             const commissionData = months.map(m => monthly[m].commission);
             const nocommissionData = months.map(m => monthly[m].nocommission);
             const expenseData = months.map(m => monthly[m].expenses);
             const totalIncomeData = months.map(m => monthly[m].transfer + monthly[m].meal + monthly[m].commission + monthly[m].nocommission);
-            const profitData = months.map(m => totalIncomeData[months.indexOf(m)] - monthly[m].expenses);
-
+            const nightsData = months.map(m => monthly[m].nights || 0);
+        
+            const totalTransfer = transferData.reduce((a,b)=>a+b,0);
+            const totalMeal = mealData.reduce((a,b)=>a+b,0);
+            const totalCommission = commissionData.reduce((a,b)=>a+b,0);
+            const totalNoCommission = nocommissionData.reduce((a,b)=>a+b,0);
             const totalRevenue = totalTransfer + totalMeal + totalCommission + totalNoCommission;
+        
             document.getElementById('analytics-total-revenue').textContent = `$${totalRevenue.toFixed(2)}`;
             document.getElementById('analytics-transfer-income').textContent = `$${totalTransfer.toFixed(2)}`;
             document.getElementById('analytics-meal-income').textContent = `$${totalMeal.toFixed(2)}`;
             document.getElementById('analytics-commission-income').textContent = `$${totalCommission.toFixed(2)}`;
             document.getElementById('analytics-nocommission-income').textContent = `$${totalNoCommission.toFixed(2)}`;
             document.getElementById('analytics-total-expenses').textContent = `$${state.expenses.reduce((s,e)=>s+parseFloat(e.amount),0).toFixed(2)}`;
-
+        
             // Destroy old charts
             if (state.charts.incomeExpense) state.charts.incomeExpense.destroy();
             if (state.charts.expenseCategory) state.charts.expenseCategory.destroy();
             if (state.charts.monthlyTrend) state.charts.monthlyTrend.destroy();
             if (state.charts.profitMargin) state.charts.profitMargin.destroy();
-
-            // Income vs Expenses chart
+        
+            // Income vs Expenses
             const ctx1 = document.getElementById('incomeExpenseChart').getContext('2d');
             state.charts.incomeExpense = new Chart(ctx1, {
                 type: 'bar',
@@ -1594,8 +1621,8 @@
                     { label: 'Expenses', data: expenseData, backgroundColor: 'rgba(239,68,68,0.7)' }
                 ]}
             });
-
-            // Expense by Category (same as before)
+        
+            // Expense by Category
             const catTotals = {};
             state.expenses.filter(e => new Date(e.date) >= cutoff).forEach(e => {
                 const cat = state.expenseCategories.find(c => c.id === e.categoryId);
@@ -1613,8 +1640,8 @@
                     }]
                 }
             });
-
-            // Monthly Revenue by Type (line chart with all four)
+        
+            // Monthly Revenue by Type
             const ctx3 = document.getElementById('monthlyTrendChart').getContext('2d');
             state.charts.monthlyTrend = new Chart(ctx3, {
                 type: 'line',
@@ -1625,7 +1652,7 @@
                     { label: 'No Commission', data: nocommissionData, borderColor: '#0ea5e9', fill: false }
                 ]}
             });
-
+        
             // Profit Margin
             const marginData = months.map(m => {
                 const total = monthly[m].transfer + monthly[m].meal + monthly[m].commission + monthly[m].nocommission;
@@ -1636,12 +1663,16 @@
                 type: 'bar',
                 data: { labels, datasets: [{ label: 'Profit Margin %', data: marginData, backgroundColor: marginData.map(v=>v>=0?'rgba(16,185,129,0.7)':'rgba(239,68,68,0.7)') }] }
             });
-
-            // Detailed table
+        
+            // Detailed table with nights and occupancy
             const tbody = document.getElementById('analytics-body');
             tbody.innerHTML = '';
             let cumulative = 0;
             months.forEach(m => {
+                const [y, mo] = m.split('-').map(Number);
+                const days = new Date(y, mo, 0).getDate(); // days in month
+                const maxNights = days * 4; // 4 rooms
+        
                 const transfer = monthly[m].transfer;
                 const meal = monthly[m].meal;
                 const commission = monthly[m].commission;
@@ -1651,6 +1682,9 @@
                 const profit = total - exp;
                 cumulative += profit;
                 const margin = total>0 ? (profit/total*100).toFixed(1) : '0.0';
+                const nights = monthly[m].nights || 0;
+                const occupancy = maxNights > 0 ? ((nights / maxNights) * 100).toFixed(1) : '0.0';
+        
                 const row = `<tr>
                     <td>${m}</td>
                     <td>${monthly[m].count}</td>
@@ -1663,11 +1697,13 @@
                     <td class="${profit>=0?'currency-cell':'expense-cell'}">$${profit.toFixed(2)}</td>
                     <td class="${cumulative>=0?'currency-cell':'expense-cell'}">$${cumulative.toFixed(2)}</td>
                     <td>${margin}%</td>
+                    <td>${nights}</td>
+                    <td>${occupancy}%</td>
                 </tr>`;
                 tbody.innerHTML += row;
             });
-
-            // This month / last month comparison
+        
+            // This month / last month
             const now = new Date();
             const thisMonthKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
             const lastMonth = new Date(now.getFullYear(), now.getMonth()-1, 1);
