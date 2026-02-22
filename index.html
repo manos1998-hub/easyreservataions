@@ -858,7 +858,7 @@
                                         <th>Commission</th>
                                         <th>No Comm</th>
                                         <th>Total Income</th>
-                                        <th>Expenses</th>
+                                        <th>Expenses*</th>
                                         <th>Profit</th>
                                         <th>Personal Expenses</th>
                                         <th>Cumulative (after personal)</th>
@@ -869,6 +869,7 @@
                                 </thead>
                                 <tbody id="analytics-body"></tbody>
                             </table>
+                            <p style="font-size:12px; color:var(--text-secondary); margin-top:8px;">* Expenses column shows non‑personal expenses only.</p>
                         </div>
                     </div>
                 </div>
@@ -928,7 +929,7 @@
                                             <th>Commission</th>
                                             <th>No Commission</th>
                                             <th>Total Income</th>
-                                            <th>Expenses</th>
+                                            <th>Expenses*</th>
                                             <th>Profit</th>
                                             <th>Personal Expenses</th>
                                             <th>Net after Personal</th>
@@ -938,6 +939,7 @@
                                     </thead>
                                     <tbody id="yearly-comparison-body"></tbody>
                                 </table>
+                                <p style="font-size:12px; color:var(--text-secondary); margin-top:8px;">* Expenses column shows non‑personal expenses only.</p>
                             </div>
                         </div>
                     </div>
@@ -1273,7 +1275,7 @@
             document.getElementById('highest-category').textContent = maxCat.name;
         }
 
-        // renderAnalytics with personal expenses separation
+        // renderAnalytics with personal expenses separation and pie chart excluding personal
         function renderAnalytics() {
             const monthly = getAnalyticsFilteredData();
             const months = Object.keys(monthly).sort();
@@ -1325,7 +1327,7 @@
                 }
             });
 
-            // Expense by Category (still total expenses)
+            // Expense by Category (exclude PERSONAL)
             const catTotals = {};
             const monthFilterActive = state.selectedAnalyticsMonth && state.selectedAnalyticsYear;
             const filteredExpenses = monthFilterActive
@@ -1334,7 +1336,10 @@
                     return d.getFullYear() === state.selectedAnalyticsYear && d.getMonth() + 1 === state.selectedAnalyticsMonth;
                   })
                 : state.expenses;
+            const personalCat = state.expenseCategories.find(c => c.name === 'PERSONAL');
+            const personalCatId = personalCat ? personalCat.id : null;
             filteredExpenses.forEach(e => {
+                if (e.categoryId === personalCatId) return; // skip personal
                 const cat = state.expenseCategories.find(c => c.id === e.categoryId);
                 const name = cat ? cat.name : 'Uncategorized';
                 catTotals[name] = (catTotals[name] || 0) + parseFloat(e.amount);
@@ -1382,7 +1387,7 @@
                 }
             });
 
-            // Detailed table with personal expenses
+            // Detailed table with personal expenses – Expenses column now shows non‑personal expenses
             const tbody = document.getElementById('analytics-body');
             tbody.innerHTML = '';
             let cumulativeNet = 0; // after personal expenses
@@ -1398,9 +1403,9 @@
                 const totalIncome = transfer + meal + commission + nocommission;
                 const totalExp = monthly[m].expenses;
                 const personalExp = monthly[m].personalExpenses;
-                const regularExp = totalExp - personalExp;
-                const profit = totalIncome - regularExp; // profit before personal
-                const net = profit - personalExp; // after personal
+                const regularExp = totalExp - personalExp; // non‑personal expenses
+                const profit = totalIncome - regularExp;   // profit before personal
+                const net = profit - personalExp;          // after personal
                 cumulativeNet += net;
                 const margin = totalIncome > 0 ? (profit / totalIncome * 100).toFixed(1) : '0.0';
                 const nights = monthly[m].nights || 0;
@@ -1413,7 +1418,7 @@
                     <td class="currency-cell">$${commission.toFixed(2)}</td>
                     <td class="currency-cell">$${nocommission.toFixed(2)}</td>
                     <td class="currency-cell">$${totalIncome.toFixed(2)}</td>
-                    <td class="expense-cell">$${totalExp.toFixed(2)}</td>
+                    <td class="expense-cell">$${regularExp.toFixed(2)}</td>
                     <td class="${profit >= 0 ? 'currency-cell' : 'expense-cell'}">$${profit.toFixed(2)}</td>
                     <td class="personal-expense-cell">$${personalExp.toFixed(2)}</td>
                     <td class="${cumulativeNet >= 0 ? 'currency-cell' : 'expense-cell'}">$${cumulativeNet.toFixed(2)}</td>
@@ -2773,6 +2778,7 @@
             return yearly;
         }
 
+        // renderYearlyComparison with personal expenses and pie chart excluding personal
         function renderYearlyComparison() {
             const start = parseInt(document.getElementById('year-compare-start').value);
             const end = parseInt(document.getElementById('year-compare-end').value);
@@ -2867,11 +2873,14 @@
                 });
             }
 
-            // Expense by Category Pie (all years)
+            // Expense by Category Pie (all years, excluding PERSONAL)
             const catTotals = {};
+            const personalCat = state.expenseCategories.find(c => c.name === 'PERSONAL');
+            const personalCatId = personalCat ? personalCat.id : null;
             state.expenses.forEach(e => {
                 const year = new Date(e.date).getFullYear();
                 if (year >= start && year <= end) {
+                    if (e.categoryId === personalCatId) return; // skip personal
                     const cat = state.expenseCategories.find(c => c.id === e.categoryId);
                     const name = cat ? cat.name : 'Uncategorized';
                     catTotals[name] = (catTotals[name] || 0) + parseFloat(e.amount);
@@ -2891,7 +2900,7 @@
                 });
             }
 
-            // Yearly table with personal expenses
+            // Yearly table with personal expenses – Expenses column now shows non‑personal
             const tbody = document.getElementById('yearly-comparison-body');
             tbody.innerHTML = '';
             years.forEach(y => {
@@ -2914,7 +2923,7 @@
                     <td class="currency-cell">$${data.commission.toFixed(2)}</td>
                     <td class="currency-cell">$${data.nocommission.toFixed(2)}</td>
                     <td class="currency-cell">$${totalIncome.toFixed(2)}</td>
-                    <td class="expense-cell">$${data.expenses.toFixed(2)}</td>
+                    <td class="expense-cell">$${regularExp.toFixed(2)}</td>
                     <td class="${profit>=0?'currency-cell':'expense-cell'}">$${profit.toFixed(2)}</td>
                     <td class="personal-expense-cell">$${data.personalExpenses.toFixed(2)}</td>
                     <td class="${net>=0?'currency-cell':'expense-cell'}">$${net.toFixed(2)}</td>
@@ -2969,7 +2978,7 @@
             });
             exportToCSV(data, 'expenses.csv');
         });
-        // Updated export-analytics-btn with personal expenses
+        // Updated export-analytics-btn with regular expenses
         document.getElementById('export-analytics-btn')?.addEventListener('click', () => {
             const monthly = getAnalyticsFilteredData();
             const months = Object.keys(monthly).sort();
@@ -2989,7 +2998,7 @@
                     Commission: monthly[m].commission.toFixed(2),
                     NoCommission: monthly[m].nocommission.toFixed(2),
                     TotalIncome: totalIncome.toFixed(2),
-                    Expenses: monthly[m].expenses.toFixed(2),
+                    Expenses: regularExp.toFixed(2), // now regular expenses
                     Profit: profit.toFixed(2),
                     PersonalExpenses: monthly[m].personalExpenses.toFixed(2),
                     NetAfterPersonal: (profit - monthly[m].personalExpenses).toFixed(2),
