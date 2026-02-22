@@ -75,7 +75,8 @@
         .stat-change.positive { color: var(--success-color); }
         .stat-change.negative { color: var(--danger-color); }
         .panel-container { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px; }
-        @media (max-width: 1200px) { .panel-container { grid-template-columns: 1fr; } }
+           @media (max-width: 768px) { .panel-container { grid-template-columns: 1fr; } }
+        .panel-container .panel { min-width: 300px; }
         .panel { background-color: var(--card-bg); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); overflow: hidden; }
         .panel-header { padding: 20px 24px; border-bottom: 1px solid var(--border-color); background-color: var(--light-bg); }
         .panel-header h2 { font-size: 18px; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 10px; }
