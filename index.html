@@ -768,8 +768,45 @@
 
             <!-- Analytics Content (with Nights and Occupancy) - Time period changed to months -->
             <div class="content-wrapper" id="analytics-content" style="display: none;">
+                <!-- ========== NEW ANALYTICS FILTERS WITH MONTH SELECTOR ========== -->
                 <div class="analytics-filters">
-                    <div class="filter-group"><label class="filter-label">Time Period (months)</label>
+                    <!-- Month selector (new) -->
+                    <div class="filter-group">
+                        <label class="filter-label">Month</label>
+                        <select class="form-control" id="analytics-month-select" style="width:120px;">
+                            <option value="">Select Month</option>
+                            <option value="1">January</option>
+                            <option value="2">February</option>
+                            <option value="3">March</option>
+                            <option value="4">April</option>
+                            <option value="5">May</option>
+                            <option value="6">June</option>
+                            <option value="7">July</option>
+                            <option value="8">August</option>
+                            <option value="9">September</option>
+                            <option value="10">October</option>
+                            <option value="11">November</option>
+                            <option value="12">December</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Year</label>
+                        <select class="form-control" id="analytics-year-select" style="width:100px;">
+                            <option value="">Year</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">&nbsp;</label>
+                        <button class="btn btn-primary" id="apply-month-filter"><i class="fas fa-calendar-check"></i> Apply Month</button>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">&nbsp;</label>
+                        <button class="btn btn-secondary" id="clear-month-filter"><i class="fas fa-times"></i> Clear Month</button>
+                    </div>
+
+                    <!-- Existing period filter (keep it) -->
+                    <div class="filter-group">
+                        <label class="filter-label">Time Period (months)</label>
                         <select class="form-control" id="analytics-period">
                             <option value="1">Last 1 Month</option>
                             <option value="3">Last 3 Months</option>
@@ -778,8 +815,14 @@
                             <option value="all">All Time</option>
                         </select>
                     </div>
-                    <div class="filter-group"><label class="filter-label">&nbsp;</label><button class="btn btn-primary" id="apply-analytics-filters"><i class="fas fa-filter"></i> Apply</button></div>
-                    <div class="filter-group"><label class="filter-label">&nbsp;</label><button class="btn btn-success" id="export-analytics-btn"><i class="fas fa-file-excel"></i> Export</button></div>
+                    <div class="filter-group">
+                        <label class="filter-label">&nbsp;</label>
+                        <button class="btn btn-primary" id="apply-analytics-filters"><i class="fas fa-filter"></i> Apply</button>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">&nbsp;</label>
+                        <button class="btn btn-success" id="export-analytics-btn"><i class="fas fa-file-excel"></i> Export</button>
+                    </div>
                 </div>
                 <div class="analytics-stats">
                     <div class="analytics-stat-card"><div class="analytics-stat-header"><div class="analytics-stat-title">Total Revenue</div><div class="analytics-stat-icon" style="background-color: var(--success-color);"><i class="fas fa-dollar-sign"></i></div></div><div class="analytics-stat-value" id="analytics-total-revenue">$0</div><div class="analytics-stat-subtitle">All income</div></div>
@@ -995,7 +1038,10 @@
             commissionFilters: { month: '', room: '' },
             noCommissionFilters: { month: '', room: '' },
             // Year comparison filter
-            yearCompare: { start: null, end: null }
+            yearCompare: { start: null, end: null },
+            // NEW: Analytics month filter
+            selectedAnalyticsMonth: null,
+            selectedAnalyticsYear: null,
         };
 
         function showNotification(msg, type = 'info') {
@@ -1054,6 +1100,9 @@
                 renderCommissionSummary();
                 renderNoCommissionSummary();
 
+                // NEW: populate analytics year dropdown
+                populateAnalyticsYearSelect();
+
                 if (state.currentPage === 'calendar') renderCalendar();
                 if (state.currentPage === 'analytics') {
                     renderAnalytics();
@@ -1066,6 +1115,94 @@
                 }
                 showNotification('Data loaded', 'success');
             } catch (e) { console.error(e); showNotification('Load failed', 'error'); }
+        }
+
+        // NEW: populate year dropdown for analytics month selector
+        function populateAnalyticsYearSelect() {
+            const years = new Set();
+            state.reservations.forEach(r => r.checkin && years.add(new Date(r.checkin).getFullYear()));
+            state.commissionStats.forEach(c => c.month && years.add(parseInt(c.month.split('-')[0])));
+            state.noCommissionStats.forEach(nc => nc.month && years.add(parseInt(nc.month.split('-')[0])));
+            state.expenses.forEach(e => e.date && years.add(new Date(e.date).getFullYear()));
+            const sorted = Array.from(years).sort((a,b) => a - b);
+            const select = document.getElementById('analytics-year-select');
+            if (!select) return;
+            select.innerHTML = '<option value="">Year</option>';
+            sorted.forEach(y => select.innerHTML += `<option value="${y}">${y}</option>`);
+        }
+
+        // NEW: helper to get filtered data (respects month or period filter)
+        function getAnalyticsFilteredData() {
+            const monthFilterActive = state.selectedAnalyticsMonth && state.selectedAnalyticsYear;
+            let startDate, endDate;
+            if (monthFilterActive) {
+                const year = state.selectedAnalyticsYear;
+                const month = state.selectedAnalyticsMonth - 1; // 0‑based
+                startDate = new Date(year, month, 1);
+                endDate = new Date(year, month + 1, 0, 23, 59, 59);
+            } else {
+                const period = document.getElementById('analytics-period').value;
+                if (period === 'all') {
+                    startDate = new Date(0);
+                } else {
+                    startDate = new Date();
+                    startDate.setMonth(startDate.getMonth() - parseInt(period));
+                }
+                endDate = new Date(); // now
+            }
+
+            const monthly = {};
+
+            // Reservations (using checkin date)
+            state.reservations.forEach(r => {
+                if (!r.checkin) return;
+                const d = new Date(r.checkin);
+                if (d >= startDate && (!monthFilterActive || d <= endDate)) {
+                    const monthKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+                    if (!monthly[monthKey]) monthly[monthKey] = { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, nights:0 };
+                    monthly[monthKey].transfer += r.transferAmount || 0;
+                    monthly[monthKey].meal += r.mealPrice || 0;
+                }
+            });
+
+            // Expenses
+            state.expenses.forEach(e => {
+                if (!e.date) return;
+                const d = new Date(e.date);
+                if (d >= startDate && (!monthFilterActive || d <= endDate)) {
+                    const monthKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+                    if (!monthly[monthKey]) monthly[monthKey] = { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, nights:0 };
+                    monthly[monthKey].expenses += parseFloat(e.amount) || 0;
+                }
+            });
+
+            // Commission stats
+            state.commissionStats.forEach(c => {
+                if (!c.month) return;
+                const [y, m] = c.month.split('-').map(Number);
+                const d = new Date(y, m-1, 1);
+                if (d >= startDate && (!monthFilterActive || d <= endDate)) {
+                    const monthKey = c.month;
+                    if (!monthly[monthKey]) monthly[monthKey] = { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, nights:0 };
+                    monthly[monthKey].commission += c.income || 0;
+                    monthly[monthKey].nights += c.stays || 0;
+                }
+            });
+
+            // No‑commission stats
+            state.noCommissionStats.forEach(nc => {
+                if (!nc.month) return;
+                const [y, m] = nc.month.split('-').map(Number);
+                const d = new Date(y, m-1, 1);
+                if (d >= startDate && (!monthFilterActive || d <= endDate)) {
+                    const monthKey = nc.month;
+                    if (!monthly[monthKey]) monthly[monthKey] = { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, nights:0 };
+                    monthly[monthKey].nocommission += nc.income || 0;
+                    monthly[monthKey].nights += nc.stays || 0;
+                }
+            });
+
+            return monthly;
         }
 
         async function saveSettings() {
@@ -1125,77 +1262,14 @@
             document.getElementById('highest-category').textContent = maxCat.name;
         }
 
-        // ========== renderAnalytics – with month-based cutoff ==========
+        // ========== NEW renderAnalytics – with month filter support ==========
         function renderAnalytics() {
-            const period = document.getElementById('analytics-period').value;
-            let cutoff;
-            if (period === 'all') {
-                cutoff = new Date(0);
-            } else {
-                const months = parseInt(period);
-                cutoff = new Date();
-                cutoff.setMonth(cutoff.getMonth() - months);
-            }
-
-            let monthly = {};
-
-            // Process reservations for income only (no nights, no count)
-            state.reservations.forEach(r => {
-                const checkin = new Date(r.checkin);
-                if (checkin >= cutoff) {
-                    const monthKey = `${checkin.getFullYear()}-${String(checkin.getMonth() + 1).padStart(2, '0')}`;
-                    if (!monthly[monthKey]) {
-                        monthly[monthKey] = { transfer: 0, meal: 0, commission: 0, nocommission: 0, expenses: 0, nights: 0 };
-                    }
-                    monthly[monthKey].transfer += r.transferAmount || 0;
-                    monthly[monthKey].meal += r.mealPrice || 0;
-                }
-            });
-
-            // Process expenses
-            state.expenses.forEach(e => {
-                const d = new Date(e.date);
-                if (d >= cutoff) {
-                    const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-                    if (!monthly[monthKey]) {
-                        monthly[monthKey] = { transfer: 0, meal: 0, commission: 0, nocommission: 0, expenses: 0, nights: 0 };
-                    }
-                    monthly[monthKey].expenses += parseFloat(e.amount) || 0;
-                }
-            });
-
-            // Process commission stats (include nights)
-            state.commissionStats.forEach(c => {
-                const [year, month] = c.month.split('-').map(Number);
-                const d = new Date(year, month - 1, 1);
-                if (d >= cutoff) {
-                    const monthKey = c.month;
-                    if (!monthly[monthKey]) {
-                        monthly[monthKey] = { transfer: 0, meal: 0, commission: 0, nocommission: 0, expenses: 0, nights: 0 };
-                    }
-                    monthly[monthKey].commission += c.income || 0;
-                    monthly[monthKey].nights += c.stays || 0;
-                }
-            });
-
-            // Process no-commission stats (include nights)
-            state.noCommissionStats.forEach(nc => {
-                const [year, month] = nc.month.split('-').map(Number);
-                const d = new Date(year, month - 1, 1);
-                if (d >= cutoff) {
-                    const monthKey = nc.month;
-                    if (!monthly[monthKey]) {
-                        monthly[monthKey] = { transfer: 0, meal: 0, commission: 0, nocommission: 0, expenses: 0, nights: 0 };
-                    }
-                    monthly[monthKey].nocommission += nc.income || 0;
-                    monthly[monthKey].nights += nc.stays || 0;
-                }
-            });
-
+            const monthly = getAnalyticsFilteredData();
             const months = Object.keys(monthly).sort();
+
             const labels = months.map(m => {
                 let [y, mo] = m.split('-');
-                return new Date(y, mo - 1).toLocaleString('default', { month: 'short' }) + ' ' + y;
+                return new Date(y, mo-1).toLocaleString('default', { month: 'short' }) + ' ' + y;
             });
 
             const transferData = months.map(m => monthly[m].transfer);
@@ -1239,7 +1313,14 @@
 
             // Expense by Category
             const catTotals = {};
-            state.expenses.filter(e => new Date(e.date) >= cutoff).forEach(e => {
+            const monthFilterActive = state.selectedAnalyticsMonth && state.selectedAnalyticsYear;
+            const filteredExpenses = monthFilterActive
+                ? state.expenses.filter(e => {
+                    const d = new Date(e.date);
+                    return d.getFullYear() === state.selectedAnalyticsYear && d.getMonth() + 1 === state.selectedAnalyticsMonth;
+                  })
+                : state.expenses; // period filter is already applied in getAnalyticsFilteredData, but for pie we need all expenses in period
+            filteredExpenses.forEach(e => {
                 const cat = state.expenseCategories.find(c => c.id === e.categoryId);
                 const name = cat ? cat.name : 'Uncategorized';
                 catTotals[name] = (catTotals[name] || 0) + parseFloat(e.amount);
@@ -1287,7 +1368,7 @@
                 }
             });
 
-            // Detailed table with nights and occupancy (Reservations column removed)
+            // Detailed table with nights and occupancy
             const tbody = document.getElementById('analytics-body');
             tbody.innerHTML = '';
             let cumulative = 0;
@@ -1325,21 +1406,31 @@
                 tbody.innerHTML += row;
             });
 
-            // This month / last month
-            const now = new Date();
-            const thisMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-            const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-            const lastMonthKey = `${lastMonth.getFullYear()}-${String(lastMonth.getMonth() + 1).padStart(2, '0')}`;
-            const thisMonthData = monthly[thisMonthKey] || { transfer: 0, meal: 0, commission: 0, nocommission: 0, expenses: 0 };
-            const lastMonthData = monthly[lastMonthKey] || { transfer: 0, meal: 0, commission: 0, nocommission: 0, expenses: 0 };
-            const thisMonthIncome = thisMonthData.transfer + thisMonthData.meal + thisMonthData.commission + thisMonthData.nocommission;
-            const lastMonthIncome = lastMonthData.transfer + lastMonthData.meal + lastMonthData.commission + lastMonthData.nocommission;
-            document.getElementById('this-month-income').textContent = `$${thisMonthIncome.toFixed(2)}`;
-            document.getElementById('this-month-expenses').textContent = `$${thisMonthData.expenses.toFixed(2)}`;
-            document.getElementById('this-month-net').textContent = `$${(thisMonthIncome - thisMonthData.expenses).toFixed(2)}`;
-            document.getElementById('last-month-income').textContent = `$${lastMonthIncome.toFixed(2)}`;
-            document.getElementById('last-month-expenses').textContent = `$${lastMonthData.expenses.toFixed(2)}`;
-            document.getElementById('last-month-net').textContent = `$${(lastMonthIncome - lastMonthData.expenses).toFixed(2)}`;
+            // This month / last month (only if month filter is not active)
+            if (!monthFilterActive) {
+                const now = new Date();
+                const thisMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+                const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+                const lastMonthKey = `${lastMonth.getFullYear()}-${String(lastMonth.getMonth() + 1).padStart(2, '0')}`;
+                const thisMonthData = monthly[thisMonthKey] || { transfer: 0, meal: 0, commission: 0, nocommission: 0, expenses: 0 };
+                const lastMonthData = monthly[lastMonthKey] || { transfer: 0, meal: 0, commission: 0, nocommission: 0, expenses: 0 };
+                const thisMonthIncome = thisMonthData.transfer + thisMonthData.meal + thisMonthData.commission + thisMonthData.nocommission;
+                const lastMonthIncome = lastMonthData.transfer + lastMonthData.meal + lastMonthData.commission + lastMonthData.nocommission;
+                document.getElementById('this-month-income').textContent = `$${thisMonthIncome.toFixed(2)}`;
+                document.getElementById('this-month-expenses').textContent = `$${thisMonthData.expenses.toFixed(2)}`;
+                document.getElementById('this-month-net').textContent = `$${(thisMonthIncome - thisMonthData.expenses).toFixed(2)}`;
+                document.getElementById('last-month-income').textContent = `$${lastMonthIncome.toFixed(2)}`;
+                document.getElementById('last-month-expenses').textContent = `$${lastMonthData.expenses.toFixed(2)}`;
+                document.getElementById('last-month-net').textContent = `$${(lastMonthIncome - lastMonthData.expenses).toFixed(2)}`;
+            } else {
+                // Hide month comparison when a specific month is selected
+                document.getElementById('this-month-income').textContent = '$0';
+                document.getElementById('this-month-expenses').textContent = '$0';
+                document.getElementById('this-month-net').textContent = '$0';
+                document.getElementById('last-month-income').textContent = '$0';
+                document.getElementById('last-month-expenses').textContent = '$0';
+                document.getElementById('last-month-net').textContent = '$0';
+            }
         }
 
         // ========== COMMISSION / NO COMMISSION FUNCTIONS ==========
@@ -2841,55 +2932,9 @@
             });
             exportToCSV(data, 'expenses.csv');
         });
+        // Updated export-analytics-btn
         document.getElementById('export-analytics-btn')?.addEventListener('click', () => {
-            const period = document.getElementById('analytics-period').value;
-            let cutoff;
-            if (period === 'all') {
-                cutoff = new Date(0);
-            } else {
-                const months = parseInt(period);
-                cutoff = new Date();
-                cutoff.setMonth(cutoff.getMonth() - months);
-            }
-            let monthly = {};
-            // Process reservations for income only (no nights, no count)
-            state.reservations.forEach(r => {
-                const d = new Date(r.checkin);
-                if (d >= cutoff) {
-                    const monthKey = `${d.getFullYear()}-${d.getMonth()+1}`;
-                    if (!monthly[monthKey]) monthly[monthKey] = { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, nights:0 };
-                    monthly[monthKey].transfer += r.transferAmount || 0;
-                    monthly[monthKey].meal += r.mealPrice || 0;
-                }
-            });
-            state.expenses.forEach(e => {
-                const d = new Date(e.date);
-                if (d >= cutoff) {
-                    const monthKey = `${d.getFullYear()}-${d.getMonth()+1}`;
-                    if (!monthly[monthKey]) monthly[monthKey] = { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, nights:0 };
-                    monthly[monthKey].expenses += parseFloat(e.amount)||0;
-                }
-            });
-            state.commissionStats.forEach(c => {
-                const [year, month] = c.month.split('-').map(Number);
-                const d = new Date(year, month-1, 1);
-                if (d >= cutoff) {
-                    const monthKey = c.month;
-                    if (!monthly[monthKey]) monthly[monthKey] = { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, nights:0 };
-                    monthly[monthKey].commission += c.income || 0;
-                    monthly[monthKey].nights += c.stays || 0;
-                }
-            });
-            state.noCommissionStats.forEach(nc => {
-                const [year, month] = nc.month.split('-').map(Number);
-                const d = new Date(year, month-1, 1);
-                if (d >= cutoff) {
-                    const monthKey = nc.month;
-                    if (!monthly[monthKey]) monthly[monthKey] = { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, nights:0 };
-                    monthly[monthKey].nocommission += nc.income || 0;
-                    monthly[monthKey].nights += nc.stays || 0;
-                }
-            });
+            const monthly = getAnalyticsFilteredData();
             const months = Object.keys(monthly).sort();
             const data = months.map(m => {
                 const [y, mo] = m.split('-').map(Number);
@@ -2899,7 +2944,6 @@
                 const occupancy = maxNights > 0 ? ((nights / maxNights) * 100).toFixed(1) : '0.0';
                 return {
                     Period: m,
-                    // Reservations column removed
                     Transfer: monthly[m].transfer.toFixed(2),
                     Meal: monthly[m].meal.toFixed(2),
                     Commission: monthly[m].commission.toFixed(2),
@@ -3104,6 +3148,27 @@
 
             // Multi-year comparison
             document.getElementById('apply-year-compare')?.addEventListener('click', renderYearlyComparison);
+
+            // NEW: Month filter buttons
+            document.getElementById('apply-month-filter')?.addEventListener('click', () => {
+                const month = document.getElementById('analytics-month-select').value;
+                const year = document.getElementById('analytics-year-select').value;
+                if (!month || !year) {
+                    showNotification('Please select both month and year', 'error');
+                    return;
+                }
+                state.selectedAnalyticsMonth = parseInt(month);
+                state.selectedAnalyticsYear = parseInt(year);
+                renderAnalytics();
+            });
+
+            document.getElementById('clear-month-filter')?.addEventListener('click', () => {
+                state.selectedAnalyticsMonth = null;
+                state.selectedAnalyticsYear = null;
+                document.getElementById('analytics-month-select').value = '';
+                document.getElementById('analytics-year-select').value = '';
+                renderAnalytics();
+            });
 
             // Print
             document.getElementById('print-btn')?.addEventListener('click', () => window.print());
