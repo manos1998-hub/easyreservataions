@@ -8,7 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        /* ========== FULL ORIGINAL STYLES (kept exactly) ========== */
+        /* ========== FULL ORIGINAL STYLES ========== */
         :root {
             --primary-color: #2563eb;
             --primary-dark: #1d4ed8;
@@ -316,6 +316,7 @@
                 <a href="#" class="nav-item" id="calendar-tab-btn"><i class="fas fa-calendar"></i>Calendar</a>
                 <a href="#" class="nav-item" id="transfer-analytics-tab-btn"><i class="fas fa-truck"></i>Transfer Analytics</a>
                 <a href="#" class="nav-item" id="expenses-tab-btn"><i class="fas fa-money-bill-wave"></i>Expenses</a>
+                <!-- NEW Reservations Stats Tab -->
                 <a href="#" class="nav-item" id="reservations-stats-tab-btn"><i class="fas fa-chart-pie"></i>Reservations Stats</a>
                 <a href="#" class="nav-item" id="analytics-tab-btn"><i class="fas fa-chart-bar"></i>Analytics</a>
                 <a href="#" class="nav-item" id="settings-tab-btn"><i class="fas fa-cog"></i>Settings</a>
@@ -515,7 +516,6 @@
                         <div class="analytics-stat-subtitle">By total transfer amount</div>
                     </div>
                 </div>
-
                 <div class="panel-container">
                     <div class="chart-container">
                         <div class="chart-header"><h3><i class="fas fa-chart-pie"></i> Transfer by Room Type</h3></div>
@@ -526,7 +526,6 @@
                         <div class="chart-body"><canvas id="transferMonthlyChart"></canvas></div>
                     </div>
                 </div>
-
                 <div class="analytics-filters" style="margin-bottom: 20px;">
                     <div class="filter-group">
                         <label class="filter-label">Filter by Room Type</label>
@@ -539,7 +538,6 @@
                         <button class="btn btn-secondary" id="clear-transfer-filter"><i class="fas fa-times"></i> Clear</button>
                     </div>
                 </div>
-
                 <div class="table-container">
                     <div class="table-header">
                         <div class="table-title"><i class="fas fa-truck"></i> All Transfers <span id="transfer-table-count" style="background-color: var(--primary-color); color: white; padding: 4px 10px; border-radius: 20px; font-size: 13px; margin-left: 10px;">0</span></div>
@@ -653,9 +651,10 @@
                 </div>
             </div>
 
-            <!-- Reservations Stats Content -->
+            <!-- NEW Reservations Stats Content -->
             <div class="content-wrapper" id="reservations-stats-content" style="display: none;">
                 <div class="panel-container">
+                    <!-- Commission Panel -->
                     <div class="panel">
                         <div class="panel-header"><h2><i class="fas fa-percentage"></i> Commission</h2></div>
                         <div class="panel-body">
@@ -680,6 +679,7 @@
                             </div>
                         </div>
                     </div>
+                    <!-- No Commission Panel -->
                     <div class="panel">
                         <div class="panel-header"><h2><i class="fas fa-times-circle"></i> No Commission</h2></div>
                         <div class="panel-body">
@@ -705,6 +705,7 @@
                         </div>
                     </div>
                 </div>
+                <!-- Third Panel: Transfer and Meal Income (auto from reservations) -->
                 <div class="panel" style="margin-top: 24px;">
                     <div class="panel-header"><h2><i class="fas fa-truck"></i> Transfer & Meal Income (from reservations)</h2></div>
                     <div class="panel-body">
@@ -917,13 +918,13 @@
                 renderCategories();
                 updateCategoryDropdowns();
                 renderExpensesTable();
-                updateStats(); // fixed version below
+                updateStats();
                 renderCommissionStats();
                 renderNoCommissionStats();
                 renderTransferMealAuto();
 
                 if (state.currentPage === 'calendar') renderCalendar();
-                if (state.currentPage === 'analytics') renderAnalytics(); // fixed version below
+                if (state.currentPage === 'analytics') renderAnalytics();
                 if (state.currentPage === 'transfer-analytics') {
                     populateTransferRoomFilter();
                     renderTransferAnalytics();
@@ -996,11 +997,7 @@
 
             let monthly = {};
 
-            function daysInMonth(year, month) {
-                return new Date(year, month + 1, 0).getDate();
-            }
-
-            // Reservations income and nights
+            // Process reservations for income and nights
             state.reservations.forEach(r => {
                 const checkin = new Date(r.checkin);
                 const checkout = new Date(r.checkout);
@@ -1026,7 +1023,7 @@
                 }
             });
 
-            // Expenses
+            // Process expenses
             state.expenses.forEach(e => {
                 const d = new Date(e.date);
                 if (d >= cutoff) {
@@ -1038,7 +1035,7 @@
                 }
             });
 
-            // Commission stats (include nights)
+            // Process commission stats (include nights)
             state.commissionStats.forEach(c => {
                 const [year, month] = c.month.split('-').map(Number);
                 const d = new Date(year, month - 1, 1);
@@ -1048,11 +1045,11 @@
                         monthly[monthKey] = { transfer: 0, meal: 0, commission: 0, nocommission: 0, expenses: 0, count: 0, nights: 0 };
                     }
                     monthly[monthKey].commission += c.income || 0;
-                    monthly[monthKey].nights += c.stays || 0; // manual stays
+                    monthly[monthKey].nights += c.stays || 0;
                 }
             });
 
-            // No-commission stats (include nights)
+            // Process no-commission stats (include nights)
             state.noCommissionStats.forEach(nc => {
                 const [year, month] = nc.month.split('-').map(Number);
                 const d = new Date(year, month - 1, 1);
@@ -1062,7 +1059,7 @@
                         monthly[monthKey] = { transfer: 0, meal: 0, commission: 0, nocommission: 0, expenses: 0, count: 0, nights: 0 };
                     }
                     monthly[monthKey].nocommission += nc.income || 0;
-                    monthly[monthKey].nights += nc.stays || 0; // manual stays
+                    monthly[monthKey].nights += nc.stays || 0;
                 }
             });
 
@@ -1093,11 +1090,13 @@
             document.getElementById('analytics-nocommission-income').textContent = `$${totalNoCommission.toFixed(2)}`;
             document.getElementById('analytics-total-expenses').textContent = `$${state.expenses.reduce((s, e) => s + parseFloat(e.amount), 0).toFixed(2)}`;
 
+            // Destroy old charts
             if (state.charts.incomeExpense) state.charts.incomeExpense.destroy();
             if (state.charts.expenseCategory) state.charts.expenseCategory.destroy();
             if (state.charts.monthlyTrend) state.charts.monthlyTrend.destroy();
             if (state.charts.profitMargin) state.charts.profitMargin.destroy();
 
+            // Income vs Expenses
             const ctx1 = document.getElementById('incomeExpenseChart').getContext('2d');
             state.charts.incomeExpense = new Chart(ctx1, {
                 type: 'bar',
@@ -1109,6 +1108,7 @@
                 }
             });
 
+            // Expense by Category
             const catTotals = {};
             state.expenses.filter(e => new Date(e.date) >= cutoff).forEach(e => {
                 const cat = state.expenseCategories.find(c => c.id === e.categoryId);
@@ -1127,6 +1127,7 @@
                 }
             });
 
+            // Monthly Revenue by Type
             const ctx3 = document.getElementById('monthlyTrendChart').getContext('2d');
             state.charts.monthlyTrend = new Chart(ctx3, {
                 type: 'line',
@@ -1140,6 +1141,7 @@
                 }
             });
 
+            // Profit Margin
             const marginData = months.map(m => {
                 const total = monthly[m].transfer + monthly[m].meal + monthly[m].commission + monthly[m].nocommission;
                 return total > 0 ? ((total - monthly[m].expenses) / total * 100) : 0;
@@ -1156,6 +1158,7 @@
                 }
             });
 
+            // Detailed table with nights and occupancy
             const tbody = document.getElementById('analytics-body');
             tbody.innerHTML = '';
             let cumulative = 0;
@@ -1194,6 +1197,7 @@
                 tbody.innerHTML += row;
             });
 
+            // This month / last month
             const now = new Date();
             const thisMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
             const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
@@ -1209,941 +1213,8 @@
             document.getElementById('last-month-expenses').textContent = `$${lastMonthData.expenses.toFixed(2)}`;
             document.getElementById('last-month-net').textContent = `$${(lastMonthIncome - lastMonthData.expenses).toFixed(2)}`;
         }
-        // Custom Fields (same as before)
-        async function addCustomField() {
-            const name = document.getElementById('field-name').value.trim();
-            const def = document.getElementById('field-default').value.trim();
-            if (!name) { showNotification('Field name required', 'error'); return; }
-            if (state.customFields.some(f => f.name.toLowerCase() === name.toLowerCase())) {
-                showNotification('Field name exists', 'error'); return;
-            }
-            const newField = {
-                name, type: state.selectedFieldType, defaultValue: def || null,
-                createdAt: new Date().toISOString()
-            };
-            if (state.selectedFieldType === 'dropdown') {
-                const opts = document.getElementById('dropdown-options').value.trim();
-                if (!opts) { showNotification('Dropdown options required', 'error'); return; }
-                newField.options = opts.split(',').map(s => s.trim()).filter(Boolean);
-            }
-            try {
-                await addDoc(customFieldsCol, newField);
-                await loadAllData();
-                document.getElementById('field-name').value = '';
-                document.getElementById('field-default').value = '';
-                document.getElementById('dropdown-options').value = '';
-                showNotification('Field added', 'success');
-            } catch (e) { console.error(e); showNotification('Error adding field', 'error'); }
-        }
 
-        async function deleteCustomField(id) {
-            if (!confirm('Delete this custom field? All associated data in reservations will be lost.')) return;
-            try {
-                await deleteDoc(doc(db, 'customFields', id));
-                await loadAllData();
-                showNotification('Field deleted', 'success');
-            } catch (e) { console.error(e); showNotification('Delete failed', 'error'); }
-        }
-
-        async function updateCustomField(id, newName, newDefault) {
-            try {
-                await updateDoc(doc(db, 'customFields', id), { name: newName, defaultValue: newDefault });
-                await loadAllData();
-                showNotification('Field updated', 'success');
-            } catch (e) { console.error(e); showNotification('Update failed', 'error'); }
-        }
-
-        function renderCustomFieldsList() {
-            const listDiv = document.getElementById('custom-fields-list');
-            if (!listDiv) return;
-            listDiv.innerHTML = '';
-            if (state.customFields.length === 0) {
-                listDiv.innerHTML = '<p class="empty-state" style="padding:20px;">No custom fields yet.</p>';
-                return;
-            }
-            state.customFields.forEach(field => {
-                const item = document.createElement('div');
-                item.style.display = 'flex'; item.style.justifyContent = 'space-between'; item.style.alignItems = 'center'; item.style.padding = '8px'; item.style.borderBottom = '1px solid var(--border-color)';
-                item.innerHTML = `
-                    <span><strong>${field.name}</strong> (${field.type})</span>
-                    <div>
-                        <button class="btn-icon edit" data-id="${field.id}" title="Edit"><i class="fas fa-edit"></i></button>
-                        <button class="btn-icon delete" data-id="${field.id}" title="Delete"><i class="fas fa-trash-alt"></i></button>
-                    </div>
-                `;
-                item.querySelector('.edit')?.addEventListener('click', () => {
-                    const newName = prompt('Enter new field name:', field.name);
-                    if (newName && newName.trim()) {
-                        const newDefault = prompt('Enter new default value (optional):', field.defaultValue || '');
-                        updateCustomField(field.id, newName.trim(), newDefault || null);
-                    }
-                });
-                item.querySelector('.delete')?.addEventListener('click', () => deleteCustomField(field.id));
-                listDiv.appendChild(item);
-            });
-        }
-
-        // Reservations (same as before)
-        async function addReservation() {
-            const room = document.getElementById('reservation-room').value;
-            const checkin = document.getElementById('reservation-checkin').value;
-            const checkout = document.getElementById('reservation-checkout').value;
-            const time = document.getElementById('reservation-time').value;
-            const checkoutTime = document.getElementById('reservation-checkout-time').value;
-            const transferAmount = parseFloat(document.getElementById('reservation-transfer').value) || 0;
-            const mealPrice = parseFloat(document.getElementById('reservation-meal').value) || 0;
-            if (!room || !checkin || !checkout || !time || !checkoutTime) { showNotification('Fill all required fields', 'error'); return; }
-            if (new Date(checkout) < new Date(checkin)) { showNotification('Check-out after check-in', 'error'); return; }
-            const duration = calculateDuration(checkin, checkout);
-            const newRes = { 
-                name: room, 
-                checkin, 
-                checkout, 
-                duration, 
-                time,
-                checkoutTime,
-                transferAmount, 
-                mealPrice, 
-                createdAt: new Date().toISOString() 
-            };
-            state.customFields.forEach(f => {
-                const el = document.getElementById(f.id);
-                if (el) newRes[f.id] = f.type === 'checkbox' ? el.checked : el.value;
-            });
-            try {
-                await addDoc(reservationsCol, newRes);
-                await loadAllData();
-                clearForm();
-                showNotification('Reservation added', 'success');
-            } catch (e) { console.error(e); showNotification('Error adding reservation', 'error'); }
-        }
-
-        async function deleteReservation(id) {
-            try {
-                await deleteDoc(doc(db, 'reservations', id));
-                await loadAllData();
-                showNotification('Reservation deleted', 'success');
-            } catch (e) { console.error(e); showNotification('Error deleting', 'error'); }
-        }
-
-        async function updateReservation(id, data) {
-            try {
-                await updateDoc(doc(db, 'reservations', id), data);
-                await loadAllData();
-                showNotification('Reservation updated', 'success');
-            } catch (e) { console.error(e); showNotification('Update failed', 'error'); }
-        }
-
-        function clearForm() {
-            document.getElementById('reservation-room').value = '';
-            const today = new Date().toISOString().split('T')[0];
-            const tomorrow = new Date(Date.now()+86400000).toISOString().split('T')[0];
-            document.getElementById('reservation-checkin').value = today;
-            document.getElementById('reservation-checkout').value = tomorrow;
-            document.getElementById('reservation-time').value = '12:00';
-            document.getElementById('reservation-checkout-time').value = '10:00';
-            document.getElementById('reservation-transfer').value = '0';
-            document.getElementById('reservation-meal').value = '0';
-            state.customFields.forEach(f => {
-                const el = document.getElementById(f.id);
-                if (el) {
-                    if (f.type === 'checkbox') el.checked = f.defaultValue === 'true';
-                    else el.value = f.defaultValue || '';
-                }
-            });
-        }
-
-        // Categories (same as before)
-        async function addCategory() {
-            const name = document.getElementById('category-name').value.trim();
-            if (!name) { showNotification('Category name required', 'error'); return; }
-            const newCat = {
-                name,
-                description: document.getElementById('category-description').value.trim(),
-                color: document.getElementById('category-color').value,
-                icon: document.getElementById('category-icon').value,
-                budget: parseFloat(document.getElementById('category-budget').value) || 0,
-                createdAt: new Date().toISOString()
-            };
-            try {
-                await addDoc(expenseCategoriesCol, newCat);
-                await loadAllData();
-                document.getElementById('category-name').value = '';
-                document.getElementById('category-description').value = '';
-                document.getElementById('category-budget').value = '';
-                showNotification('Category added', 'success');
-            } catch (e) { console.error(e); showNotification('Error adding category', 'error'); }
-        }
-
-        async function updateCategory(id) {
-            const name = document.getElementById('category-name').value.trim();
-            if (!name) return;
-            const updated = {
-                name,
-                description: document.getElementById('category-description').value.trim(),
-                color: document.getElementById('category-color').value,
-                icon: document.getElementById('category-icon').value,
-                budget: parseFloat(document.getElementById('category-budget').value) || 0
-            };
-            try {
-                await updateDoc(doc(db, 'expenseCategories', id), updated);
-                await loadAllData();
-                showNotification('Category updated', 'success');
-            } catch (e) { console.error(e); showNotification('Update failed', 'error'); }
-        }
-
-        async function deleteCategory(id) {
-            try {
-                const batch = writeBatch(db);
-                state.expenses.filter(e => e.categoryId === id).forEach(e => {
-                    batch.update(doc(db, 'expenses', e.id), { categoryId: null });
-                });
-                batch.delete(doc(db, 'expenseCategories', id));
-                await batch.commit();
-                await loadAllData();
-                showNotification('Category deleted', 'success');
-            } catch (e) { console.error(e); showNotification('Delete failed', 'error'); }
-        }
-
-        // Expenses (same as before)
-        async function addExpense() {
-            const name = document.getElementById('expense-name').value.trim();
-            const catId = document.getElementById('expense-category').value;
-            const amount = document.getElementById('expense-amount').value;
-            const date = document.getElementById('expense-date').value;
-            if (!name || !catId || !amount || !date) { showNotification('Fill required fields', 'error'); return; }
-            const newExp = {
-                name, categoryId: catId, amount: parseFloat(amount).toFixed(2), date,
-                payment: document.getElementById('expense-payment').value,
-                description: document.getElementById('expense-description').value.trim(),
-                status: document.getElementById('expense-status').value,
-                createdAt: new Date().toISOString()
-            };
-            try {
-                await addDoc(expensesCol, newExp);
-                await loadAllData();
-                document.getElementById('expense-name').value = '';
-                document.getElementById('expense-amount').value = '';
-                document.getElementById('expense-description').value = '';
-                document.getElementById('expense-status').value = 'pending';
-                showNotification('Expense added', 'success');
-            } catch (e) { console.error(e); showNotification('Error adding expense', 'error'); }
-        }
-
-        async function deleteExpense(id) {
-            try {
-                await deleteDoc(doc(db, 'expenses', id));
-                await loadAllData();
-                showNotification('Expense deleted', 'success');
-            } catch (e) { console.error(e); showNotification('Error deleting', 'error'); }
-        }
-
-        async function updateExpense(id) {
-            const name = document.getElementById('edit-expense-name').value.trim();
-            const catId = document.getElementById('edit-expense-category').value;
-            const amount = document.getElementById('edit-expense-amount').value;
-            const date = document.getElementById('edit-expense-date').value;
-            if (!name || !catId || !amount || !date) return;
-            const updated = {
-                name, categoryId: catId, amount: parseFloat(amount).toFixed(2), date,
-                payment: document.getElementById('edit-expense-payment').value,
-                description: document.getElementById('edit-expense-description').value.trim(),
-                status: document.getElementById('edit-expense-status').value
-            };
-            try {
-                await updateDoc(doc(db, 'expenses', id), updated);
-                await loadAllData();
-                document.getElementById('edit-expense-modal').classList.remove('active');
-                showNotification('Expense updated', 'success');
-            } catch (e) { console.error(e); showNotification('Update failed', 'error'); }
-        }
-
-        // Filters (same as before)
-        function applyExpenseFiltersFromState() {
-            const filters = state.activeExpenseFilters;
-            if (Object.keys(filters).length === 0) {
-                state.filteredExpenses = null;
-                return;
-            }
-            state.filteredExpenses = state.expenses.filter(e => {
-                if (filters.name && !e.name.toLowerCase().includes(filters.name.toLowerCase())) return false;
-                if (filters.categoryId && e.categoryId !== filters.categoryId) return false;
-                if (filters.status && e.status !== filters.status) return false;
-                if (filters.dateFrom && e.date < filters.dateFrom) return false;
-                if (filters.dateTo && e.date > filters.dateTo) return false;
-                if (filters.amountFrom && parseFloat(e.amount) < parseFloat(filters.amountFrom)) return false;
-                if (filters.amountTo && parseFloat(e.amount) > parseFloat(filters.amountTo)) return false;
-                return true;
-            });
-        }
-
-        async function applyExpenseFilters() {
-            state.activeExpenseFilters = {
-                name: document.getElementById('expense-filter-name').value,
-                categoryId: document.getElementById('expense-filter-category').value,
-                status: document.getElementById('expense-filter-status').value,
-                dateFrom: document.getElementById('expense-filter-date-from').value,
-                dateTo: document.getElementById('expense-filter-date-to').value,
-                amountFrom: document.getElementById('expense-filter-amount-from').value,
-                amountTo: document.getElementById('expense-filter-amount-to').value
-            };
-            Object.keys(state.activeExpenseFilters).forEach(key => !state.activeExpenseFilters[key] && delete state.activeExpenseFilters[key]);
-            applyExpenseFiltersFromState();
-            renderExpensesTable();
-            await saveSettings();
-        }
-
-        function clearExpenseFilters() {
-            state.activeExpenseFilters = {};
-            state.filteredExpenses = null;
-            document.getElementById('expense-filter-name').value = '';
-            document.getElementById('expense-filter-category').value = '';
-            document.getElementById('expense-filter-status').value = '';
-            document.getElementById('expense-filter-date-from').value = '';
-            document.getElementById('expense-filter-date-to').value = '';
-            document.getElementById('expense-filter-amount-from').value = '';
-            document.getElementById('expense-filter-amount-to').value = '';
-            renderExpensesTable();
-            saveSettings();
-        }
-
-        // UI Rendering (same as before)
-        function renderCustomFields() {
-            const container = document.getElementById('custom-fields-container');
-            if (!container) return;
-            if (state.customFields.length === 0) {
-                container.innerHTML = `<div class="empty-state" style="padding:20px 0;"><i class="fas fa-list-alt"></i><h3>No Custom Fields</h3><p>Add fields using the panel.</p></div>`;
-                document.getElementById('reset-order-btn').style.display = 'none';
-                return;
-            }
-            container.innerHTML = '';
-            const sorted = [...state.customFields].sort((a,b) => state.fieldOrder.indexOf(a.id) - state.fieldOrder.indexOf(b.id));
-            sorted.forEach((field, idx) => {
-                const div = document.createElement('div');
-                div.className = 'form-group draggable';
-                div.dataset.id = field.id;
-                let inputHtml = '';
-                if (field.type === 'checkbox') {
-                    inputHtml = `<div class="checkbox-group"><input type="checkbox" id="${field.id}" ${field.defaultValue==='true'?'checked':''}><label>${field.name}</label></div>`;
-                } else if (field.type === 'dropdown') {
-                    let options = '<option value="">Select</option>';
-                    if (field.options) {
-                        field.options.forEach(o => {
-                            options += `<option value="${o}" ${o===field.defaultValue?'selected':''}>${o}</option>`;
-                        });
-                    }
-                    inputHtml = `<select class="form-control" id="${field.id}">${options}</select>`;
-                } else if (field.type === 'status') {
-                    inputHtml = `<select class="form-control" id="${field.id}">
-                        <option value="pending" ${field.defaultValue==='pending'?'selected':''}>Pending</option>
-                        <option value="confirmed" ${field.defaultValue==='confirmed'?'selected':''}>Confirmed</option>
-                        <option value="cancelled" ${field.defaultValue==='cancelled'?'selected':''}>Cancelled</option>
-                    </select>`;
-                } else {
-                    inputHtml = `<input type="${field.type==='date'?'date':field.type==='currency'||field.type==='number'?'number':'text'}" 
-                        class="form-control" id="${field.id}" value="${field.defaultValue || ''}" 
-                        ${field.type==='currency'?'step="0.01"':''} placeholder="${field.name}">`;
-                }
-                div.innerHTML = `
-                    <div class="drag-handle" draggable="true"><i class="fas fa-grip-vertical"></i></div>
-                    <div class="field-order-indicator">${idx+1}</div>
-                    <label class="form-label">${field.name}</label>
-                    ${inputHtml}
-                `;
-                container.appendChild(div);
-            });
-            const handles = container.querySelectorAll('.drag-handle');
-            handles.forEach(h => {
-                h.addEventListener('dragstart', e => {
-                    e.dataTransfer.setData('text/plain', e.target.closest('.draggable').dataset.id);
-                    e.target.closest('.draggable').classList.add('dragging');
-                });
-                h.addEventListener('dragend', e => e.target.closest('.draggable').classList.remove('dragging'));
-            });
-            container.addEventListener('dragover', e => e.preventDefault());
-            container.addEventListener('drop', e => {
-                e.preventDefault();
-                const draggedId = e.dataTransfer.getData('text/plain');
-                const target = e.target.closest('.draggable');
-                if (!target || target.dataset.id === draggedId) return;
-                const draggedIdx = state.fieldOrder.indexOf(draggedId);
-                const targetIdx = state.fieldOrder.indexOf(target.dataset.id);
-                state.fieldOrder.splice(draggedIdx, 1);
-                state.fieldOrder.splice(targetIdx, 0, draggedId);
-                renderCustomFields();
-                saveSettings();
-                showNotification('Field order updated', 'success');
-            });
-        }
-
-        function renderReservationsTable() {
-            const thead = document.getElementById('reservations-thead');
-            const tbody = document.getElementById('reservations-body');
-            if (!thead || !tbody) return;
-            let headerHtml = '<tr><th>Room Type</th><th>Check-in</th><th>Check-out</th><th>Duration</th><th>Check-in Time</th><th>Check-out Time</th><th>Transfer ($)</th><th>Meal ($)</th>';
-            state.customFields.forEach(f => { headerHtml += `<th>${f.name}</th>`; });
-            headerHtml += '<th>Actions</th></tr>';
-            thead.innerHTML = headerHtml;
-            tbody.innerHTML = '';
-            const res = state.filteredReservations || state.reservations;
-            if (res.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="${8 + state.customFields.length + 1}"><div class="empty-state"><i class="fas fa-calendar-times"></i><h3>No Reservations</h3></div></td></tr>`;
-                return;
-            }
-            res.forEach(r => {
-                const tr = document.createElement('tr');
-                let rowHtml = `
-                    <td>${r.name}</td>
-                    <td>${r.checkin}</td>
-                    <td>${r.checkout}</td>
-                    <td>${r.duration || 1}</td>
-                    <td>${r.time || ''}</td>
-                    <td>${r.checkoutTime || ''}</td>
-                    <td class="currency-cell">$${(r.transferAmount || 0).toFixed(2)}</td>
-                    <td class="currency-cell">$${(r.mealPrice || 0).toFixed(2)}</td>
-                `;
-                state.customFields.forEach(f => {
-                    let val = r[f.id];
-                    if (f.type === 'checkbox') {
-                        val = val ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-times-circle"></i>';
-                    } else if (f.type === 'currency') {
-                        val = val ? `$${parseFloat(val).toFixed(2)}` : '-';
-                    } else {
-                        val = val || '-';
-                    }
-                    rowHtml += `<td>${val}</td>`;
-                });
-                rowHtml += `<td><div class="action-buttons"><button class="btn-icon edit" onclick="window.editReservation('${r.id}')"><i class="fas fa-edit"></i></button><button class="btn-icon delete" onclick="window.deleteReservation('${r.id}')"><i class="fas fa-trash-alt"></i></button></div></td>`;
-                tr.innerHTML = rowHtml;
-                tbody.appendChild(tr);
-            });
-            document.getElementById('reservation-count-badge').textContent = res.length;
-        }
-
-        function renderCategories() {
-            const list = document.getElementById('categories-list');
-            if (!list) return;
-            list.innerHTML = '';
-            state.expenseCategories.forEach(cat => {
-                const item = document.createElement('div');
-                item.className = `category-item ${state.selectedCategoryId===cat.id?'active':''}`;
-                item.dataset.id = cat.id;
-                item.innerHTML = `
-                    <div class="category-item-header"><span class="category-name">${cat.name}</span>
-                        <div class="category-actions">
-                            <button class="btn-icon edit" onclick="window.editCategory('${cat.id}')"><i class="fas fa-edit"></i></button>
-                            <button class="btn-icon delete" onclick="window.deleteCategory('${cat.id}')"><i class="fas fa-trash-alt"></i></button>
-                        </div>
-                    </div>
-                    <div style="font-size:13px;color:var(--text-secondary);">${cat.description || ''}</div>
-                    <div><span style="background-color:${cat.color}; width:12px;height:12px;display:inline-block;border-radius:50%;"></span> <i class="${cat.icon}"></i> $${cat.budget || 0}</div>
-                `;
-                item.addEventListener('click', (e) => {
-                    if (!e.target.closest('.btn-icon')) {
-                        state.selectedCategoryId = cat.id;
-                        document.getElementById('category-name').value = cat.name;
-                        document.getElementById('category-description').value = cat.description || '';
-                        document.getElementById('category-color').value = cat.color;
-                        document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('selected'));
-                        const matchingPreset = document.querySelector(`.color-option[data-color="${cat.color}"]`);
-                        if (matchingPreset) matchingPreset.classList.add('selected');
-                        document.getElementById('category-color-custom').value = cat.color;
-                        document.getElementById('category-icon').value = cat.icon;
-                        document.querySelectorAll('.icon-option').forEach(opt => opt.classList.remove('selected'));
-                        document.querySelector(`.icon-option i.${cat.icon}`)?.closest('.icon-option')?.classList.add('selected');
-                        document.getElementById('category-budget').value = cat.budget;
-                        document.getElementById('category-form-title').textContent = `Edit: ${cat.name}`;
-                        document.getElementById('cancel-category-btn').style.display = 'block';
-                        renderCategories();
-                    }
-                });
-                list.appendChild(item);
-            });
-        }
-
-        function updateCategoryDropdowns() {
-            const selects = ['expense-category', 'expense-filter-category', 'edit-expense-category'];
-            selects.forEach(id => {
-                const sel = document.getElementById(id);
-                if (!sel) return;
-                sel.innerHTML = `<option value="">${id.includes('filter')?'All Categories':'Select a category'}</option>`;
-                state.expenseCategories.forEach(c => {
-                    sel.innerHTML += `<option value="${c.id}">${c.name}</option>`;
-                });
-            });
-        }
-
-        function renderExpensesTable() {
-            const tbody = document.getElementById('expenses-body');
-            if (!tbody) return;
-            tbody.innerHTML = '';
-            const exps = state.filteredExpenses || state.expenses;
-            if (exps.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><i class="fas fa-money-bill-wave"></i><h3>No Expenses</h3></div></td></tr>`;
-                document.getElementById('expense-summary').style.display = 'none';
-                return;
-            }
-            exps.forEach(e => {
-                const cat = state.expenseCategories.find(c => c.id === e.categoryId);
-                const tr = document.createElement('tr');
-                tr.className = e.status === 'paid' ? 'status-paid' : 'status-pending';
-                tr.innerHTML = `
-                    <td>${e.name}</td>
-                    <td><span class="category-badge" style="background-color:${cat?.color}20; color:${cat?.color};">${cat?.name||'Uncategorized'}</span></td>
-                    <td class="expense-cell">$${parseFloat(e.amount).toFixed(2)}</td>
-                    <td>${e.date}</td>
-                    <td>${e.payment}</td>
-                    <td>${e.description || '-'}</td>
-                    <td><span class="status-badge ${e.status==='paid'?'status-paid':'status-expense-pending'}">${e.status}</span></td>
-                    <td><div class="action-buttons">
-                        <button class="btn-icon edit" onclick="window.editExpense('${e.id}')"><i class="fas fa-edit"></i></button>
-                        <button class="btn-icon delete" onclick="window.deleteExpense('${e.id}')"><i class="fas fa-trash-alt"></i></button>
-                    </div></td>
-                `;
-                tbody.appendChild(tr);
-            });
-            document.getElementById('expense-count-badge').textContent = exps.length;
-            updateExpenseSummary(exps);
-        }
-
-        function updateExpenseSummary(exps) {
-            if (!exps.length) { document.getElementById('expense-summary').style.display = 'none'; return; }
-            const total = exps.reduce((s,e)=>s+parseFloat(e.amount),0);
-            const paid = exps.filter(e=>e.status==='paid').length;
-            const pend = exps.length - paid;
-            document.getElementById('summary-count').textContent = exps.length;
-            document.getElementById('summary-paid-count').textContent = paid;
-            document.getElementById('summary-pending-count').textContent = pend;
-            document.getElementById('summary-total-amount').textContent = `$${total.toFixed(2)}`;
-            document.getElementById('expense-summary').style.display = 'flex';
-        }
-
-        function updateStats() {
-            const transferCount = (state.filteredReservations || state.reservations).filter(r => (r.transferAmount || 0) > 0).length;
-            document.getElementById('total-reservations').textContent = transferCount;
-            document.getElementById('reservation-count-badge').textContent = tot;
-            const pending = state.reservations.filter(r => {
-                for (let f of state.customFields) {
-                    if (f.type==='status' && r[f.id]==='pending') return true;
-                } return false;
-            }).length;
-            document.getElementById('pending-reservations').textContent = pending;
-            const monthlyExp = state.expenses.filter(e => {
-                let d = new Date(e.date);
-                let now = new Date();
-                return d.getMonth()===now.getMonth() && d.getFullYear()===now.getFullYear();
-            }).reduce((s,e)=>s+parseFloat(e.amount),0);
-            document.getElementById('monthly-expenses').textContent = `$${monthlyExp.toFixed(2)}`;
-            let revenue = 0;
-            state.reservations.forEach(r => {
-                revenue += (r.transferAmount || 0) + (r.mealPrice || 0);
-            });
-            document.getElementById('net-revenue').textContent = `$${(revenue-monthlyExp).toFixed(2)}`;
-            const totalExpenses = state.expenses.reduce((s,e)=>s+parseFloat(e.amount),0);
-            document.getElementById('total-expenses').textContent = `$${totalExpenses.toFixed(2)}`;
-            document.getElementById('month-expenses').textContent = `$${monthlyExp.toFixed(2)}`;
-            const catTotals = {};
-            state.expenses.forEach(e => { if (e.categoryId) catTotals[e.categoryId] = (catTotals[e.categoryId]||0) + parseFloat(e.amount); });
-            let maxCat = { name: 'None', amount: 0 };
-            for (let [cid, amt] of Object.entries(catTotals)) {
-                let cat = state.expenseCategories.find(c => c.id === cid);
-                if (cat && amt > maxCat.amount) maxCat = { name: cat.name, amount: amt };
-            }
-            document.getElementById('highest-category').textContent = maxCat.name;
-        }
-
-        // Analytics (updated with commission and no commission)
-        function renderAnalytics() {
-            const period = document.getElementById('analytics-period').value;
-            const cutoff = period === 'all' ? new Date(0) : new Date(Date.now() - parseInt(period)*24*60*60*1000);
-            
-            let monthly = {}; // each month will have transfer, meal, commission, nocommission, expenses, count, nights
-        
-            // Helper to get days in month
-            function daysInMonth(year, month) {
-                return new Date(year, month + 1, 0).getDate();
-            }
-        
-            // Process reservations for income and nights
-            state.reservations.forEach(r => {
-                const checkin = new Date(r.checkin);
-                const checkout = new Date(r.checkout);
-                if (checkin >= cutoff) {
-                    // For each night (day from checkin to checkout-1)
-                    let current = new Date(checkin);
-                    while (current < checkout) {
-                        const year = current.getFullYear();
-                        const month = current.getMonth();
-                        const monthKey = `${year}-${String(month+1).padStart(2,'0')}`;
-                        if (!monthly[monthKey]) {
-                            monthly[monthKey] = { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, count:0, nights:0 };
-                        }
-                        monthly[monthKey].nights += 1; // one night for this day
-                        current.setDate(current.getDate() + 1);
-                    }
-                    // Add income (we attribute all income to check-in month for simplicity, as before)
-                    const monthKey = `${checkin.getFullYear()}-${String(checkin.getMonth()+1).padStart(2,'0')}`;
-                    if (!monthly[monthKey]) {
-                        monthly[monthKey] = { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, count:0, nights:0 };
-                    }
-                    monthly[monthKey].transfer += r.transferAmount || 0;
-                    monthly[monthKey].meal += r.mealPrice || 0;
-                    monthly[monthKey].count += 1;
-                }
-            });
-        
-            // Process expenses
-            state.expenses.forEach(e => {
-                const d = new Date(e.date);
-                if (d >= cutoff) {
-                    const monthKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-                    if (!monthly[monthKey]) {
-                        monthly[monthKey] = { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, count:0, nights:0 };
-                    }
-                    monthly[monthKey].expenses += parseFloat(e.amount)||0;
-                }
-            });
-        
-            // Process commission and no commission stats
-            state.commissionStats.forEach(c => {
-                const [year, month] = c.month.split('-').map(Number);
-                const d = new Date(year, month-1, 1);
-                if (d >= cutoff) {
-                    const monthKey = c.month;
-                    if (!monthly[monthKey]) {
-                        monthly[monthKey] = { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, count:0, nights:0 };
-                    }
-                    monthly[monthKey].commission += c.income || 0;
-                }
-            });
-            state.noCommissionStats.forEach(nc => {
-                const [year, month] = nc.month.split('-').map(Number);
-                const d = new Date(year, month-1, 1);
-                if (d >= cutoff) {
-                    const monthKey = nc.month;
-                    if (!monthly[monthKey]) {
-                        monthly[monthKey] = { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, count:0, nights:0 };
-                    }
-                    monthly[monthKey].nocommission += nc.income || 0;
-                }
-            });
-        
-            const months = Object.keys(monthly).sort();
-            const labels = months.map(m => { let [y,mo]=m.split('-'); return new Date(y,mo-1).toLocaleString('default',{month:'short'})+' '+y; });
-        
-            const transferData = months.map(m => monthly[m].transfer);
-            const mealData = months.map(m => monthly[m].meal);
-            const commissionData = months.map(m => monthly[m].commission);
-            const nocommissionData = months.map(m => monthly[m].nocommission);
-            const expenseData = months.map(m => monthly[m].expenses);
-            const totalIncomeData = months.map(m => monthly[m].transfer + monthly[m].meal + monthly[m].commission + monthly[m].nocommission);
-            const nightsData = months.map(m => monthly[m].nights || 0);
-        
-            const totalTransfer = transferData.reduce((a,b)=>a+b,0);
-            const totalMeal = mealData.reduce((a,b)=>a+b,0);
-            const totalCommission = commissionData.reduce((a,b)=>a+b,0);
-            const totalNoCommission = nocommissionData.reduce((a,b)=>a+b,0);
-            const totalRevenue = totalTransfer + totalMeal + totalCommission + totalNoCommission;
-        
-            document.getElementById('analytics-total-revenue').textContent = `$${totalRevenue.toFixed(2)}`;
-            document.getElementById('analytics-transfer-income').textContent = `$${totalTransfer.toFixed(2)}`;
-            document.getElementById('analytics-meal-income').textContent = `$${totalMeal.toFixed(2)}`;
-            document.getElementById('analytics-commission-income').textContent = `$${totalCommission.toFixed(2)}`;
-            document.getElementById('analytics-nocommission-income').textContent = `$${totalNoCommission.toFixed(2)}`;
-            document.getElementById('analytics-total-expenses').textContent = `$${state.expenses.reduce((s,e)=>s+parseFloat(e.amount),0).toFixed(2)}`;
-        
-            // Destroy old charts
-            if (state.charts.incomeExpense) state.charts.incomeExpense.destroy();
-            if (state.charts.expenseCategory) state.charts.expenseCategory.destroy();
-            if (state.charts.monthlyTrend) state.charts.monthlyTrend.destroy();
-            if (state.charts.profitMargin) state.charts.profitMargin.destroy();
-        
-            // Income vs Expenses
-            const ctx1 = document.getElementById('incomeExpenseChart').getContext('2d');
-            state.charts.incomeExpense = new Chart(ctx1, {
-                type: 'bar',
-                data: { labels, datasets: [
-                    { label: 'Total Income', data: totalIncomeData, backgroundColor: 'rgba(16,185,129,0.7)' },
-                    { label: 'Expenses', data: expenseData, backgroundColor: 'rgba(239,68,68,0.7)' }
-                ]}
-            });
-        
-            // Expense by Category
-            const catTotals = {};
-            state.expenses.filter(e => new Date(e.date) >= cutoff).forEach(e => {
-                const cat = state.expenseCategories.find(c => c.id === e.categoryId);
-                const name = cat ? cat.name : 'Uncategorized';
-                catTotals[name] = (catTotals[name]||0) + parseFloat(e.amount);
-            });
-            const ctx2 = document.getElementById('expenseCategoryChart').getContext('2d');
-            state.charts.expenseCategory = new Chart(ctx2, {
-                type: 'pie',
-                data: {
-                    labels: Object.keys(catTotals),
-                    datasets: [{
-                        data: Object.values(catTotals),
-                        backgroundColor: ['#8b5cf6','#0ea5e9','#10b981','#f59e0b','#ef4444','#2563eb','#7c3aed','#475569']
-                    }]
-                }
-            });
-        
-            // Monthly Revenue by Type
-            const ctx3 = document.getElementById('monthlyTrendChart').getContext('2d');
-            state.charts.monthlyTrend = new Chart(ctx3, {
-                type: 'line',
-                data: { labels, datasets: [
-                    { label: 'Transfer', data: transferData, borderColor: '#2563eb', fill: false },
-                    { label: 'Meal', data: mealData, borderColor: '#f59e0b', fill: false },
-                    { label: 'Commission', data: commissionData, borderColor: '#8b5cf6', fill: false },
-                    { label: 'No Commission', data: nocommissionData, borderColor: '#0ea5e9', fill: false }
-                ]}
-            });
-        
-            // Profit Margin
-            const marginData = months.map(m => {
-                const total = monthly[m].transfer + monthly[m].meal + monthly[m].commission + monthly[m].nocommission;
-                return total>0 ? ((total - monthly[m].expenses)/total*100) : 0;
-            });
-            const ctx4 = document.getElementById('profitMarginChart').getContext('2d');
-            state.charts.profitMargin = new Chart(ctx4, {
-                type: 'bar',
-                data: { labels, datasets: [{ label: 'Profit Margin %', data: marginData, backgroundColor: marginData.map(v=>v>=0?'rgba(16,185,129,0.7)':'rgba(239,68,68,0.7)') }] }
-            });
-        
-            // Detailed table with nights and occupancy
-            const tbody = document.getElementById('analytics-body');
-            tbody.innerHTML = '';
-            let cumulative = 0;
-            months.forEach(m => {
-                const [y, mo] = m.split('-').map(Number);
-                const days = new Date(y, mo, 0).getDate(); // days in month
-                const maxNights = days * 4; // 4 rooms
-        
-                const transfer = monthly[m].transfer;
-                const meal = monthly[m].meal;
-                const commission = monthly[m].commission;
-                const nocommission = monthly[m].nocommission;
-                const total = transfer + meal + commission + nocommission;
-                const exp = monthly[m].expenses;
-                const profit = total - exp;
-                cumulative += profit;
-                const margin = total>0 ? (profit/total*100).toFixed(1) : '0.0';
-                const nights = monthly[m].nights || 0;
-                const occupancy = maxNights > 0 ? ((nights / maxNights) * 100).toFixed(1) : '0.0';
-        
-                const row = `<tr>
-                    <td>${m}</td>
-                    <td>${monthly[m].count}</td>
-                    <td class="currency-cell">$${transfer.toFixed(2)}</td>
-                    <td class="currency-cell">$${meal.toFixed(2)}</td>
-                    <td class="currency-cell">$${commission.toFixed(2)}</td>
-                    <td class="currency-cell">$${nocommission.toFixed(2)}</td>
-                    <td class="currency-cell">$${total.toFixed(2)}</td>
-                    <td class="expense-cell">$${exp.toFixed(2)}</td>
-                    <td class="${profit>=0?'currency-cell':'expense-cell'}">$${profit.toFixed(2)}</td>
-                    <td class="${cumulative>=0?'currency-cell':'expense-cell'}">$${cumulative.toFixed(2)}</td>
-                    <td>${margin}%</td>
-                    <td>${nights}</td>
-                    <td>${occupancy}%</td>
-                </tr>`;
-                tbody.innerHTML += row;
-            });
-        
-            // This month / last month
-            const now = new Date();
-            const thisMonthKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
-            const lastMonth = new Date(now.getFullYear(), now.getMonth()-1, 1);
-            const lastMonthKey = `${lastMonth.getFullYear()}-${String(lastMonth.getMonth()+1).padStart(2,'0')}`;
-            const thisMonthData = monthly[thisMonthKey] || { transfer:0, meal:0, commission:0, nocommission:0, expenses:0 };
-            const lastMonthData = monthly[lastMonthKey] || { transfer:0, meal:0, commission:0, nocommission:0, expenses:0 };
-            const thisMonthIncome = thisMonthData.transfer + thisMonthData.meal + thisMonthData.commission + thisMonthData.nocommission;
-            const lastMonthIncome = lastMonthData.transfer + lastMonthData.meal + lastMonthData.commission + lastMonthData.nocommission;
-            document.getElementById('this-month-income').textContent = `$${thisMonthIncome.toFixed(2)}`;
-            document.getElementById('this-month-expenses').textContent = `$${thisMonthData.expenses.toFixed(2)}`;
-            document.getElementById('this-month-net').textContent = `$${(thisMonthIncome - thisMonthData.expenses).toFixed(2)}`;
-            document.getElementById('last-month-income').textContent = `$${lastMonthIncome.toFixed(2)}`;
-            document.getElementById('last-month-expenses').textContent = `$${lastMonthData.expenses.toFixed(2)}`;
-            document.getElementById('last-month-net').textContent = `$${(lastMonthIncome - lastMonthData.expenses).toFixed(2)}`;
-        }
-
-        // Calendar (same as before)
-        function renderCalendar() {
-            const grid = document.getElementById('calendar-days-grid');
-            if (!grid) return;
-            const year = state.currentCalendarDate.getFullYear();
-            const month = state.currentCalendarDate.getMonth();
-            document.getElementById('calendar-month-year').textContent = 
-                new Date(year, month).toLocaleString('default', { month:'long', year:'numeric' });
-            grid.innerHTML = '';
-            const firstDay = new Date(year, month, 1).getDay();
-            const daysInMonth = new Date(year, month+1, 0).getDate();
-            for (let i=0; i<firstDay; i++) grid.appendChild(document.createElement('div')).className = 'calendar-day empty';
-            for (let d=1; d<=daysInMonth; d++) {
-                const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-                const dayReservations = state.reservations.filter(r => 
-                    new Date(r.checkin) <= new Date(dateStr) && new Date(r.checkout) > new Date(dateStr)
-                );
-                const dayDiv = document.createElement('div');
-                dayDiv.className = 'calendar-day';
-                dayDiv.dataset.date = dateStr;
-                if (dateStr === new Date().toISOString().split('T')[0]) dayDiv.classList.add('today');
-                dayDiv.innerHTML = `<div class="calendar-day-number">${d}</div>`;
-                if (dayReservations.length > 0) {
-                    const indicator = document.createElement('div');
-                    indicator.className = 'calendar-reservation-indicator';
-                    dayReservations.slice(0,3).forEach(r => {
-                        const resDiv = document.createElement('div');
-                        let roomClass = 'reservation-pending';
-                        if (r.name === 'Apartment 1') roomClass = 'reservation-room-single';
-                        else if (r.name === 'Apartment 2') roomClass = 'reservation-room-double';
-                        else if (r.name === 'Studio') roomClass = 'reservation-room-suite';
-                        else if (r.name === 'Villa') roomClass = 'reservation-room-vip';
-                        else if (r.name === 'Horizon') roomClass = 'reservation-room-deluxe';
-                        resDiv.className = `calendar-reservation ${roomClass}`;
-                        resDiv.innerHTML = `<div class="time">${r.time || ''}</div><div class="name">${r.name}</div>`;
-                        indicator.appendChild(resDiv);
-                    });
-                    if (dayReservations.length > 3) {
-                        const more = document.createElement('div');
-                        more.textContent = `+${dayReservations.length-3} more`;
-                        more.style.fontStyle = 'italic';
-                        indicator.appendChild(more);
-                    }
-                    dayDiv.appendChild(indicator);
-                }
-                dayDiv.addEventListener('click', () => showDayReservations(dateStr));
-                grid.appendChild(dayDiv);
-            }
-        }
-
-        function showDayReservations(dateStr) {
-            const container = document.getElementById('selected-date-reservations');
-            const title = document.getElementById('selected-date-title');
-            title.textContent = `Reservations for ${dateStr}`;
-            const dayRes = state.reservations.filter(r => 
-                new Date(r.checkin) <= new Date(dateStr) && new Date(r.checkout) > new Date(dateStr)
-            );
-            if (dayRes.length === 0) {
-                container.innerHTML = '<div class="calendar-no-reservations">No reservations</div>';
-                return;
-            }
-            container.innerHTML = '';
-            dayRes.forEach(r => {
-                const item = document.createElement('div');
-                item.className = 'calendar-reservation-item';
-                let detailsHtml = `
-                    <div class="calendar-reservation-header">
-                        <span class="calendar-reservation-title">${r.name}</span>
-                        <div class="action-buttons">
-                            <button class="btn-icon edit" onclick="window.editReservation('${r.id}')"><i class="fas fa-edit"></i></button>
-                            <button class="btn-icon delete" onclick="window.deleteReservation('${r.id}')"><i class="fas fa-trash-alt"></i></button>
-                        </div>
-                    </div>
-                    <div class="calendar-reservation-detail-grid">
-                        <div class="calendar-reservation-detail"><strong>Check-in:</strong> ${r.checkin} ${r.time || ''}</div>
-                        <div class="calendar-reservation-detail"><strong>Check-out:</strong> ${r.checkout} ${r.checkoutTime || ''}</div>
-                        <div class="calendar-reservation-detail"><strong>Duration:</strong> ${r.duration} nights</div>
-                        <div class="calendar-reservation-detail"><strong>Transfer:</strong> $${(r.transferAmount || 0).toFixed(2)}</div>
-                        <div class="calendar-reservation-detail"><strong>Meal:</strong> $${(r.mealPrice || 0).toFixed(2)}</div>
-                `;
-                state.customFields.forEach(f => {
-                    let val = r[f.id];
-                    if (val !== undefined && val !== null && val !== '') {
-                        if (f.type === 'checkbox') val = val ? 'Yes' : 'No';
-                        else if (f.type === 'currency') val = `$${parseFloat(val).toFixed(2)}`;
-                        detailsHtml += `<div class="calendar-reservation-detail"><strong>${f.name}:</strong> ${val}</div>`;
-                    }
-                });
-                detailsHtml += '</div>';
-                item.innerHTML = detailsHtml;
-                container.appendChild(item);
-            });
-        }
-
-        // Transfer Analytics (same as before)
-        function populateTransferRoomFilter() {
-            const rooms = [...new Set(state.reservations.map(r => r.name).filter(Boolean))];
-            const select = document.getElementById('transfer-filter-room');
-            select.innerHTML = '<option value="">All Rooms</option>';
-            rooms.forEach(room => {
-                const option = document.createElement('option');
-                option.value = room;
-                option.textContent = room;
-                select.appendChild(option);
-            });
-            select.value = state.transferFilterRoom || '';
-        }
-
-        function renderTransferAnalytics() {
-            const reservations = state.reservations;
-            let transfers = reservations.filter(r => (r.transferAmount || 0) > 0);
-            if (state.transferFilterRoom) {
-                transfers = transfers.filter(r => r.name === state.transferFilterRoom);
-            }
-            const totalTransfer = transfers.reduce((sum, r) => sum + (r.transferAmount || 0), 0);
-            const avgTransfer = transfers.length ? (totalTransfer / transfers.length) : 0;
-            document.getElementById('transfer-total').textContent = `$${totalTransfer.toFixed(2)}`;
-            document.getElementById('transfer-average').textContent = `$${avgTransfer.toFixed(2)}`;
-            document.getElementById('transfer-count').textContent = transfers.length;
-            document.getElementById('transfer-table-count').textContent = transfers.length;
-
-            const roomTotals = {};
-            reservations.filter(r => (r.transferAmount || 0) > 0).forEach(r => {
-                const room = r.name || 'Unknown';
-                roomTotals[room] = (roomTotals[room] || 0) + (r.transferAmount || 0);
-            });
-            let topRoom = 'None', topAmount = 0;
-            for (let [room, amt] of Object.entries(roomTotals)) {
-                if (amt > topAmount) { topRoom = room; topAmount = amt; }
-            }
-            document.getElementById('transfer-top-room').textContent = topRoom;
-
-            if (state.charts.transferRoom) state.charts.transferRoom.destroy();
-            const ctxRoom = document.getElementById('transferRoomChart')?.getContext('2d');
-            if (ctxRoom) {
-                const roomLabels = Object.keys(roomTotals);
-                const roomData = Object.values(roomTotals);
-                state.charts.transferRoom = new Chart(ctxRoom, {
-                    type: 'pie',
-                    data: { labels: roomLabels, datasets: [{ data: roomData, backgroundColor: ['#2563eb','#10b981','#f59e0b','#ef4444','#8b5cf6','#0ea5e9','#7c3aed'] }] }
-                });
-            }
-
-            const monthly = {};
-            transfers.forEach(r => {
-                const d = new Date(r.checkin);
-                const monthKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-                monthly[monthKey] = (monthly[monthKey] || 0) + (r.transferAmount || 0);
-            });
-            const sortedMonths = Object.keys(monthly).sort();
-            const monthLabels = sortedMonths.map(m => { const [y,mo]=m.split('-'); return new Date(y,mo-1).toLocaleString('default',{month:'short'})+' '+y; });
-            const monthValues = sortedMonths.map(m => monthly[m]);
-            if (state.charts.transferMonthly) state.charts.transferMonthly.destroy();
-            const ctxMonthly = document.getElementById('transferMonthlyChart')?.getContext('2d');
-            if (ctxMonthly) {
-                state.charts.transferMonthly = new Chart(ctxMonthly, {
-                    type: 'line',
-                    data: { labels: monthLabels, datasets: [{ label: 'Transfer Amount ($)', data: monthValues, borderColor: '#2563eb', fill: false }] }
-                });
-            }
-
-            const tbody = document.getElementById('transfer-table-body');
-            tbody.innerHTML = '';
-            transfers.forEach(r => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${r.name || ''}</td>
-                    <td>${r.checkin || ''}</td>
-                    <td>${r.checkout || ''}</td>
-                    <td class="currency-cell">$${(r.transferAmount || 0).toFixed(2)}</td>
-                    <td class="currency-cell">$${(r.mealPrice || 0).toFixed(2)}</td>
-                    <td>${r.duration || 1}</td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        // Reservations Stats functions (with room)
+        // ========== COMMISSION / NO COMMISSION FUNCTIONS ==========
         async function addCommissionStat() {
             const month = document.getElementById('commission-month').value;
             const room = document.getElementById('commission-room').value;
@@ -2246,7 +1317,6 @@
             });
         }
 
-        // Auto Transfer/Meal table from reservations
         function renderTransferMealAuto() {
             const tbody = document.getElementById('transfer-meal-auto-body');
             if (!tbody) return;
@@ -2254,7 +1324,7 @@
             state.reservations.forEach(r => {
                 if (!r.checkin) return;
                 const d = new Date(r.checkin);
-                const monthKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+                const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
                 if (!monthly[monthKey]) monthly[monthKey] = { transfer: 0, meal: 0 };
                 monthly[monthKey].transfer += r.transferAmount || 0;
                 monthly[monthKey].meal += r.mealPrice || 0;
@@ -2279,7 +1349,692 @@
             });
         }
 
-        // Export functions (same as before)
+        // ========== TRANSFER ANALYTICS FUNCTIONS ==========
+        function populateTransferRoomFilter() {
+            const rooms = [...new Set(state.reservations.map(r => r.name).filter(Boolean))];
+            const select = document.getElementById('transfer-filter-room');
+            select.innerHTML = '<option value="">All Rooms</option>';
+            rooms.forEach(room => {
+                const option = document.createElement('option');
+                option.value = room;
+                option.textContent = room;
+                select.appendChild(option);
+            });
+            select.value = state.transferFilterRoom || '';
+        }
+
+        function renderTransferAnalytics() {
+            const reservations = state.reservations;
+            let transfers = reservations.filter(r => (r.transferAmount || 0) > 0);
+            if (state.transferFilterRoom) {
+                transfers = transfers.filter(r => r.name === state.transferFilterRoom);
+            }
+            const totalTransfer = transfers.reduce((sum, r) => sum + (r.transferAmount || 0), 0);
+            const avgTransfer = transfers.length ? (totalTransfer / transfers.length) : 0;
+            document.getElementById('transfer-total').textContent = `$${totalTransfer.toFixed(2)}`;
+            document.getElementById('transfer-average').textContent = `$${avgTransfer.toFixed(2)}`;
+            document.getElementById('transfer-count').textContent = transfers.length;
+            document.getElementById('transfer-table-count').textContent = transfers.length;
+
+            const roomTotals = {};
+            reservations.filter(r => (r.transferAmount || 0) > 0).forEach(r => {
+                const room = r.name || 'Unknown';
+                roomTotals[room] = (roomTotals[room] || 0) + (r.transferAmount || 0);
+            });
+            let topRoom = 'None', topAmount = 0;
+            for (let [room, amt] of Object.entries(roomTotals)) {
+                if (amt > topAmount) { topRoom = room; topAmount = amt; }
+            }
+            document.getElementById('transfer-top-room').textContent = topRoom;
+
+            if (state.charts.transferRoom) state.charts.transferRoom.destroy();
+            const ctxRoom = document.getElementById('transferRoomChart')?.getContext('2d');
+            if (ctxRoom) {
+                const roomLabels = Object.keys(roomTotals);
+                const roomData = Object.values(roomTotals);
+                state.charts.transferRoom = new Chart(ctxRoom, {
+                    type: 'pie',
+                    data: { labels: roomLabels, datasets: [{ data: roomData, backgroundColor: ['#2563eb','#10b981','#f59e0b','#ef4444','#8b5cf6','#0ea5e9','#7c3aed'] }] }
+                });
+            }
+
+            const monthly = {};
+            transfers.forEach(r => {
+                const d = new Date(r.checkin);
+                const monthKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+                monthly[monthKey] = (monthly[monthKey] || 0) + (r.transferAmount || 0);
+            });
+            const sortedMonths = Object.keys(monthly).sort();
+            const monthLabels = sortedMonths.map(m => { const [y,mo]=m.split('-'); return new Date(y,mo-1).toLocaleString('default',{month:'short'})+' '+y; });
+            const monthValues = sortedMonths.map(m => monthly[m]);
+            if (state.charts.transferMonthly) state.charts.transferMonthly.destroy();
+            const ctxMonthly = document.getElementById('transferMonthlyChart')?.getContext('2d');
+            if (ctxMonthly) {
+                state.charts.transferMonthly = new Chart(ctxMonthly, {
+                    type: 'line',
+                    data: { labels: monthLabels, datasets: [{ label: 'Transfer Amount ($)', data: monthValues, borderColor: '#2563eb', fill: false }] }
+                });
+            }
+
+            const tbody = document.getElementById('transfer-table-body');
+            tbody.innerHTML = '';
+            transfers.forEach(r => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${r.name || ''}</td>
+                    <td>${r.checkin || ''}</td>
+                    <td>${r.checkout || ''}</td>
+                    <td class="currency-cell">$${(r.transferAmount || 0).toFixed(2)}</td>
+                    <td class="currency-cell">$${(r.mealPrice || 0).toFixed(2)}</td>
+                    <td>${r.duration || 1}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // ========== CUSTOM FIELDS FUNCTIONS ==========
+        async function addCustomField() {
+            const name = document.getElementById('field-name').value.trim();
+            const def = document.getElementById('field-default').value.trim();
+            if (!name) { showNotification('Field name required', 'error'); return; }
+            if (state.customFields.some(f => f.name.toLowerCase() === name.toLowerCase())) {
+                showNotification('Field name exists', 'error'); return;
+            }
+            const newField = {
+                name, type: state.selectedFieldType, defaultValue: def || null,
+                createdAt: new Date().toISOString()
+            };
+            if (state.selectedFieldType === 'dropdown') {
+                const opts = document.getElementById('dropdown-options').value.trim();
+                if (!opts) { showNotification('Dropdown options required', 'error'); return; }
+                newField.options = opts.split(',').map(s => s.trim()).filter(Boolean);
+            }
+            try {
+                await addDoc(customFieldsCol, newField);
+                await loadAllData();
+                document.getElementById('field-name').value = '';
+                document.getElementById('field-default').value = '';
+                document.getElementById('dropdown-options').value = '';
+                showNotification('Field added', 'success');
+            } catch (e) { console.error(e); showNotification('Error adding field', 'error'); }
+        }
+
+        async function deleteCustomField(id) {
+            if (!confirm('Delete this custom field? All associated data in reservations will be lost.')) return;
+            try {
+                await deleteDoc(doc(db, 'customFields', id));
+                await loadAllData();
+                showNotification('Field deleted', 'success');
+            } catch (e) { console.error(e); showNotification('Delete failed', 'error'); }
+        }
+
+        async function updateCustomField(id, newName, newDefault) {
+            try {
+                await updateDoc(doc(db, 'customFields', id), { name: newName, defaultValue: newDefault });
+                await loadAllData();
+                showNotification('Field updated', 'success');
+            } catch (e) { console.error(e); showNotification('Update failed', 'error'); }
+        }
+
+        function renderCustomFieldsList() {
+            const listDiv = document.getElementById('custom-fields-list');
+            if (!listDiv) return;
+            listDiv.innerHTML = '';
+            if (state.customFields.length === 0) {
+                listDiv.innerHTML = '<p class="empty-state" style="padding:20px;">No custom fields yet.</p>';
+                return;
+            }
+            state.customFields.forEach(field => {
+                const item = document.createElement('div');
+                item.style.display = 'flex'; item.style.justifyContent = 'space-between'; item.style.alignItems = 'center'; item.style.padding = '8px'; item.style.borderBottom = '1px solid var(--border-color)';
+                item.innerHTML = `
+                    <span><strong>${field.name}</strong> (${field.type})</span>
+                    <div>
+                        <button class="btn-icon edit" data-id="${field.id}" title="Edit"><i class="fas fa-edit"></i></button>
+                        <button class="btn-icon delete" data-id="${field.id}" title="Delete"><i class="fas fa-trash-alt"></i></button>
+                    </div>
+                `;
+                item.querySelector('.edit')?.addEventListener('click', () => {
+                    const newName = prompt('Enter new field name:', field.name);
+                    if (newName && newName.trim()) {
+                        const newDefault = prompt('Enter new default value (optional):', field.defaultValue || '');
+                        updateCustomField(field.id, newName.trim(), newDefault || null);
+                    }
+                });
+                item.querySelector('.delete')?.addEventListener('click', () => deleteCustomField(field.id));
+                listDiv.appendChild(item);
+            });
+        }
+
+        function renderCustomFields() {
+            const container = document.getElementById('custom-fields-container');
+            if (!container) return;
+            if (state.customFields.length === 0) {
+                container.innerHTML = `<div class="empty-state" style="padding:20px 0;"><i class="fas fa-list-alt"></i><h3>No Custom Fields</h3><p>Add fields using the panel.</p></div>`;
+                document.getElementById('reset-order-btn').style.display = 'none';
+                return;
+            }
+            container.innerHTML = '';
+            const sorted = [...state.customFields].sort((a,b) => state.fieldOrder.indexOf(a.id) - state.fieldOrder.indexOf(b.id));
+            sorted.forEach((field, idx) => {
+                const div = document.createElement('div');
+                div.className = 'form-group draggable';
+                div.dataset.id = field.id;
+                let inputHtml = '';
+                if (field.type === 'checkbox') {
+                    inputHtml = `<div class="checkbox-group"><input type="checkbox" id="${field.id}" ${field.defaultValue==='true'?'checked':''}><label>${field.name}</label></div>`;
+                } else if (field.type === 'dropdown') {
+                    let options = '<option value="">Select</option>';
+                    if (field.options) {
+                        field.options.forEach(o => {
+                            options += `<option value="${o}" ${o===field.defaultValue?'selected':''}>${o}</option>`;
+                        });
+                    }
+                    inputHtml = `<select class="form-control" id="${field.id}">${options}</select>`;
+                } else if (field.type === 'status') {
+                    inputHtml = `<select class="form-control" id="${field.id}">
+                        <option value="pending" ${field.defaultValue==='pending'?'selected':''}>Pending</option>
+                        <option value="confirmed" ${field.defaultValue==='confirmed'?'selected':''}>Confirmed</option>
+                        <option value="cancelled" ${field.defaultValue==='cancelled'?'selected':''}>Cancelled</option>
+                    </select>`;
+                } else {
+                    inputHtml = `<input type="${field.type==='date'?'date':field.type==='currency'||field.type==='number'?'number':'text'}" 
+                        class="form-control" id="${field.id}" value="${field.defaultValue || ''}" 
+                        ${field.type==='currency'?'step="0.01"':''} placeholder="${field.name}">`;
+                }
+                div.innerHTML = `
+                    <div class="drag-handle" draggable="true"><i class="fas fa-grip-vertical"></i></div>
+                    <div class="field-order-indicator">${idx+1}</div>
+                    <label class="form-label">${field.name}</label>
+                    ${inputHtml}
+                `;
+                container.appendChild(div);
+            });
+            const handles = container.querySelectorAll('.drag-handle');
+            handles.forEach(h => {
+                h.addEventListener('dragstart', e => {
+                    e.dataTransfer.setData('text/plain', e.target.closest('.draggable').dataset.id);
+                    e.target.closest('.draggable').classList.add('dragging');
+                });
+                h.addEventListener('dragend', e => e.target.closest('.draggable').classList.remove('dragging'));
+            });
+            container.addEventListener('dragover', e => e.preventDefault());
+            container.addEventListener('drop', e => {
+                e.preventDefault();
+                const draggedId = e.dataTransfer.getData('text/plain');
+                const target = e.target.closest('.draggable');
+                if (!target || target.dataset.id === draggedId) return;
+                const draggedIdx = state.fieldOrder.indexOf(draggedId);
+                const targetIdx = state.fieldOrder.indexOf(target.dataset.id);
+                state.fieldOrder.splice(draggedIdx, 1);
+                state.fieldOrder.splice(targetIdx, 0, draggedId);
+                renderCustomFields();
+                saveSettings();
+                showNotification('Field order updated', 'success');
+            });
+        }
+
+        // ========== RESERVATIONS FUNCTIONS ==========
+        async function addReservation() {
+            const room = document.getElementById('reservation-room').value;
+            const checkin = document.getElementById('reservation-checkin').value;
+            const checkout = document.getElementById('reservation-checkout').value;
+            const time = document.getElementById('reservation-time').value;
+            const checkoutTime = document.getElementById('reservation-checkout-time').value;
+            const transferAmount = parseFloat(document.getElementById('reservation-transfer').value) || 0;
+            const mealPrice = parseFloat(document.getElementById('reservation-meal').value) || 0;
+            if (!room || !checkin || !checkout || !time || !checkoutTime) { showNotification('Fill all required fields', 'error'); return; }
+            if (new Date(checkout) < new Date(checkin)) { showNotification('Check-out after check-in', 'error'); return; }
+            const duration = calculateDuration(checkin, checkout);
+            const newRes = { 
+                name: room, 
+                checkin, 
+                checkout, 
+                duration, 
+                time,
+                checkoutTime,
+                transferAmount, 
+                mealPrice, 
+                createdAt: new Date().toISOString() 
+            };
+            state.customFields.forEach(f => {
+                const el = document.getElementById(f.id);
+                if (el) newRes[f.id] = f.type === 'checkbox' ? el.checked : el.value;
+            });
+            try {
+                await addDoc(reservationsCol, newRes);
+                await loadAllData();
+                clearForm();
+                showNotification('Reservation added', 'success');
+            } catch (e) { console.error(e); showNotification('Error adding reservation', 'error'); }
+        }
+
+        async function deleteReservation(id) {
+            try {
+                await deleteDoc(doc(db, 'reservations', id));
+                await loadAllData();
+                showNotification('Reservation deleted', 'success');
+            } catch (e) { console.error(e); showNotification('Error deleting', 'error'); }
+        }
+
+        async function updateReservation(id, data) {
+            try {
+                await updateDoc(doc(db, 'reservations', id), data);
+                await loadAllData();
+                showNotification('Reservation updated', 'success');
+            } catch (e) { console.error(e); showNotification('Update failed', 'error'); }
+        }
+
+        function clearForm() {
+            document.getElementById('reservation-room').value = '';
+            const today = new Date().toISOString().split('T')[0];
+            const tomorrow = new Date(Date.now()+86400000).toISOString().split('T')[0];
+            document.getElementById('reservation-checkin').value = today;
+            document.getElementById('reservation-checkout').value = tomorrow;
+            document.getElementById('reservation-time').value = '12:00';
+            document.getElementById('reservation-checkout-time').value = '10:00';
+            document.getElementById('reservation-transfer').value = '0';
+            document.getElementById('reservation-meal').value = '0';
+            state.customFields.forEach(f => {
+                const el = document.getElementById(f.id);
+                if (el) {
+                    if (f.type === 'checkbox') el.checked = f.defaultValue === 'true';
+                    else el.value = f.defaultValue || '';
+                }
+            });
+        }
+
+        function renderReservationsTable() {
+            const thead = document.getElementById('reservations-thead');
+            const tbody = document.getElementById('reservations-body');
+            if (!thead || !tbody) return;
+            let headerHtml = '<tr><th>Room Type</th><th>Check-in</th><th>Check-out</th><th>Duration</th><th>Check-in Time</th><th>Check-out Time</th><th>Transfer ($)</th><th>Meal ($)</th>';
+            state.customFields.forEach(f => { headerHtml += `<th>${f.name}</th>`; });
+            headerHtml += '<th>Actions</th></tr>';
+            thead.innerHTML = headerHtml;
+            tbody.innerHTML = '';
+            const res = state.filteredReservations || state.reservations;
+            if (res.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="${8 + state.customFields.length + 1}"><div class="empty-state"><i class="fas fa-calendar-times"></i><h3>No Reservations</h3></div></td></tr>`;
+                return;
+            }
+            res.forEach(r => {
+                const tr = document.createElement('tr');
+                let rowHtml = `
+                    <td>${r.name}</td>
+                    <td>${r.checkin}</td>
+                    <td>${r.checkout}</td>
+                    <td>${r.duration || 1}</td>
+                    <td>${r.time || ''}</td>
+                    <td>${r.checkoutTime || ''}</td>
+                    <td class="currency-cell">$${(r.transferAmount || 0).toFixed(2)}</td>
+                    <td class="currency-cell">$${(r.mealPrice || 0).toFixed(2)}</td>
+                `;
+                state.customFields.forEach(f => {
+                    let val = r[f.id];
+                    if (f.type === 'checkbox') {
+                        val = val ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-times-circle"></i>';
+                    } else if (f.type === 'currency') {
+                        val = val ? `$${parseFloat(val).toFixed(2)}` : '-';
+                    } else {
+                        val = val || '-';
+                    }
+                    rowHtml += `<td>${val}</td>`;
+                });
+                rowHtml += `<td><div class="action-buttons"><button class="btn-icon edit" onclick="window.editReservation('${r.id}')"><i class="fas fa-edit"></i></button><button class="btn-icon delete" onclick="window.deleteReservation('${r.id}')"><i class="fas fa-trash-alt"></i></button></div></td>`;
+                tr.innerHTML = rowHtml;
+                tbody.appendChild(tr);
+            });
+            document.getElementById('reservation-count-badge').textContent = res.length;
+        }
+
+        // ========== CATEGORIES FUNCTIONS ==========
+        async function addCategory() {
+            const name = document.getElementById('category-name').value.trim();
+            if (!name) { showNotification('Category name required', 'error'); return; }
+            const newCat = {
+                name,
+                description: document.getElementById('category-description').value.trim(),
+                color: document.getElementById('category-color').value,
+                icon: document.getElementById('category-icon').value,
+                budget: parseFloat(document.getElementById('category-budget').value) || 0,
+                createdAt: new Date().toISOString()
+            };
+            try {
+                await addDoc(expenseCategoriesCol, newCat);
+                await loadAllData();
+                document.getElementById('category-name').value = '';
+                document.getElementById('category-description').value = '';
+                document.getElementById('category-budget').value = '';
+                showNotification('Category added', 'success');
+            } catch (e) { console.error(e); showNotification('Error adding category', 'error'); }
+        }
+
+        async function updateCategory(id) {
+            const name = document.getElementById('category-name').value.trim();
+            if (!name) return;
+            const updated = {
+                name,
+                description: document.getElementById('category-description').value.trim(),
+                color: document.getElementById('category-color').value,
+                icon: document.getElementById('category-icon').value,
+                budget: parseFloat(document.getElementById('category-budget').value) || 0
+            };
+            try {
+                await updateDoc(doc(db, 'expenseCategories', id), updated);
+                await loadAllData();
+                showNotification('Category updated', 'success');
+            } catch (e) { console.error(e); showNotification('Update failed', 'error'); }
+        }
+
+        async function deleteCategory(id) {
+            try {
+                const batch = writeBatch(db);
+                state.expenses.filter(e => e.categoryId === id).forEach(e => {
+                    batch.update(doc(db, 'expenses', e.id), { categoryId: null });
+                });
+                batch.delete(doc(db, 'expenseCategories', id));
+                await batch.commit();
+                await loadAllData();
+                showNotification('Category deleted', 'success');
+            } catch (e) { console.error(e); showNotification('Delete failed', 'error'); }
+        }
+
+        function renderCategories() {
+            const list = document.getElementById('categories-list');
+            if (!list) return;
+            list.innerHTML = '';
+            state.expenseCategories.forEach(cat => {
+                const item = document.createElement('div');
+                item.className = `category-item ${state.selectedCategoryId===cat.id?'active':''}`;
+                item.dataset.id = cat.id;
+                item.innerHTML = `
+                    <div class="category-item-header"><span class="category-name">${cat.name}</span>
+                        <div class="category-actions">
+                            <button class="btn-icon edit" onclick="window.editCategory('${cat.id}')"><i class="fas fa-edit"></i></button>
+                            <button class="btn-icon delete" onclick="window.deleteCategory('${cat.id}')"><i class="fas fa-trash-alt"></i></button>
+                        </div>
+                    </div>
+                    <div style="font-size:13px;color:var(--text-secondary);">${cat.description || ''}</div>
+                    <div><span style="background-color:${cat.color}; width:12px;height:12px;display:inline-block;border-radius:50%;"></span> <i class="${cat.icon}"></i> $${cat.budget || 0}</div>
+                `;
+                item.addEventListener('click', (e) => {
+                    if (!e.target.closest('.btn-icon')) {
+                        state.selectedCategoryId = cat.id;
+                        document.getElementById('category-name').value = cat.name;
+                        document.getElementById('category-description').value = cat.description || '';
+                        document.getElementById('category-color').value = cat.color;
+                        document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('selected'));
+                        const matchingPreset = document.querySelector(`.color-option[data-color="${cat.color}"]`);
+                        if (matchingPreset) matchingPreset.classList.add('selected');
+                        document.getElementById('category-color-custom').value = cat.color;
+                        document.getElementById('category-icon').value = cat.icon;
+                        document.querySelectorAll('.icon-option').forEach(opt => opt.classList.remove('selected'));
+                        document.querySelector(`.icon-option i.${cat.icon}`)?.closest('.icon-option')?.classList.add('selected');
+                        document.getElementById('category-budget').value = cat.budget;
+                        document.getElementById('category-form-title').textContent = `Edit: ${cat.name}`;
+                        document.getElementById('cancel-category-btn').style.display = 'block';
+                        renderCategories();
+                    }
+                });
+                list.appendChild(item);
+            });
+        }
+
+        function updateCategoryDropdowns() {
+            const selects = ['expense-category', 'expense-filter-category', 'edit-expense-category'];
+            selects.forEach(id => {
+                const sel = document.getElementById(id);
+                if (!sel) return;
+                sel.innerHTML = `<option value="">${id.includes('filter')?'All Categories':'Select a category'}</option>`;
+                state.expenseCategories.forEach(c => {
+                    sel.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+                });
+            });
+        }
+
+        // ========== EXPENSES FUNCTIONS ==========
+        async function addExpense() {
+            const name = document.getElementById('expense-name').value.trim();
+            const catId = document.getElementById('expense-category').value;
+            const amount = document.getElementById('expense-amount').value;
+            const date = document.getElementById('expense-date').value;
+            if (!name || !catId || !amount || !date) { showNotification('Fill required fields', 'error'); return; }
+            const newExp = {
+                name, categoryId: catId, amount: parseFloat(amount).toFixed(2), date,
+                payment: document.getElementById('expense-payment').value,
+                description: document.getElementById('expense-description').value.trim(),
+                status: document.getElementById('expense-status').value,
+                createdAt: new Date().toISOString()
+            };
+            try {
+                await addDoc(expensesCol, newExp);
+                await loadAllData();
+                document.getElementById('expense-name').value = '';
+                document.getElementById('expense-amount').value = '';
+                document.getElementById('expense-description').value = '';
+                document.getElementById('expense-status').value = 'pending';
+                showNotification('Expense added', 'success');
+            } catch (e) { console.error(e); showNotification('Error adding expense', 'error'); }
+        }
+
+        async function deleteExpense(id) {
+            try {
+                await deleteDoc(doc(db, 'expenses', id));
+                await loadAllData();
+                showNotification('Expense deleted', 'success');
+            } catch (e) { console.error(e); showNotification('Error deleting', 'error'); }
+        }
+
+        async function updateExpense(id) {
+            const name = document.getElementById('edit-expense-name').value.trim();
+            const catId = document.getElementById('edit-expense-category').value;
+            const amount = document.getElementById('edit-expense-amount').value;
+            const date = document.getElementById('edit-expense-date').value;
+            if (!name || !catId || !amount || !date) return;
+            const updated = {
+                name, categoryId: catId, amount: parseFloat(amount).toFixed(2), date,
+                payment: document.getElementById('edit-expense-payment').value,
+                description: document.getElementById('edit-expense-description').value.trim(),
+                status: document.getElementById('edit-expense-status').value
+            };
+            try {
+                await updateDoc(doc(db, 'expenses', id), updated);
+                await loadAllData();
+                document.getElementById('edit-expense-modal').classList.remove('active');
+                showNotification('Expense updated', 'success');
+            } catch (e) { console.error(e); showNotification('Update failed', 'error'); }
+        }
+
+        function renderExpensesTable() {
+            const tbody = document.getElementById('expenses-body');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            const exps = state.filteredExpenses || state.expenses;
+            if (exps.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><i class="fas fa-money-bill-wave"></i><h3>No Expenses</h3></div></td></tr>`;
+                document.getElementById('expense-summary').style.display = 'none';
+                return;
+            }
+            exps.forEach(e => {
+                const cat = state.expenseCategories.find(c => c.id === e.categoryId);
+                const tr = document.createElement('tr');
+                tr.className = e.status === 'paid' ? 'status-paid' : 'status-pending';
+                tr.innerHTML = `
+                    <td>${e.name}</td>
+                    <td><span class="category-badge" style="background-color:${cat?.color}20; color:${cat?.color};">${cat?.name||'Uncategorized'}</span></td>
+                    <td class="expense-cell">$${parseFloat(e.amount).toFixed(2)}</td>
+                    <td>${e.date}</td>
+                    <td>${e.payment}</td>
+                    <td>${e.description || '-'}</td>
+                    <td><span class="status-badge ${e.status==='paid'?'status-paid':'status-expense-pending'}">${e.status}</span></td>
+                    <td><div class="action-buttons">
+                        <button class="btn-icon edit" onclick="window.editExpense('${e.id}')"><i class="fas fa-edit"></i></button>
+                        <button class="btn-icon delete" onclick="window.deleteExpense('${e.id}')"><i class="fas fa-trash-alt"></i></button>
+                    </div></td>
+                `;
+                tbody.appendChild(tr);
+            });
+            document.getElementById('expense-count-badge').textContent = exps.length;
+            updateExpenseSummary(exps);
+        }
+
+        function updateExpenseSummary(exps) {
+            if (!exps.length) { document.getElementById('expense-summary').style.display = 'none'; return; }
+            const total = exps.reduce((s,e)=>s+parseFloat(e.amount),0);
+            const paid = exps.filter(e=>e.status==='paid').length;
+            const pend = exps.length - paid;
+            document.getElementById('summary-count').textContent = exps.length;
+            document.getElementById('summary-paid-count').textContent = paid;
+            document.getElementById('summary-pending-count').textContent = pend;
+            document.getElementById('summary-total-amount').textContent = `$${total.toFixed(2)}`;
+            document.getElementById('expense-summary').style.display = 'flex';
+        }
+
+        // ========== FILTER FUNCTIONS ==========
+        function applyExpenseFiltersFromState() {
+            const filters = state.activeExpenseFilters;
+            if (Object.keys(filters).length === 0) {
+                state.filteredExpenses = null;
+                return;
+            }
+            state.filteredExpenses = state.expenses.filter(e => {
+                if (filters.name && !e.name.toLowerCase().includes(filters.name.toLowerCase())) return false;
+                if (filters.categoryId && e.categoryId !== filters.categoryId) return false;
+                if (filters.status && e.status !== filters.status) return false;
+                if (filters.dateFrom && e.date < filters.dateFrom) return false;
+                if (filters.dateTo && e.date > filters.dateTo) return false;
+                if (filters.amountFrom && parseFloat(e.amount) < parseFloat(filters.amountFrom)) return false;
+                if (filters.amountTo && parseFloat(e.amount) > parseFloat(filters.amountTo)) return false;
+                return true;
+            });
+        }
+
+        async function applyExpenseFilters() {
+            state.activeExpenseFilters = {
+                name: document.getElementById('expense-filter-name').value,
+                categoryId: document.getElementById('expense-filter-category').value,
+                status: document.getElementById('expense-filter-status').value,
+                dateFrom: document.getElementById('expense-filter-date-from').value,
+                dateTo: document.getElementById('expense-filter-date-to').value,
+                amountFrom: document.getElementById('expense-filter-amount-from').value,
+                amountTo: document.getElementById('expense-filter-amount-to').value
+            };
+            Object.keys(state.activeExpenseFilters).forEach(key => !state.activeExpenseFilters[key] && delete state.activeExpenseFilters[key]);
+            applyExpenseFiltersFromState();
+            renderExpensesTable();
+            await saveSettings();
+        }
+
+        function clearExpenseFilters() {
+            state.activeExpenseFilters = {};
+            state.filteredExpenses = null;
+            document.getElementById('expense-filter-name').value = '';
+            document.getElementById('expense-filter-category').value = '';
+            document.getElementById('expense-filter-status').value = '';
+            document.getElementById('expense-filter-date-from').value = '';
+            document.getElementById('expense-filter-date-to').value = '';
+            document.getElementById('expense-filter-amount-from').value = '';
+            document.getElementById('expense-filter-amount-to').value = '';
+            renderExpensesTable();
+            saveSettings();
+        }
+
+        // ========== CALENDAR FUNCTIONS ==========
+        function renderCalendar() {
+            const grid = document.getElementById('calendar-days-grid');
+            if (!grid) return;
+            const year = state.currentCalendarDate.getFullYear();
+            const month = state.currentCalendarDate.getMonth();
+            document.getElementById('calendar-month-year').textContent = 
+                new Date(year, month).toLocaleString('default', { month:'long', year:'numeric' });
+            grid.innerHTML = '';
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month+1, 0).getDate();
+            for (let i=0; i<firstDay; i++) grid.appendChild(document.createElement('div')).className = 'calendar-day empty';
+            for (let d=1; d<=daysInMonth; d++) {
+                const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+                const dayReservations = state.reservations.filter(r => 
+                    new Date(r.checkin) <= new Date(dateStr) && new Date(r.checkout) > new Date(dateStr)
+                );
+                const dayDiv = document.createElement('div');
+                dayDiv.className = 'calendar-day';
+                dayDiv.dataset.date = dateStr;
+                if (dateStr === new Date().toISOString().split('T')[0]) dayDiv.classList.add('today');
+                dayDiv.innerHTML = `<div class="calendar-day-number">${d}</div>`;
+                if (dayReservations.length > 0) {
+                    const indicator = document.createElement('div');
+                    indicator.className = 'calendar-reservation-indicator';
+                    dayReservations.slice(0,3).forEach(r => {
+                        const resDiv = document.createElement('div');
+                        let roomClass = 'reservation-pending';
+                        if (r.name === 'Apartment 1') roomClass = 'reservation-room-single';
+                        else if (r.name === 'Apartment 2') roomClass = 'reservation-room-double';
+                        else if (r.name === 'Studio') roomClass = 'reservation-room-suite';
+                        else if (r.name === 'Villa') roomClass = 'reservation-room-vip';
+                        else if (r.name === 'Horizon') roomClass = 'reservation-room-deluxe';
+                        resDiv.className = `calendar-reservation ${roomClass}`;
+                        resDiv.innerHTML = `<div class="time">${r.time || ''}</div><div class="name">${r.name}</div>`;
+                        indicator.appendChild(resDiv);
+                    });
+                    if (dayReservations.length > 3) {
+                        const more = document.createElement('div');
+                        more.textContent = `+${dayReservations.length-3} more`;
+                        more.style.fontStyle = 'italic';
+                        indicator.appendChild(more);
+                    }
+                    dayDiv.appendChild(indicator);
+                }
+                dayDiv.addEventListener('click', () => showDayReservations(dateStr));
+                grid.appendChild(dayDiv);
+            }
+        }
+
+        function showDayReservations(dateStr) {
+            const container = document.getElementById('selected-date-reservations');
+            const title = document.getElementById('selected-date-title');
+            title.textContent = `Reservations for ${dateStr}`;
+            const dayRes = state.reservations.filter(r => 
+                new Date(r.checkin) <= new Date(dateStr) && new Date(r.checkout) > new Date(dateStr)
+            );
+            if (dayRes.length === 0) {
+                container.innerHTML = '<div class="calendar-no-reservations">No reservations</div>';
+                return;
+            }
+            container.innerHTML = '';
+            dayRes.forEach(r => {
+                const item = document.createElement('div');
+                item.className = 'calendar-reservation-item';
+                let detailsHtml = `
+                    <div class="calendar-reservation-header">
+                        <span class="calendar-reservation-title">${r.name}</span>
+                        <div class="action-buttons">
+                            <button class="btn-icon edit" onclick="window.editReservation('${r.id}')"><i class="fas fa-edit"></i></button>
+                            <button class="btn-icon delete" onclick="window.deleteReservation('${r.id}')"><i class="fas fa-trash-alt"></i></button>
+                        </div>
+                    </div>
+                    <div class="calendar-reservation-detail-grid">
+                        <div class="calendar-reservation-detail"><strong>Check-in:</strong> ${r.checkin} ${r.time || ''}</div>
+                        <div class="calendar-reservation-detail"><strong>Check-out:</strong> ${r.checkout} ${r.checkoutTime || ''}</div>
+                        <div class="calendar-reservation-detail"><strong>Duration:</strong> ${r.duration} nights</div>
+                        <div class="calendar-reservation-detail"><strong>Transfer:</strong> $${(r.transferAmount || 0).toFixed(2)}</div>
+                        <div class="calendar-reservation-detail"><strong>Meal:</strong> $${(r.mealPrice || 0).toFixed(2)}</div>
+                `;
+                state.customFields.forEach(f => {
+                    let val = r[f.id];
+                    if (val !== undefined && val !== null && val !== '') {
+                        if (f.type === 'checkbox') val = val ? 'Yes' : 'No';
+                        else if (f.type === 'currency') val = `$${parseFloat(val).toFixed(2)}`;
+                        detailsHtml += `<div class="calendar-reservation-detail"><strong>${f.name}:</strong> ${val}</div>`;
+                    }
+                });
+                detailsHtml += '</div>';
+                item.innerHTML = detailsHtml;
+                container.appendChild(item);
+            });
+        }
+
+        // ========== EXPORT FUNCTIONS ==========
         function exportToCSV(data, filename) {
             if (!data || data.length === 0) { showNotification('No data to export', 'error'); return; }
             const headers = Object.keys(data[0]);
@@ -2301,7 +2056,7 @@
             window.URL.revokeObjectURL(url);
         }
 
-        // Modal functions (edit reservation, etc.)
+        // ========== MODAL FUNCTIONS ==========
         window.editReservation = (id) => {
             const r = state.reservations.find(r => r.id === id);
             if (!r) return;
@@ -2416,7 +2171,7 @@
 
         window.deleteExpense = (id) => { if (confirm('Delete expense?')) deleteExpense(id); };
 
-        // Navigation
+        // ========== NAVIGATION ==========
         function showPage(page) {
             state.currentPage = page;
             ['dashboard','calendar','transfer-analytics','expenses','reservations-stats','analytics','settings'].forEach(p => {
@@ -2437,7 +2192,7 @@
             }
         }
 
-        // Filter modal (same as before)
+        // ========== FILTER MODAL ==========
         function openFilterModal() {
             document.getElementById('filter-room').value = state.activeFilters.room || '';
             document.getElementById('filter-checkin-from').value = state.activeFilters.checkinFrom || '';
@@ -2537,7 +2292,7 @@
             document.getElementById('clear-filters-btn').style.display = 'none';
         }
 
-        // Export handlers (same as before)
+        // ========== EXPORT BUTTONS ==========
         document.getElementById('export-dashboard-btn')?.addEventListener('click', () => {
             const data = state.reservations.map(r => ({
                 Room: r.name,
@@ -2589,7 +2344,7 @@
                 const d = new Date(r.checkin);
                 if (d >= cutoff) {
                     const monthKey = `${d.getFullYear()}-${d.getMonth()+1}`;
-                    monthly[monthKey] = monthly[monthKey] || { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, count:0 };
+                    monthly[monthKey] = monthly[monthKey] || { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, count:0, nights:0 };
                     monthly[monthKey].transfer += r.transferAmount || 0;
                     monthly[monthKey].meal += r.mealPrice || 0;
                     monthly[monthKey].count += 1;
@@ -2599,40 +2354,51 @@
                 const d = new Date(e.date);
                 if (d >= cutoff) {
                     const monthKey = `${d.getFullYear()}-${d.getMonth()+1}`;
-                    monthly[monthKey] = monthly[monthKey] || { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, count:0 };
+                    monthly[monthKey] = monthly[monthKey] || { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, count:0, nights:0 };
                     monthly[monthKey].expenses += parseFloat(e.amount)||0;
                 }
             });
             state.commissionStats.forEach(c => {
-                const [year, month] = c.month.split('-');
-                const d = new Date(parseInt(year), parseInt(month)-1, 1);
+                const [year, month] = c.month.split('-').map(Number);
+                const d = new Date(year, month-1, 1);
                 if (d >= cutoff) {
                     const monthKey = c.month;
-                    monthly[monthKey] = monthly[monthKey] || { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, count:0 };
+                    monthly[monthKey] = monthly[monthKey] || { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, count:0, nights:0 };
                     monthly[monthKey].commission += c.income || 0;
+                    monthly[monthKey].nights += c.stays || 0;
                 }
             });
             state.noCommissionStats.forEach(nc => {
-                const [year, month] = nc.month.split('-');
-                const d = new Date(parseInt(year), parseInt(month)-1, 1);
+                const [year, month] = nc.month.split('-').map(Number);
+                const d = new Date(year, month-1, 1);
                 if (d >= cutoff) {
                     const monthKey = nc.month;
-                    monthly[monthKey] = monthly[monthKey] || { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, count:0 };
+                    monthly[monthKey] = monthly[monthKey] || { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, count:0, nights:0 };
                     monthly[monthKey].nocommission += nc.income || 0;
+                    monthly[monthKey].nights += nc.stays || 0;
                 }
             });
             const months = Object.keys(monthly).sort();
-            const data = months.map(m => ({
-                Period: m,
-                Reservations: monthly[m].count,
-                Transfer: monthly[m].transfer.toFixed(2),
-                Meal: monthly[m].meal.toFixed(2),
-                Commission: monthly[m].commission.toFixed(2),
-                NoCommission: monthly[m].nocommission.toFixed(2),
-                TotalIncome: (monthly[m].transfer + monthly[m].meal + monthly[m].commission + monthly[m].nocommission).toFixed(2),
-                Expenses: monthly[m].expenses.toFixed(2),
-                Profit: (monthly[m].transfer + monthly[m].meal + monthly[m].commission + monthly[m].nocommission - monthly[m].expenses).toFixed(2)
-            }));
+            const data = months.map(m => {
+                const [y, mo] = m.split('-').map(Number);
+                const days = new Date(y, mo, 0).getDate();
+                const maxNights = days * 4;
+                const nights = monthly[m].nights || 0;
+                const occupancy = maxNights > 0 ? ((nights / maxNights) * 100).toFixed(1) : '0.0';
+                return {
+                    Period: m,
+                    Reservations: monthly[m].count,
+                    Transfer: monthly[m].transfer.toFixed(2),
+                    Meal: monthly[m].meal.toFixed(2),
+                    Commission: monthly[m].commission.toFixed(2),
+                    NoCommission: monthly[m].nocommission.toFixed(2),
+                    TotalIncome: (monthly[m].transfer + monthly[m].meal + monthly[m].commission + monthly[m].nocommission).toFixed(2),
+                    Expenses: monthly[m].expenses.toFixed(2),
+                    Profit: (monthly[m].transfer + monthly[m].meal + monthly[m].commission + monthly[m].nocommission - monthly[m].expenses).toFixed(2),
+                    Nights: nights,
+                    Occupancy: occupancy + '%'
+                };
+            });
             exportToCSV(data, 'analytics.csv');
         });
 
@@ -2649,7 +2415,7 @@
             exportToCSV(data, 'transfers.csv');
         });
 
-        // Refresh buttons
+        // ========== REFRESH BUTTONS ==========
         document.getElementById('refresh-table-btn')?.addEventListener('click', () => {
             renderReservationsTable();
             showNotification('Reservations table refreshed', 'success');
@@ -2659,7 +2425,7 @@
             showNotification('Expenses table refreshed', 'success');
         });
 
-        // Event listeners
+        // ========== EVENT LISTENERS ==========
         document.addEventListener('DOMContentLoaded', async () => {
             const today = new Date().toISOString().split('T')[0];
             const tomorrow = new Date(Date.now()+86400000).toISOString().split('T')[0];
