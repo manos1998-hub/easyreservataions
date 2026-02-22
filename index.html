@@ -298,19 +298,6 @@
         .calendar-reservation-detail-item span { color: var(--text-primary); font-weight: 500; }
         .reservation-duration-display { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background-color: rgba(37, 99, 235, 0.1); border-radius: 20px; font-size: 12px; font-weight: 600; color: var(--primary-color); margin-top: 8px; }
         .reservation-duration-display i { font-size: 11px; }
-        .progress-bar-container {
-            width: 100px;
-            height: 20px;
-            background-color: #e2e8f0;
-            border-radius: 10px;
-            overflow: hidden;
-        }
-        .progress-bar-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #10b981, #34d399);
-            border-radius: 10px;
-            transition: width 0.3s ease;
-        }
     </style>
 </head>
 <body>
@@ -703,24 +690,17 @@
                             </div>
 
                             <!-- NEW: Summary table -->
-                           <div class="commission-summary" style="margin-top: 30px;">
+                            <div class="commission-summary" style="margin-top: 30px;">
                                 <h4>Commission Summary by Room & Month</h4>
                                 <div class="table-wrapper">
                                     <table class="data-table" id="commission-summary-table">
-                                        <thead>
-                                            <tr>
-                                                <th>Month</th>
-                                                <th>Room</th>
-                                                <th>Total Income</th>
-                                                <th>Total Stays</th>
-                                                <th>Occupancy %</th>
-                                                <th>Occupancy Bar</th>   <!-- NEW COLUMN -->
-                                            </tr>
-                                        </thead>
+                                        <thead><tr><th>Month</th><th>Room</th><th>Total Income</th><th>Total Stays</th><th>Occupancy %</th></tr></thead>
                                         <tbody id="commission-summary-body"></tbody>
                                     </table>
                                 </div>
                             </div>
+                        </div>
+                    </div>
 
                     <!-- No Commission Panel -->
                     <div class="panel">
@@ -758,24 +738,18 @@
                             </div>
 
                             <!-- NEW: Summary table -->
-                          <div class="no-commission-summary" style="margin-top: 30px;">
+                            <div class="no-commission-summary" style="margin-top: 30px;">
                                 <h4>No Commission Summary by Room & Month</h4>
                                 <div class="table-wrapper">
                                     <table class="data-table" id="no-commission-summary-table">
-                                        <thead>
-                                            <tr>
-                                                <th>Month</th>
-                                                <th>Room</th>
-                                                <th>Total Income</th>
-                                                <th>Total Stays</th>
-                                                <th>Occupancy %</th>
-                                                <th>Occupancy Bar</th>   <!-- NEW COLUMN -->
-                                            </tr>
-                                        </thead>
+                                        <thead><tr><th>Month</th><th>Room</th><th>Total Income</th><th>Total Stays</th><th>Occupancy %</th></tr></thead>
                                         <tbody id="no-commission-summary-body"></tbody>
                                     </table>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
 
                 <!-- Third Panel: Transfer and Meal Income (unchanged) -->
                 <div class="panel" style="margin-top: 24px;">
@@ -1373,26 +1347,20 @@
             const sorted = Object.values(grouped).sort((a,b) => a.month.localeCompare(b.month) || a.room.localeCompare(b.room));
             tbody.innerHTML = '';
             if (sorted.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state">No data</div></td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state">No data</div></td></tr>';
                 return;
             }
             sorted.forEach(item => {
                 const [year, month] = item.month.split('-').map(Number);
                 const daysInMonth = new Date(year, month, 0).getDate();
-                const occupancy = item.stays > 0 ? ((item.stays / daysInMonth) * 100) : 0;
-                const occupancyFixed = occupancy.toFixed(1);
+                const occupancy = item.stays > 0 ? ((item.stays / daysInMonth) * 100).toFixed(1) : '0.0';
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td>${item.month}</td>
                     <td>${item.room}</td>
                     <td class="currency-cell">$${item.income.toFixed(2)}</td>
                     <td>${item.stays}</td>
-                    <td>${occupancyFixed}%</td>
-                    <td>
-                        <div class="progress-bar-container">
-                            <div class="progress-bar-fill" style="width: ${occupancy}%;"></div>
-                        </div>
-                    </td>
+                    <td>${occupancy}%</td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -1490,7 +1458,7 @@
             });
         }
 
-       function renderNoCommissionSummary() {
+        function renderNoCommissionSummary() {
             const tbody = document.getElementById('no-commission-summary-body');
             if (!tbody) return;
             const filtered = getFilteredNoCommissionStats();
@@ -1506,26 +1474,20 @@
             const sorted = Object.values(grouped).sort((a,b) => a.month.localeCompare(b.month) || a.room.localeCompare(b.room));
             tbody.innerHTML = '';
             if (sorted.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state">No data</div></td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state">No data</div></td></tr>';
                 return;
             }
             sorted.forEach(item => {
                 const [year, month] = item.month.split('-').map(Number);
                 const daysInMonth = new Date(year, month, 0).getDate();
-                const occupancy = item.stays > 0 ? ((item.stays / daysInMonth) * 100) : 0;
-                const occupancyFixed = occupancy.toFixed(1);
+                const occupancy = item.stays > 0 ? ((item.stays / daysInMonth) * 100).toFixed(1) : '0.0';
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td>${item.month}</td>
                     <td>${item.room}</td>
                     <td class="currency-cell">$${item.income.toFixed(2)}</td>
                     <td>${item.stays}</td>
-                    <td>${occupancyFixed}%</td>
-                    <td>
-                        <div class="progress-bar-container">
-                            <div class="progress-bar-fill" style="width: ${occupancy}%;"></div>
-                        </div>
-                    </td>
+                    <td>${occupancy}%</td>
                 `;
                 tbody.appendChild(tr);
             });
