@@ -216,7 +216,7 @@
         .chart-header h3 { font-size: 18px; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 10px; }
         .chart-header h3 i { color: var(--primary-color); }
         .chart-body { padding: 20px; height: 350px; position: relative; }
-        .analytics-filters { display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+        .analytics-filters { display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; align-items: flex-end; }
         .filter-group { display: flex; flex-direction: column; gap: 8px; }
         .filter-label { font-size: 14px; font-weight: 600; color: var(--text-primary); }
         .chart-placeholder { display: flex; align-items: center; justify-content: center; flex-direction: column; height: 100%; color: var(--text-secondary); }
@@ -766,10 +766,18 @@
                 </div>
             </div>
 
-            <!-- Analytics Content (with Nights and Occupancy) -->
+            <!-- Analytics Content (with Nights and Occupancy) - Time period changed to months -->
             <div class="content-wrapper" id="analytics-content" style="display: none;">
                 <div class="analytics-filters">
-                    <div class="filter-group"><label class="filter-label">Time Period</label><select class="form-control" id="analytics-period"><option value="30">Last 30 Days</option><option value="90">Last 90 Days</option><option value="180">Last 6 Months</option><option value="365">Last 12 Months</option><option value="all">All Time</option></select></div>
+                    <div class="filter-group"><label class="filter-label">Time Period (months)</label>
+                        <select class="form-control" id="analytics-period">
+                            <option value="1">Last 1 Month</option>
+                            <option value="3">Last 3 Months</option>
+                            <option value="6">Last 6 Months</option>
+                            <option value="12" selected>Last 12 Months</option>
+                            <option value="all">All Time</option>
+                        </select>
+                    </div>
                     <div class="filter-group"><label class="filter-label">&nbsp;</label><button class="btn btn-primary" id="apply-analytics-filters"><i class="fas fa-filter"></i> Apply</button></div>
                     <div class="filter-group"><label class="filter-label">&nbsp;</label><button class="btn btn-success" id="export-analytics-btn"><i class="fas fa-file-excel"></i> Export</button></div>
                 </div>
@@ -944,7 +952,7 @@
         </div>
     </div>
 
-    <!-- ========== FIREBASE SCRIPT (with new features) ========== -->
+    <!-- ========== FIREBASE SCRIPT (with month-based period) ========== -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
         import { 
@@ -1117,10 +1125,17 @@
             document.getElementById('highest-category').textContent = maxCat.name;
         }
 
-        // ========== FIXED renderAnalytics – Reservations column removed, nights only from commission/no‑commission ==========
+        // ========== renderAnalytics – with month-based cutoff ==========
         function renderAnalytics() {
             const period = document.getElementById('analytics-period').value;
-            const cutoff = period === 'all' ? new Date(0) : new Date(Date.now() - parseInt(period) * 24 * 60 * 60 * 1000);
+            let cutoff;
+            if (period === 'all') {
+                cutoff = new Date(0);
+            } else {
+                const months = parseInt(period);
+                cutoff = new Date();
+                cutoff.setMonth(cutoff.getMonth() - months);
+            }
 
             let monthly = {};
 
@@ -2828,7 +2843,14 @@
         });
         document.getElementById('export-analytics-btn')?.addEventListener('click', () => {
             const period = document.getElementById('analytics-period').value;
-            const cutoff = period === 'all' ? new Date(0) : new Date(Date.now() - parseInt(period)*24*60*60*1000);
+            let cutoff;
+            if (period === 'all') {
+                cutoff = new Date(0);
+            } else {
+                const months = parseInt(period);
+                cutoff = new Date();
+                cutoff.setMonth(cutoff.getMonth() - months);
+            }
             let monthly = {};
             // Process reservations for income only (no nights, no count)
             state.reservations.forEach(r => {
