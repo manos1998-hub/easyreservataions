@@ -746,7 +746,7 @@
                 </div>
             </div>
 
-            <!-- Analytics Content (with horizontal scroll for table) -->
+            <!-- Analytics Content (updated with commission and no commission) -->
             <div class="content-wrapper" id="analytics-content" style="display: none;">
                 <div class="analytics-filters">
                     <div class="filter-group"><label class="filter-label">Time Period</label><select class="form-control" id="analytics-period"><option value="30">Last 30 Days</option><option value="90">Last 90 Days</option><option value="180">Last 6 Months</option><option value="365">Last 12 Months</option><option value="all">All Time</option></select></div>
@@ -757,6 +757,8 @@
                     <div class="analytics-stat-card"><div class="analytics-stat-header"><div class="analytics-stat-title">Total Revenue</div><div class="analytics-stat-icon" style="background-color: var(--success-color);"><i class="fas fa-dollar-sign"></i></div></div><div class="analytics-stat-value" id="analytics-total-revenue">$0</div><div class="analytics-stat-subtitle">All income</div></div>
                     <div class="analytics-stat-card"><div class="analytics-stat-header"><div class="analytics-stat-title">Transfer Income</div><div class="analytics-stat-icon" style="background-color: var(--primary-color);"><i class="fas fa-truck"></i></div></div><div class="analytics-stat-value" id="analytics-transfer-income">$0</div><div class="analytics-stat-subtitle">From transfers</div></div>
                     <div class="analytics-stat-card"><div class="analytics-stat-header"><div class="analytics-stat-title">Meal Income</div><div class="analytics-stat-icon" style="background-color: var(--warning-color);"><i class="fas fa-utensils"></i></div></div><div class="analytics-stat-value" id="analytics-meal-income">$0</div><div class="analytics-stat-subtitle">From meals</div></div>
+                    <div class="analytics-stat-card"><div class="analytics-stat-header"><div class="analytics-stat-title">Commission Income</div><div class="analytics-stat-icon" style="background-color: var(--expense-color);"><i class="fas fa-percentage"></i></div></div><div class="analytics-stat-value" id="analytics-commission-income">$0</div><div class="analytics-stat-subtitle">From commission</div></div>
+                    <div class="analytics-stat-card"><div class="analytics-stat-header"><div class="analytics-stat-title">No Commission Income</div><div class="analytics-stat-icon" style="background-color: var(--accent-color);"><i class="fas fa-times-circle"></i></div></div><div class="analytics-stat-value" id="analytics-nocommission-income">$0</div><div class="analytics-stat-subtitle">From no commission</div></div>
                     <div class="analytics-stat-card"><div class="analytics-stat-header"><div class="analytics-stat-title">Total Expenses</div><div class="analytics-stat-icon" style="background-color: var(--danger-color);"><i class="fas fa-money-bill-wave"></i></div></div><div class="analytics-stat-value" id="analytics-total-expenses">$0</div><div class="analytics-stat-subtitle">All expenses</div></div>
                 </div>
                 <div class="comparison-cards">
@@ -777,7 +779,7 @@
                         <!-- Added table-wrapper for horizontal scroll on mobile -->
                         <div class="table-wrapper">
                             <table class="data-table" id="analytics-table">
-                                <thead><tr><th>Period</th><th>Reservations</th><th>Transfer Income</th><th>Meal Income</th><th>Total Income</th><th>Expenses</th><th>Monthly Profit</th><th>Total Profit</th><th>Margin</th></tr></thead>
+                                <thead><tr><th>Period</th><th>Reservations</th><th>Transfer</th><th>Meal</th><th>Commission</th><th>No Commission</th><th>Total Income</th><th>Expenses</th><th>Profit</th><th>Cumulative</th><th>Margin</th></tr></thead>
                                 <tbody id="analytics-body"></tbody>
                             </table>
                         </div>
@@ -840,7 +842,7 @@
         </div>
     </div>
 
-    <!-- ========== FIREBASE SCRIPT (full working version with updated Reservations Stats) ========== -->
+    <!-- ========== FIREBASE SCRIPT (updated with commission/no commission in analytics) ========== -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
         import { 
@@ -867,13 +869,11 @@
         // NEW: collections for reservations stats (now with room)
         const commissionStatsCol = collection(db, 'commissionStats');
         const noCommissionStatsCol = collection(db, 'noCommissionStats');
-        // Note: transferMealStats collection is no longer used for manual entry; we keep it for backward compatibility but won't use.
 
         // State
         const state = {
             customFields: [], reservations: [], expenseCategories: [], expenses: [],
-            // NEW arrays
-            commissionStats: [], noCommissionStats: [], // transferMealStats no longer used
+            commissionStats: [], noCommissionStats: [],
             selectedFieldType: 'text', editingReservationId: null, editingExpenseId: null,
             deletingReservationId: null, deletingExpenseId: null,
             activeFilters: {}, activeExpenseFilters: {},
@@ -882,7 +882,7 @@
             editingCategoryId: null, deletingCategoryId: null,
             currentCalendarDate: new Date(), selectedCalendarDate: null, calendarView: 'month',
             charts: {},
-            transferFilterRoom: '' // for filtering transfers by room
+            transferFilterRoom: ''
         };
 
         // Helper functions
@@ -915,7 +915,6 @@
                 state.reservations = resSnap.docs.map(d => ({ id: d.id, ...d.data() }));
                 state.expenseCategories = catSnap.docs.map(d => ({ id: d.id, ...d.data() }));
                 state.expenses = expSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-                // NEW
                 state.commissionStats = commSnap.docs.map(d => ({ id: d.id, ...d.data() }));
                 state.noCommissionStats = noCommSnap.docs.map(d => ({ id: d.id, ...d.data() }));
                 
@@ -936,10 +935,9 @@
                 updateCategoryDropdowns();
                 renderExpensesTable();
                 updateStats();
-                // NEW renders
                 renderCommissionStats();
                 renderNoCommissionStats();
-                renderTransferMealAuto(); // new auto table
+                renderTransferMealAuto();
 
                 if (state.currentPage === 'calendar') renderCalendar();
                 if (state.currentPage === 'analytics') renderAnalytics();
@@ -1043,7 +1041,7 @@
             const room = document.getElementById('reservation-room').value;
             const checkin = document.getElementById('reservation-checkin').value;
             const checkout = document.getElementById('reservation-checkout').value;
-            const time = document.getElementById('reservation-time').value; // check-in time
+            const time = document.getElementById('reservation-time').value;
             const checkoutTime = document.getElementById('reservation-checkout-time').value;
             const transferAmount = parseFloat(document.getElementById('reservation-transfer').value) || 0;
             const mealPrice = parseFloat(document.getElementById('reservation-meal').value) || 0;
@@ -1055,7 +1053,7 @@
                 checkin, 
                 checkout, 
                 duration, 
-                time, // check-in time
+                time,
                 checkoutTime,
                 transferAmount, 
                 mealPrice, 
@@ -1208,7 +1206,7 @@
             try {
                 await updateDoc(doc(db, 'expenses', id), updated);
                 await loadAllData();
-                closeEditExpenseModal();
+                document.getElementById('edit-expense-modal').classList.remove('active');
                 showNotification('Expense updated', 'success');
             } catch (e) { console.error(e); showNotification('Update failed', 'error'); }
         }
@@ -1307,7 +1305,6 @@
                 `;
                 container.appendChild(div);
             });
-            // drag & drop - improved
             const handles = container.querySelectorAll('.drag-handle');
             handles.forEach(h => {
                 h.addEventListener('dragstart', e => {
@@ -1336,12 +1333,10 @@
             const thead = document.getElementById('reservations-thead');
             const tbody = document.getElementById('reservations-body');
             if (!thead || !tbody) return;
-
             let headerHtml = '<tr><th>Room Type</th><th>Check-in</th><th>Check-out</th><th>Duration</th><th>Check-in Time</th><th>Check-out Time</th><th>Transfer ($)</th><th>Meal ($)</th>';
             state.customFields.forEach(f => { headerHtml += `<th>${f.name}</th>`; });
             headerHtml += '<th>Actions</th></tr>';
             thead.innerHTML = headerHtml;
-
             tbody.innerHTML = '';
             const res = state.filteredReservations || state.reservations;
             if (res.length === 0) {
@@ -1402,7 +1397,6 @@
                         document.getElementById('category-name').value = cat.name;
                         document.getElementById('category-description').value = cat.description || '';
                         document.getElementById('category-color').value = cat.color;
-                        // Update preset and custom color picker
                         document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('selected'));
                         const matchingPreset = document.querySelector(`.color-option[data-color="${cat.color}"]`);
                         if (matchingPreset) matchingPreset.classList.add('selected');
@@ -1511,33 +1505,59 @@
             document.getElementById('highest-category').textContent = maxCat.name;
         }
 
-        // Analytics (same as before)
+        // Analytics (updated with commission and no commission)
         function renderAnalytics() {
             const period = document.getElementById('analytics-period').value;
             const cutoff = period === 'all' ? new Date(0) : new Date(Date.now() - parseInt(period)*24*60*60*1000);
             
+            // Monthly data from reservations
             let monthly = {};
             let totalTransfer = 0, totalMeal = 0;
             state.reservations.forEach(r => {
                 const d = new Date(r.checkin);
                 if (d >= cutoff) {
-                    const monthKey = `${d.getFullYear()}-${d.getMonth()+1}`;
+                    const monthKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
                     const transfer = r.transferAmount || 0;
                     const meal = r.mealPrice || 0;
                     totalTransfer += transfer;
                     totalMeal += meal;
-                    monthly[monthKey] = monthly[monthKey] || { transfer:0, meal:0, expenses:0, count:0 };
+                    if (!monthly[monthKey]) monthly[monthKey] = { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, count:0 };
                     monthly[monthKey].transfer += transfer;
                     monthly[monthKey].meal += meal;
                     monthly[monthKey].count += 1;
                 }
             });
+
+            // Monthly expenses
             state.expenses.forEach(e => {
                 const d = new Date(e.date);
                 if (d >= cutoff) {
-                    const monthKey = `${d.getFullYear()}-${d.getMonth()+1}`;
-                    monthly[monthKey] = monthly[monthKey] || { transfer:0, meal:0, expenses:0, count:0 };
+                    const monthKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+                    if (!monthly[monthKey]) monthly[monthKey] = { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, count:0 };
                     monthly[monthKey].expenses += parseFloat(e.amount)||0;
+                }
+            });
+
+            // Monthly commission and no commission
+            let totalCommission = 0, totalNoCommission = 0;
+            state.commissionStats.forEach(c => {
+                const [year, month] = c.month.split('-');
+                const d = new Date(parseInt(year), parseInt(month)-1, 1);
+                if (d >= cutoff) {
+                    const monthKey = c.month; // already YYYY-MM
+                    if (!monthly[monthKey]) monthly[monthKey] = { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, count:0 };
+                    monthly[monthKey].commission += c.income || 0;
+                    totalCommission += c.income || 0;
+                }
+            });
+            state.noCommissionStats.forEach(nc => {
+                const [year, month] = nc.month.split('-');
+                const d = new Date(parseInt(year), parseInt(month)-1, 1);
+                if (d >= cutoff) {
+                    const monthKey = nc.month;
+                    if (!monthly[monthKey]) monthly[monthKey] = { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, count:0 };
+                    monthly[monthKey].nocommission += nc.income || 0;
+                    totalNoCommission += nc.income || 0;
                 }
             });
 
@@ -1545,21 +1565,27 @@
             const labels = months.map(m => { let [y,mo]=m.split('-'); return new Date(y,mo-1).toLocaleString('default',{month:'short'})+' '+y; });
             const transferData = months.map(m => monthly[m].transfer);
             const mealData = months.map(m => monthly[m].meal);
+            const commissionData = months.map(m => monthly[m].commission);
+            const nocommissionData = months.map(m => monthly[m].nocommission);
             const expenseData = months.map(m => monthly[m].expenses);
-            const totalIncomeData = months.map(m => monthly[m].transfer + monthly[m].meal);
-            const profitData = months.map(m => (monthly[m].transfer + monthly[m].meal) - monthly[m].expenses);
+            const totalIncomeData = months.map(m => monthly[m].transfer + monthly[m].meal + monthly[m].commission + monthly[m].nocommission);
+            const profitData = months.map(m => totalIncomeData[months.indexOf(m)] - monthly[m].expenses);
 
-            const totalRevenue = totalTransfer + totalMeal;
+            const totalRevenue = totalTransfer + totalMeal + totalCommission + totalNoCommission;
             document.getElementById('analytics-total-revenue').textContent = `$${totalRevenue.toFixed(2)}`;
             document.getElementById('analytics-transfer-income').textContent = `$${totalTransfer.toFixed(2)}`;
             document.getElementById('analytics-meal-income').textContent = `$${totalMeal.toFixed(2)}`;
+            document.getElementById('analytics-commission-income').textContent = `$${totalCommission.toFixed(2)}`;
+            document.getElementById('analytics-nocommission-income').textContent = `$${totalNoCommission.toFixed(2)}`;
             document.getElementById('analytics-total-expenses').textContent = `$${state.expenses.reduce((s,e)=>s+parseFloat(e.amount),0).toFixed(2)}`;
 
+            // Destroy old charts
             if (state.charts.incomeExpense) state.charts.incomeExpense.destroy();
             if (state.charts.expenseCategory) state.charts.expenseCategory.destroy();
             if (state.charts.monthlyTrend) state.charts.monthlyTrend.destroy();
             if (state.charts.profitMargin) state.charts.profitMargin.destroy();
 
+            // Income vs Expenses chart
             const ctx1 = document.getElementById('incomeExpenseChart').getContext('2d');
             state.charts.incomeExpense = new Chart(ctx1, {
                 type: 'bar',
@@ -1569,6 +1595,7 @@
                 ]}
             });
 
+            // Expense by Category (same as before)
             const catTotals = {};
             state.expenses.filter(e => new Date(e.date) >= cutoff).forEach(e => {
                 const cat = state.expenseCategories.find(c => c.id === e.categoryId);
@@ -1587,17 +1614,21 @@
                 }
             });
 
+            // Monthly Revenue by Type (line chart with all four)
             const ctx3 = document.getElementById('monthlyTrendChart').getContext('2d');
             state.charts.monthlyTrend = new Chart(ctx3, {
                 type: 'line',
                 data: { labels, datasets: [
-                    { label: 'Transfer Income', data: transferData, borderColor: '#2563eb', fill: false },
-                    { label: 'Meal Income', data: mealData, borderColor: '#f59e0b', fill: false }
+                    { label: 'Transfer', data: transferData, borderColor: '#2563eb', fill: false },
+                    { label: 'Meal', data: mealData, borderColor: '#f59e0b', fill: false },
+                    { label: 'Commission', data: commissionData, borderColor: '#8b5cf6', fill: false },
+                    { label: 'No Commission', data: nocommissionData, borderColor: '#0ea5e9', fill: false }
                 ]}
             });
 
+            // Profit Margin
             const marginData = months.map(m => {
-                const total = monthly[m].transfer + monthly[m].meal;
+                const total = monthly[m].transfer + monthly[m].meal + monthly[m].commission + monthly[m].nocommission;
                 return total>0 ? ((total - monthly[m].expenses)/total*100) : 0;
             });
             const ctx4 = document.getElementById('profitMarginChart').getContext('2d');
@@ -1606,13 +1637,16 @@
                 data: { labels, datasets: [{ label: 'Profit Margin %', data: marginData, backgroundColor: marginData.map(v=>v>=0?'rgba(16,185,129,0.7)':'rgba(239,68,68,0.7)') }] }
             });
 
+            // Detailed table
             const tbody = document.getElementById('analytics-body');
             tbody.innerHTML = '';
             let cumulative = 0;
             months.forEach(m => {
                 const transfer = monthly[m].transfer;
                 const meal = monthly[m].meal;
-                const total = transfer + meal;
+                const commission = monthly[m].commission;
+                const nocommission = monthly[m].nocommission;
+                const total = transfer + meal + commission + nocommission;
                 const exp = monthly[m].expenses;
                 const profit = total - exp;
                 cumulative += profit;
@@ -1622,6 +1656,8 @@
                     <td>${monthly[m].count}</td>
                     <td class="currency-cell">$${transfer.toFixed(2)}</td>
                     <td class="currency-cell">$${meal.toFixed(2)}</td>
+                    <td class="currency-cell">$${commission.toFixed(2)}</td>
+                    <td class="currency-cell">$${nocommission.toFixed(2)}</td>
                     <td class="currency-cell">$${total.toFixed(2)}</td>
                     <td class="expense-cell">$${exp.toFixed(2)}</td>
                     <td class="${profit>=0?'currency-cell':'expense-cell'}">$${profit.toFixed(2)}</td>
@@ -1631,16 +1667,21 @@
                 tbody.innerHTML += row;
             });
 
+            // This month / last month comparison
             const now = new Date();
-            const thisMonthKey = `${now.getFullYear()}-${now.getMonth()+1}`;
+            const thisMonthKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
             const lastMonth = new Date(now.getFullYear(), now.getMonth()-1, 1);
-            const lastMonthKey = `${lastMonth.getFullYear()}-${lastMonth.getMonth()+1}`;
-            document.getElementById('this-month-income').textContent = `$${((monthly[thisMonthKey]?.transfer||0)+(monthly[thisMonthKey]?.meal||0)).toFixed(2)}`;
-            document.getElementById('this-month-expenses').textContent = `$${(monthly[thisMonthKey]?.expenses||0).toFixed(2)}`;
-            document.getElementById('this-month-net').textContent = `$${(((monthly[thisMonthKey]?.transfer||0)+(monthly[thisMonthKey]?.meal||0))-(monthly[thisMonthKey]?.expenses||0)).toFixed(2)}`;
-            document.getElementById('last-month-income').textContent = `$${((monthly[lastMonthKey]?.transfer||0)+(monthly[lastMonthKey]?.meal||0)).toFixed(2)}`;
-            document.getElementById('last-month-expenses').textContent = `$${(monthly[lastMonthKey]?.expenses||0).toFixed(2)}`;
-            document.getElementById('last-month-net').textContent = `$${(((monthly[lastMonthKey]?.transfer||0)+(monthly[lastMonthKey]?.meal||0))-(monthly[lastMonthKey]?.expenses||0)).toFixed(2)}`;
+            const lastMonthKey = `${lastMonth.getFullYear()}-${String(lastMonth.getMonth()+1).padStart(2,'0')}`;
+            const thisMonthData = monthly[thisMonthKey] || { transfer:0, meal:0, commission:0, nocommission:0, expenses:0 };
+            const lastMonthData = monthly[lastMonthKey] || { transfer:0, meal:0, commission:0, nocommission:0, expenses:0 };
+            const thisMonthIncome = thisMonthData.transfer + thisMonthData.meal + thisMonthData.commission + thisMonthData.nocommission;
+            const lastMonthIncome = lastMonthData.transfer + lastMonthData.meal + lastMonthData.commission + lastMonthData.nocommission;
+            document.getElementById('this-month-income').textContent = `$${thisMonthIncome.toFixed(2)}`;
+            document.getElementById('this-month-expenses').textContent = `$${thisMonthData.expenses.toFixed(2)}`;
+            document.getElementById('this-month-net').textContent = `$${(thisMonthIncome - thisMonthData.expenses).toFixed(2)}`;
+            document.getElementById('last-month-income').textContent = `$${lastMonthIncome.toFixed(2)}`;
+            document.getElementById('last-month-expenses').textContent = `$${lastMonthData.expenses.toFixed(2)}`;
+            document.getElementById('last-month-net').textContent = `$${(lastMonthIncome - lastMonthData.expenses).toFixed(2)}`;
         }
 
         // Calendar (same as before)
@@ -1670,7 +1711,6 @@
                     indicator.className = 'calendar-reservation-indicator';
                     dayReservations.slice(0,3).forEach(r => {
                         const resDiv = document.createElement('div');
-                        // map room name to a class for color
                         let roomClass = 'reservation-pending';
                         if (r.name === 'Apartment 1') roomClass = 'reservation-room-single';
                         else if (r.name === 'Apartment 2') roomClass = 'reservation-room-double';
@@ -1709,7 +1749,6 @@
             dayRes.forEach(r => {
                 const item = document.createElement('div');
                 item.className = 'calendar-reservation-item';
-                // Build details grid
                 let detailsHtml = `
                     <div class="calendar-reservation-header">
                         <span class="calendar-reservation-title">${r.name}</span>
@@ -1725,7 +1764,6 @@
                         <div class="calendar-reservation-detail"><strong>Transfer:</strong> $${(r.transferAmount || 0).toFixed(2)}</div>
                         <div class="calendar-reservation-detail"><strong>Meal:</strong> $${(r.mealPrice || 0).toFixed(2)}</div>
                 `;
-                // Add custom fields
                 state.customFields.forEach(f => {
                     let val = r[f.id];
                     if (val !== undefined && val !== null && val !== '') {
@@ -1751,19 +1789,15 @@
                 option.textContent = room;
                 select.appendChild(option);
             });
-            // Set selected value from state
             select.value = state.transferFilterRoom || '';
         }
 
         function renderTransferAnalytics() {
             const reservations = state.reservations;
             let transfers = reservations.filter(r => (r.transferAmount || 0) > 0);
-            
-            // Apply room filter
             if (state.transferFilterRoom) {
                 transfers = transfers.filter(r => r.name === state.transferFilterRoom);
             }
-
             const totalTransfer = transfers.reduce((sum, r) => sum + (r.transferAmount || 0), 0);
             const avgTransfer = transfers.length ? (totalTransfer / transfers.length) : 0;
             document.getElementById('transfer-total').textContent = `$${totalTransfer.toFixed(2)}`;
@@ -1771,20 +1805,17 @@
             document.getElementById('transfer-count').textContent = transfers.length;
             document.getElementById('transfer-table-count').textContent = transfers.length;
 
-            // Top room type by total transfer (based on all transfers, not filtered)
             const roomTotals = {};
             reservations.filter(r => (r.transferAmount || 0) > 0).forEach(r => {
                 const room = r.name || 'Unknown';
                 roomTotals[room] = (roomTotals[room] || 0) + (r.transferAmount || 0);
             });
-            let topRoom = 'None';
-            let topAmount = 0;
+            let topRoom = 'None', topAmount = 0;
             for (let [room, amt] of Object.entries(roomTotals)) {
                 if (amt > topAmount) { topRoom = room; topAmount = amt; }
             }
             document.getElementById('transfer-top-room').textContent = topRoom;
 
-            // Transfer by room type (pie chart) - based on all transfers (unfiltered) for overview.
             if (state.charts.transferRoom) state.charts.transferRoom.destroy();
             const ctxRoom = document.getElementById('transferRoomChart')?.getContext('2d');
             if (ctxRoom) {
@@ -1792,17 +1823,10 @@
                 const roomData = Object.values(roomTotals);
                 state.charts.transferRoom = new Chart(ctxRoom, {
                     type: 'pie',
-                    data: {
-                        labels: roomLabels,
-                        datasets: [{
-                            data: roomData,
-                            backgroundColor: ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#0ea5e9', '#7c3aed']
-                        }]
-                    }
+                    data: { labels: roomLabels, datasets: [{ data: roomData, backgroundColor: ['#2563eb','#10b981','#f59e0b','#ef4444','#8b5cf6','#0ea5e9','#7c3aed'] }] }
                 });
             }
 
-            // Monthly transfer trend - based on filtered transfers (if filter applied)
             const monthly = {};
             transfers.forEach(r => {
                 const d = new Date(r.checkin);
@@ -1810,29 +1834,17 @@
                 monthly[monthKey] = (monthly[monthKey] || 0) + (r.transferAmount || 0);
             });
             const sortedMonths = Object.keys(monthly).sort();
-            const monthLabels = sortedMonths.map(m => {
-                const [y, mo] = m.split('-');
-                return new Date(y, mo-1).toLocaleString('default', { month:'short' }) + ' ' + y;
-            });
+            const monthLabels = sortedMonths.map(m => { const [y,mo]=m.split('-'); return new Date(y,mo-1).toLocaleString('default',{month:'short'})+' '+y; });
             const monthValues = sortedMonths.map(m => monthly[m]);
             if (state.charts.transferMonthly) state.charts.transferMonthly.destroy();
             const ctxMonthly = document.getElementById('transferMonthlyChart')?.getContext('2d');
             if (ctxMonthly) {
                 state.charts.transferMonthly = new Chart(ctxMonthly, {
                     type: 'line',
-                    data: {
-                        labels: monthLabels,
-                        datasets: [{
-                            label: 'Transfer Amount ($)',
-                            data: monthValues,
-                            borderColor: '#2563eb',
-                            fill: false
-                        }]
-                    }
+                    data: { labels: monthLabels, datasets: [{ label: 'Transfer Amount ($)', data: monthValues, borderColor: '#2563eb', fill: false }] }
                 });
             }
 
-            // Transfer table (filtered)
             const tbody = document.getElementById('transfer-table-body');
             tbody.innerHTML = '';
             transfers.forEach(r => {
@@ -1849,7 +1861,7 @@
             });
         }
 
-        // NEW: Reservations Stats functions (updated with room)
+        // Reservations Stats functions (with room)
         async function addCommissionStat() {
             const month = document.getElementById('commission-month').value;
             const room = document.getElementById('commission-room').value;
@@ -1952,11 +1964,10 @@
             });
         }
 
-        // NEW: Auto Transfer/Meal table from reservations
+        // Auto Transfer/Meal table from reservations
         function renderTransferMealAuto() {
             const tbody = document.getElementById('transfer-meal-auto-body');
             if (!tbody) return;
-            // Group reservations by month (YYYY-MM)
             const monthly = {};
             state.reservations.forEach(r => {
                 if (!r.checkin) return;
@@ -1966,7 +1977,7 @@
                 monthly[monthKey].transfer += r.transferAmount || 0;
                 monthly[monthKey].meal += r.mealPrice || 0;
             });
-            const sortedMonths = Object.keys(monthly).sort().reverse(); // most recent first
+            const sortedMonths = Object.keys(monthly).sort().reverse();
             tbody.innerHTML = '';
             if (sortedMonths.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state">No reservation data</div></td></tr>';
@@ -2008,7 +2019,7 @@
             window.URL.revokeObjectURL(url);
         }
 
-        // Modal functions (edit reservation, etc. - same as before)
+        // Modal functions (edit reservation, etc.)
         window.editReservation = (id) => {
             const r = state.reservations.find(r => r.id === id);
             if (!r) return;
@@ -2296,7 +2307,7 @@
                 const d = new Date(r.checkin);
                 if (d >= cutoff) {
                     const monthKey = `${d.getFullYear()}-${d.getMonth()+1}`;
-                    monthly[monthKey] = monthly[monthKey] || { transfer:0, meal:0, expenses:0, count:0 };
+                    monthly[monthKey] = monthly[monthKey] || { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, count:0 };
                     monthly[monthKey].transfer += r.transferAmount || 0;
                     monthly[monthKey].meal += r.mealPrice || 0;
                     monthly[monthKey].count += 1;
@@ -2306,24 +2317,43 @@
                 const d = new Date(e.date);
                 if (d >= cutoff) {
                     const monthKey = `${d.getFullYear()}-${d.getMonth()+1}`;
-                    monthly[monthKey] = monthly[monthKey] || { transfer:0, meal:0, expenses:0, count:0 };
+                    monthly[monthKey] = monthly[monthKey] || { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, count:0 };
                     monthly[monthKey].expenses += parseFloat(e.amount)||0;
+                }
+            });
+            state.commissionStats.forEach(c => {
+                const [year, month] = c.month.split('-');
+                const d = new Date(parseInt(year), parseInt(month)-1, 1);
+                if (d >= cutoff) {
+                    const monthKey = c.month;
+                    monthly[monthKey] = monthly[monthKey] || { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, count:0 };
+                    monthly[monthKey].commission += c.income || 0;
+                }
+            });
+            state.noCommissionStats.forEach(nc => {
+                const [year, month] = nc.month.split('-');
+                const d = new Date(parseInt(year), parseInt(month)-1, 1);
+                if (d >= cutoff) {
+                    const monthKey = nc.month;
+                    monthly[monthKey] = monthly[monthKey] || { transfer:0, meal:0, commission:0, nocommission:0, expenses:0, count:0 };
+                    monthly[monthKey].nocommission += nc.income || 0;
                 }
             });
             const months = Object.keys(monthly).sort();
             const data = months.map(m => ({
                 Period: m,
                 Reservations: monthly[m].count,
-                TransferIncome: monthly[m].transfer.toFixed(2),
-                MealIncome: monthly[m].meal.toFixed(2),
-                TotalIncome: (monthly[m].transfer + monthly[m].meal).toFixed(2),
+                Transfer: monthly[m].transfer.toFixed(2),
+                Meal: monthly[m].meal.toFixed(2),
+                Commission: monthly[m].commission.toFixed(2),
+                NoCommission: monthly[m].nocommission.toFixed(2),
+                TotalIncome: (monthly[m].transfer + monthly[m].meal + monthly[m].commission + monthly[m].nocommission).toFixed(2),
                 Expenses: monthly[m].expenses.toFixed(2),
-                Profit: (monthly[m].transfer + monthly[m].meal - monthly[m].expenses).toFixed(2)
+                Profit: (monthly[m].transfer + monthly[m].meal + monthly[m].commission + monthly[m].nocommission - monthly[m].expenses).toFixed(2)
             }));
             exportToCSV(data, 'analytics.csv');
         });
 
-        // Export transfers
         document.getElementById('export-transfers-btn')?.addEventListener('click', () => {
             const transfers = state.reservations.filter(r => (r.transferAmount || 0) > 0);
             const data = transfers.map(r => ({
@@ -2375,12 +2405,10 @@
                     document.getElementById('category-color-custom').value = this.dataset.color;
                 });
             });
-            // Custom color picker
             const customColorInput = document.getElementById('category-color-custom');
             if (customColorInput) {
                 customColorInput.addEventListener('input', function() {
                     document.getElementById('category-color').value = this.value;
-                    // Remove selected class from preset options
                     document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('selected'));
                 });
             }
@@ -2500,10 +2528,9 @@
             document.getElementById('apply-filters-btn')?.addEventListener('click', applyFilters);
             document.getElementById('clear-filters-btn')?.addEventListener('click', clearAllFilters);
 
-            // NEW: Reservations Stats buttons
+            // Reservations Stats buttons
             document.getElementById('add-commission-btn')?.addEventListener('click', addCommissionStat);
             document.getElementById('add-no-commission-btn')?.addEventListener('click', addNoCommissionStat);
-            // Refresh button for auto transfer/meal
             document.getElementById('refresh-transfer-meal-btn')?.addEventListener('click', () => {
                 renderTransferMealAuto();
                 showNotification('Transfer/Meal data refreshed', 'success');
