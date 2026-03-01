@@ -655,11 +655,12 @@
             <!-- NEW Reservations Stats Content (modified with filters and summaries) -->
             <div class="content-wrapper" id="reservations-stats-content" style="display: none;">
                 <div class="panel-container">
-                    <!-- Commission Panel -->
+                    <!-- Commission Panel (modified: added Tax input) -->
                     <div class="panel">
                         <div class="panel-header"><h2><i class="fas fa-percentage"></i> Commission</h2></div>
                         <div class="panel-body">
-                            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+                            <!-- Input grid with 5 columns: Month, Room, Income, Tax, Stays -->
+                            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px;">
                                 <input type="month" class="form-control" id="commission-month" placeholder="Month (YYYY-MM)">
                                 <select class="form-control" id="commission-room">
                                     <option value="">Select Room</option>
@@ -668,7 +669,8 @@
                                     <option value="Studio">Studio</option>
                                     <option value="Villa">Villa</option>
                                 </select>
-                                <input type="number" class="form-control" id="commission-income" placeholder="Total Income" step="0.01">
+                                <input type="number" class="form-control" id="commission-income" placeholder="Income" step="0.01">
+                                <input type="number" class="form-control" id="commission-tax" placeholder="Tax" step="0.01">
                                 <input type="number" class="form-control" id="commission-stays" placeholder="Total Stays" step="1">
                             </div>
                             <button class="btn btn-primary" id="add-commission-btn"><i class="fas fa-plus"></i> Add Commission Record</button>
@@ -703,7 +705,7 @@
                         </div>
                     </div>
 
-                    <!-- No Commission Panel -->
+                    <!-- No Commission Panel (unchanged) -->
                     <div class="panel">
                         <div class="panel-header"><h2><i class="fas fa-times-circle"></i> No Commission</h2></div>
                         <div class="panel-body">
@@ -1460,23 +1462,26 @@
             }
         }
 
-        // ========== COMMISSION / NO COMMISSION FUNCTIONS (unchanged) ==========
+        // ========== COMMISSION / NO COMMISSION FUNCTIONS (modified for tax) ==========
         async function addCommissionStat() {
             const month = document.getElementById('commission-month').value;
             const room = document.getElementById('commission-room').value;
             const income = parseFloat(document.getElementById('commission-income').value) || 0;
+            const tax = parseFloat(document.getElementById('commission-tax').value) || 0;
             const stays = parseInt(document.getElementById('commission-stays').value) || 0;
-            if (!month || !room || income === 0 || stays === 0) {
+            if (!month || !room || stays === 0) {
                 showNotification('Please fill month, room, income and stays', 'error');
                 return;
             }
-            const newStat = { month, room, income, stays, createdAt: new Date().toISOString() };
+            const totalIncome = income + tax;
+            const newStat = { month, room, income: totalIncome, stays, createdAt: new Date().toISOString() };
             try {
                 await addDoc(commissionStatsCol, newStat);
                 await loadAllData();
                 document.getElementById('commission-month').value = '';
                 document.getElementById('commission-room').value = '';
                 document.getElementById('commission-income').value = '';
+                document.getElementById('commission-tax').value = '';
                 document.getElementById('commission-stays').value = '';
                 showNotification('Commission record added', 'success');
             } catch (e) { console.error(e); showNotification('Error adding', 'error'); }
