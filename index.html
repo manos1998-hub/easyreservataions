@@ -413,6 +413,11 @@
                                     <option value="Horizon">Horizon</option>
                                 </select>
                             </div>
+                            <!-- NEW: Guest Name Field -->
+                            <div class="form-group">
+                                <label class="form-label">Guest Name <span>*</span></label>
+                                <input type="text" class="form-control" id="reservation-guest" placeholder="Guest name">
+                            </div>
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
                                 <div class="form-group"><label class="form-label">Check-in Date <span>*</span></label><input type="date" class="form-control" id="reservation-checkin"></div>
                                 <div class="form-group"><label class="form-label">Check-out Date <span>*</span></label><input type="date" class="form-control" id="reservation-checkout"></div>
@@ -448,7 +453,20 @@
                     </div>
                     <div class="table-wrapper">
                         <table class="data-table" id="reservations-table">
-                            <thead id="reservations-thead"><tr><th>Room Type</th><th>Check-in</th><th>Check-out</th><th>Duration</th><th>Check-in Time</th><th>Check-out Time</th><th>Transfer ($)</th><th>Meal ($)</th><th>Actions</th></tr></thead>
+                            <thead id="reservations-thead">
+                                <tr>
+                                    <th>Room Type</th>
+                                    <th>Guest Name</th> <!-- NEW COLUMN -->
+                                    <th>Check-in</th>
+                                    <th>Check-out</th>
+                                    <th>Duration</th>
+                                    <th>Check-in Time</th>
+                                    <th>Check-out Time</th>
+                                    <th>Transfer ($)</th>
+                                    <th>Meal ($)</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
                             <tbody id="reservations-body"></tbody>
                         </table>
                     </div>
@@ -1981,17 +1999,22 @@
         // ========== RESERVATIONS FUNCTIONS ==========
         async function addReservation() {
             const room = document.getElementById('reservation-room').value;
+            const guest = document.getElementById('reservation-guest').value.trim(); // NEW
             const checkin = document.getElementById('reservation-checkin').value;
             const checkout = document.getElementById('reservation-checkout').value;
             const time = document.getElementById('reservation-time').value;
             const checkoutTime = document.getElementById('reservation-checkout-time').value;
             const transferAmount = parseFloat(document.getElementById('reservation-transfer').value) || 0;
             const mealPrice = parseFloat(document.getElementById('reservation-meal').value) || 0;
-            if (!room || !checkin || !checkout || !time || !checkoutTime) { showNotification('Fill all required fields', 'error'); return; }
+            if (!room || !guest || !checkin || !checkout || !time || !checkoutTime) { 
+                showNotification('Fill all required fields (Room, Guest, Dates, Times)', 'error'); 
+                return; 
+            }
             if (new Date(checkout) < new Date(checkin)) { showNotification('Check-out after check-in', 'error'); return; }
             const duration = calculateDuration(checkin, checkout);
             const newRes = { 
                 name: room, 
+                guestName: guest, // NEW
                 checkin, 
                 checkout, 
                 duration, 
@@ -2031,6 +2054,7 @@
 
         function clearForm() {
             document.getElementById('reservation-room').value = '';
+            document.getElementById('reservation-guest').value = ''; // NEW
             const today = new Date().toISOString().split('T')[0];
             const tomorrow = new Date(Date.now()+86400000).toISOString().split('T')[0];
             document.getElementById('reservation-checkin').value = today;
@@ -2052,20 +2076,22 @@
             const thead = document.getElementById('reservations-thead');
             const tbody = document.getElementById('reservations-body');
             if (!thead || !tbody) return;
-            let headerHtml = '<tr><th>Room Type</th><th>Check-in</th><th>Check-out</th><th>Duration</th><th>Check-in Time</th><th>Check-out Time</th><th>Transfer ($)</th><th>Meal ($)</th>';
+            // Updated header with Guest Name
+            let headerHtml = '<tr><th>Room Type</th><th>Guest Name</th><th>Check-in</th><th>Check-out</th><th>Duration</th><th>Check-in Time</th><th>Check-out Time</th><th>Transfer ($)</th><th>Meal ($)</th>';
             state.customFields.forEach(f => { headerHtml += `<th>${f.name}</th>`; });
             headerHtml += '<th>Actions</th></tr>';
             thead.innerHTML = headerHtml;
             tbody.innerHTML = '';
             const res = state.filteredReservations || state.reservations;
             if (res.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="${8 + state.customFields.length + 1}"><div class="empty-state"><i class="fas fa-calendar-times"></i><h3>No Reservations</h3></div></td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="${9 + state.customFields.length + 1}"><div class="empty-state"><i class="fas fa-calendar-times"></i><h3>No Reservations</h3></div></td></tr>`;
                 return;
             }
             res.forEach(r => {
                 const tr = document.createElement('tr');
                 let rowHtml = `
                     <td>${r.name}</td>
+                    <td>${r.guestName || ''}</td> <!-- NEW -->
                     <td>${r.checkin}</td>
                     <td>${r.checkout}</td>
                     <td>${r.duration || 1}</td>
@@ -2087,9 +2113,7 @@
                 });
                 rowHtml += `<td><div class="action-buttons"><button class="btn-icon edit" onclick="window.editReservation('${r.id}')"><i class="fas fa-edit"></i></button><button class="btn-icon delete" onclick="window.deleteReservation('${r.id}')"><i class="fas fa-trash-alt"></i></button></div></td>`;
                 tr.innerHTML = rowHtml;
-                // Attach click event to the row for editing, but ignore clicks on buttons
                 tr.addEventListener('click', (e) => {
-                    // If the click originated from a button or its child, do nothing
                     if (e.target.closest('.btn-icon') || e.target.closest('button')) return;
                     window.editReservation(r.id);
                 });
@@ -2270,7 +2294,6 @@
                 const cat = state.expenseCategories.find(c => c.id === e.categoryId);
                 const tr = document.createElement('tr');
                 tr.className = e.status === 'paid' ? 'status-paid' : 'status-pending';
-                // Add data-id attribute for row click handling
                 tr.dataset.id = e.id;
                 tr.innerHTML = `
                     <td>${e.name}</td>
@@ -2285,9 +2308,7 @@
                         <button class="btn-icon delete" onclick="window.deleteExpense('${e.id}')"><i class="fas fa-trash-alt"></i></button>
                     </div></td>
                 `;
-                // Row click handler for editing
                 tr.addEventListener('click', (event) => {
-                    // If click came from a button or its child, ignore
                     if (event.target.closest('.btn-icon') || event.target.closest('button')) return;
                     window.editExpense(e.id);
                 });
@@ -2425,7 +2446,7 @@
                 item.className = 'calendar-reservation-item';
                 let detailsHtml = `
                     <div class="calendar-reservation-header">
-                        <span class="calendar-reservation-title">${r.name}</span>
+                        <span class="calendar-reservation-title">${r.name} (${r.guestName || 'No guest'})</span>
                         <div class="action-buttons">
                             <button class="btn-icon edit" onclick="window.editReservation('${r.id}')"><i class="fas fa-edit"></i></button>
                             <button class="btn-icon delete" onclick="window.deleteReservation('${r.id}')"><i class="fas fa-trash-alt"></i></button>
@@ -2491,6 +2512,7 @@
                         <option value="Horizon" ${r.name==='Horizon'?'selected':''}>Horizon</option>
                     </select>
                 </div>
+                <div class="form-group"><label>Guest Name</label><input type="text" id="edit-guest" class="form-control" value="${r.guestName || ''}"></div> <!-- NEW -->
                 <div class="form-group"><label>Check-in Date</label><input type="date" id="edit-checkin" class="form-control" value="${r.checkin}"></div>
                 <div class="form-group"><label>Check-out Date</label><input type="date" id="edit-checkout" class="form-control" value="${r.checkout}"></div>
                 <div class="form-group"><label>Check-in Time</label><input type="time" id="edit-time" class="form-control" value="${r.time || ''}"></div>
@@ -2511,6 +2533,7 @@
             if (!state.editingReservationId) return;
             const data = {
                 name: document.getElementById('edit-name').value,
+                guestName: document.getElementById('edit-guest').value, // NEW
                 checkin: document.getElementById('edit-checkin').value,
                 checkout: document.getElementById('edit-checkout').value,
                 time: document.getElementById('edit-time').value,
@@ -2957,9 +2980,10 @@
         // ========== EXPORT BUTTONS ==========
         document.getElementById('export-dashboard-btn')?.addEventListener('click', () => {
             const data = state.reservations.map(r => ({
-                Room: r.name,
-                Checkin: r.checkin,
-                Checkout: r.checkout,
+                'Room Type': r.name,
+                'Guest Name': r.guestName || '',
+                'Check-in': r.checkin,
+                'Check-out': r.checkout,
                 Duration: r.duration,
                 'Check-in Time': r.time,
                 'Check-out Time': r.checkoutTime,
@@ -2971,9 +2995,10 @@
         });
         document.getElementById('export-reservations-btn')?.addEventListener('click', () => {
             const data = state.reservations.map(r => ({
-                Room: r.name,
-                Checkin: r.checkin,
-                Checkout: r.checkout,
+                'Room Type': r.name,
+                'Guest Name': r.guestName || '',
+                'Check-in': r.checkin,
+                'Check-out': r.checkout,
                 Duration: r.duration,
                 'Check-in Time': r.time,
                 'Check-out Time': r.checkoutTime,
@@ -3033,6 +3058,7 @@
             const transfers = state.reservations.filter(r => (r.transferAmount || 0) > 0);
             const data = transfers.map(r => ({
                 Room: r.name,
+                'Guest Name': r.guestName || '',
                 Checkin: r.checkin,
                 Checkout: r.checkout,
                 Transfer: r.transferAmount || 0,
