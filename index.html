@@ -115,7 +115,6 @@
         .data-table th { padding: 16px 20px; text-align: left; font-weight: 600; font-size: 13px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border-color); background-color: var(--light-bg); white-space: nowrap; }
         .data-table td { padding: 16px 20px; border-bottom: 1px solid var(--border-color); font-size: 14px; color: var(--text-primary); }
         .data-table tbody tr:hover { background-color: rgba(37, 99, 235, 0.02); }
-        /* NEW: make rows clickable for edit */
         .data-table tbody tr { cursor: pointer; }
         .status-badge { display: inline-flex; align-items: center; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
         .status-confirmed { background-color: rgba(16, 185, 129, 0.1); color: var(--success-color); }
@@ -179,6 +178,7 @@
         .expense-table th { padding: 16px 20px; text-align: left; font-weight: 600; font-size: 13px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border-color); background-color: var(--light-bg); white-space: nowrap; }
         .expense-table td { padding: 16px 20px; border-bottom: 1px solid var(--border-color); font-size: 14px; color: var(--text-primary); }
         .expense-table tbody tr:hover { background-color: rgba(139, 92, 246, 0.02); }
+        .expense-table tbody tr { cursor: pointer; }
         .expense-table tbody tr.status-paid { background-color: rgba(16, 185, 129, 0.08); }
         .expense-table tbody tr.status-pending { background-color: rgba(239, 68, 68, 0.08); }
         .category-management { display: grid; grid-template-columns: 300px 1fr; gap: 24px; margin-bottom: 32px; }
@@ -2270,6 +2270,8 @@
                 const cat = state.expenseCategories.find(c => c.id === e.categoryId);
                 const tr = document.createElement('tr');
                 tr.className = e.status === 'paid' ? 'status-paid' : 'status-pending';
+                // Add data-id attribute for row click handling
+                tr.dataset.id = e.id;
                 tr.innerHTML = `
                     <td>${e.name}</td>
                     <td><span class="category-badge" style="background-color:${cat?.color}20; color:${cat?.color};">${cat?.name||'Uncategorized'}</span></td>
@@ -2283,6 +2285,12 @@
                         <button class="btn-icon delete" onclick="window.deleteExpense('${e.id}')"><i class="fas fa-trash-alt"></i></button>
                     </div></td>
                 `;
+                // Row click handler for editing
+                tr.addEventListener('click', (event) => {
+                    // If click came from a button or its child, ignore
+                    if (event.target.closest('.btn-icon') || event.target.closest('button')) return;
+                    window.editExpense(e.id);
+                });
                 tbody.appendChild(tr);
             });
             document.getElementById('expense-count-badge').textContent = exps.length;
