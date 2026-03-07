@@ -2047,6 +2047,7 @@
             });
         }
 
+        // ========== MODIFIED: renderReservationsTable with row click edit ==========
         function renderReservationsTable() {
             const thead = document.getElementById('reservations-thead');
             const tbody = document.getElementById('reservations-body');
@@ -2086,9 +2087,53 @@
                 });
                 rowHtml += `<td><div class="action-buttons"><button class="btn-icon edit" onclick="window.editReservation('${r.id}')"><i class="fas fa-edit"></i></button><button class="btn-icon delete" onclick="window.deleteReservation('${r.id}')"><i class="fas fa-trash-alt"></i></button></div></td>`;
                 tr.innerHTML = rowHtml;
+                // Add click listener for row to edit (except when clicking on action buttons)
+                tr.addEventListener('click', (e) => {
+                    if (e.target.closest('.action-buttons')) return; // ignore clicks on buttons
+                    window.editReservation(r.id);
+                });
                 tbody.appendChild(tr);
             });
             document.getElementById('reservation-count-badge').textContent = res.length;
+        }
+
+        // ========== MODIFIED: renderExpensesTable with row click edit ==========
+        function renderExpensesTable() {
+            const tbody = document.getElementById('expenses-body');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            const exps = state.filteredExpenses || state.expenses;
+            if (exps.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><i class="fas fa-money-bill-wave"></i><h3>No Expenses</h3></div></td></tr>`;
+                document.getElementById('expense-summary').style.display = 'none';
+                return;
+            }
+            exps.forEach(e => {
+                const cat = state.expenseCategories.find(c => c.id === e.categoryId);
+                const tr = document.createElement('tr');
+                tr.className = e.status === 'paid' ? 'status-paid' : 'status-pending';
+                tr.innerHTML = `
+                    <td>${e.name}</td>
+                    <td><span class="category-badge" style="background-color:${cat?.color}20; color:${cat?.color};">${cat?.name||'Uncategorized'}</span></td>
+                    <td class="expense-cell">$${parseFloat(e.amount).toFixed(2)}</td>
+                    <td>${e.date}</td>
+                    <td>${e.payment}</td>
+                    <td>${e.description || '-'}</td>
+                    <td><span class="status-badge ${e.status==='paid'?'status-paid':'status-expense-pending'}">${e.status}</span></td>
+                    <td><div class="action-buttons">
+                        <button class="btn-icon edit" onclick="window.editExpense('${e.id}')"><i class="fas fa-edit"></i></button>
+                        <button class="btn-icon delete" onclick="window.deleteExpense('${e.id}')"><i class="fas fa-trash-alt"></i></button>
+                    </div></td>
+                `;
+                // Add click listener for row to edit (except when clicking on action buttons)
+                tr.addEventListener('click', (ev) => {
+                    if (ev.target.closest('.action-buttons')) return;
+                    window.editExpense(e.id);
+                });
+                tbody.appendChild(tr);
+            });
+            document.getElementById('expense-count-badge').textContent = exps.length;
+            updateExpenseSummary(exps);
         }
 
         // ========== CATEGORIES FUNCTIONS ==========
@@ -2247,51 +2292,6 @@
                 document.getElementById('edit-expense-modal').classList.remove('active');
                 showNotification('Expense updated', 'success');
             } catch (e) { console.error(e); showNotification('Update failed', 'error'); }
-        }
-
-        function renderExpensesTable() {
-            const tbody = document.getElementById('expenses-body');
-            if (!tbody) return;
-            tbody.innerHTML = '';
-            const exps = state.filteredExpenses || state.expenses;
-            if (exps.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><i class="fas fa-money-bill-wave"></i><h3>No Expenses</h3></div></td></tr>`;
-                document.getElementById('expense-summary').style.display = 'none';
-                return;
-            }
-            exps.forEach(e => {
-                const cat = state.expenseCategories.find(c => c.id === e.categoryId);
-                const tr = document.createElement('tr');
-                tr.className = e.status === 'paid' ? 'status-paid' : 'status-pending';
-                tr.innerHTML = `
-                    <td>${e.name}</td>
-                    <td><span class="category-badge" style="background-color:${cat?.color}20; color:${cat?.color};">${cat?.name||'Uncategorized'}</span></td>
-                    <td class="expense-cell">$${parseFloat(e.amount).toFixed(2)}</td>
-                    <td>${e.date}</td>
-                    <td>${e.payment}</td>
-                    <td>${e.description || '-'}</td>
-                    <td><span class="status-badge ${e.status==='paid'?'status-paid':'status-expense-pending'}">${e.status}</span></td>
-                    <td><div class="action-buttons">
-                        <button class="btn-icon edit" onclick="window.editExpense('${e.id}')"><i class="fas fa-edit"></i></button>
-                        <button class="btn-icon delete" onclick="window.deleteExpense('${e.id}')"><i class="fas fa-trash-alt"></i></button>
-                    </div></td>
-                `;
-                tbody.appendChild(tr);
-            });
-            document.getElementById('expense-count-badge').textContent = exps.length;
-            updateExpenseSummary(exps);
-        }
-
-        function updateExpenseSummary(exps) {
-            if (!exps.length) { document.getElementById('expense-summary').style.display = 'none'; return; }
-            const total = exps.reduce((s,e)=>s+parseFloat(e.amount),0);
-            const paid = exps.filter(e=>e.status==='paid').length;
-            const pend = exps.length - paid;
-            document.getElementById('summary-count').textContent = exps.length;
-            document.getElementById('summary-paid-count').textContent = paid;
-            document.getElementById('summary-pending-count').textContent = pend;
-            document.getElementById('summary-total-amount').textContent = `$${total.toFixed(2)}`;
-            document.getElementById('expense-summary').style.display = 'flex';
         }
 
         // ========== FILTER FUNCTIONS ==========
