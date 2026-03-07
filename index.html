@@ -115,6 +115,8 @@
         .data-table th { padding: 16px 20px; text-align: left; font-weight: 600; font-size: 13px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border-color); background-color: var(--light-bg); white-space: nowrap; }
         .data-table td { padding: 16px 20px; border-bottom: 1px solid var(--border-color); font-size: 14px; color: var(--text-primary); }
         .data-table tbody tr:hover { background-color: rgba(37, 99, 235, 0.02); }
+        /* NEW: make rows clickable for edit */
+        .data-table tbody tr { cursor: pointer; }
         .status-badge { display: inline-flex; align-items: center; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
         .status-confirmed { background-color: rgba(16, 185, 129, 0.1); color: var(--success-color); }
         .status-pending { background-color: rgba(245, 158, 11, 0.1); color: var(--warning-color); }
@@ -124,7 +126,7 @@
         .category-badge { display: inline-flex; align-items: center; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
         .currency-cell { font-weight: 600; color: var(--success-color); }
         .expense-cell { font-weight: 600; color: var(--danger-color); }
-        .personal-expense-cell { font-weight: 600; color: #ff6b6b; } /* new style for personal expenses */
+        .personal-expense-cell { font-weight: 600; color: #ff6b6b; }
         .checkbox-cell { text-align: center; }
         .checkbox-cell i.fa-check-circle { color: var(--success-color); }
         .checkbox-cell i.fa-times-circle { color: var(--danger-color); }
@@ -317,7 +319,6 @@
                 <a href="#" class="nav-item" id="calendar-tab-btn"><i class="fas fa-calendar"></i>Calendar</a>
                 <a href="#" class="nav-item" id="transfer-analytics-tab-btn"><i class="fas fa-truck"></i>Transfer Analytics</a>
                 <a href="#" class="nav-item" id="expenses-tab-btn"><i class="fas fa-money-bill-wave"></i>Expenses</a>
-                <!-- NEW Reservations Stats Tab -->
                 <a href="#" class="nav-item" id="reservations-stats-tab-btn"><i class="fas fa-chart-pie"></i>Reservations Stats</a>
                 <a href="#" class="nav-item" id="analytics-tab-btn"><i class="fas fa-chart-bar"></i>Analytics</a>
                 <a href="#" class="nav-item" id="settings-tab-btn"><i class="fas fa-cog"></i>Settings</a>
@@ -2086,6 +2087,12 @@
                 });
                 rowHtml += `<td><div class="action-buttons"><button class="btn-icon edit" onclick="window.editReservation('${r.id}')"><i class="fas fa-edit"></i></button><button class="btn-icon delete" onclick="window.deleteReservation('${r.id}')"><i class="fas fa-trash-alt"></i></button></div></td>`;
                 tr.innerHTML = rowHtml;
+                // Attach click event to the row for editing, but ignore clicks on buttons
+                tr.addEventListener('click', (e) => {
+                    // If the click originated from a button or its child, do nothing
+                    if (e.target.closest('.btn-icon') || e.target.closest('button')) return;
+                    window.editReservation(r.id);
+                });
                 tbody.appendChild(tr);
             });
             document.getElementById('reservation-count-badge').textContent = res.length;
