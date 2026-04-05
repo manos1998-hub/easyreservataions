@@ -1,0 +1,34 @@
+name: Daily Reservation Robot
+
+on:
+  schedule:
+    # This is "Cron" format. '0 8 * * *' means 8:00 AM UTC every day.
+    # You can change the '8' to whatever hour (0-23) you prefer.
+    - cron: '0 8 * * *'
+  # This line lets you click a button to test it manually!
+  workflow_dispatch: 
+
+jobs:
+  run-script:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout your code
+        uses: actions/checkout@v3
+
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install Firebase Library
+        run: npm install firebase-admin
+
+      - name: Run the Script
+        run: node scripts/daily_email.js
+        env:
+          # This connects the "Secrets" you saved earlier to the script
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          EMAILJS_SERVICE_ID: ${{ secrets.EMAILJS_SERVICE_ID }}
+          EMAILJS_TEMPLATE_ID: ${{ secrets.EMAILJS_TEMPLATE_ID }}
+          EMAILJS_PUBLIC_KEY: ${{ secrets.EMAILJS_PUBLIC_KEY }}
+          EMAILJS_PRIVATE_KEY: ${{ secrets.EMAILJS_PRIVATE_KEY }}
