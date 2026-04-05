@@ -1133,7 +1133,7 @@
             const formattedDate = tomorrowDate.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
             
             // Build email body without separator lines and with ALL fields
-            let body = `UPCOMING TRANSFERS FOR ${formattedDate}\n\n`;
+            let body = `UPCOMING TRANSFERS`;
             body += `Total reservations: ${tomorrowReservations.length}\n\n`;
             
             tomorrowReservations.forEach((r, idx) => {
