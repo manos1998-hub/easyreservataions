@@ -1133,7 +1133,7 @@
             const formattedDate = tomorrowDate.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
             
             // Build email body without separator lines and with ALL fields
-            let body = `UPCOMING TRANSFERS`;
+            let body = `UPCOMING TRANSFERS `;
             body += `Total reservations: ${tomorrowReservations.length}\n\n`;
             
             tomorrowReservations.forEach((r, idx) => {
@@ -1170,7 +1170,7 @@
             body += `Total Meal Revenue: $${totalMeal.toFixed(2)}\n`;
             body += `Combined Total: $${(totalTransfer + totalMeal).toFixed(2)}\n`;
 
-            const subject = encodeURIComponent(`Upcoming Transfers for ${formattedDate}`);
+            const subject = encodeURIComponent(`Upcoming Transfers `);
             const encodedBody = encodeURIComponent(body);
             const mailtoLink = `mailto:${state.notificationEmail}?subject=${subject}&body=${encodedBody}`;
             window.location.href = mailtoLink;
