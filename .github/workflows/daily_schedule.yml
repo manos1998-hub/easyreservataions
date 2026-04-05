@@ -4,7 +4,7 @@ on:
   schedule:
     # This is "Cron" format. '0 8 * * *' means 8:00 AM UTC every day.
     # You can change the '8' to whatever hour (0-23) you prefer.
-    - cron: '0 8 * * *'
+    - cron: '0 19 * * *'
   # This line lets you click a button to test it manually!
   workflow_dispatch: 
 
