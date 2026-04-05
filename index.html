@@ -1079,7 +1079,7 @@
             return Math.max(0, Math.ceil((new Date(checkout) - new Date(checkin)) / (1000*60*60*24)));
         }
 
-        // ========== EMAIL NOTIFICATION FUNCTIONS ==========
+        // ========== EMAIL NOTIFICATION FUNCTIONS (UPDATED) ==========
         async function loadEmailSettings() {
             try {
                 const snap = await getDocs(emailSettingsCol);
@@ -1132,23 +1132,40 @@
             tomorrowDate.setDate(tomorrowDate.getDate() + 1);
             const formattedDate = tomorrowDate.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
             
-            // Build email body
-            let body = `Upcoming Transfers for ${formattedDate}\n\n`;
+            // Build email body without separator lines and with ALL fields
+            let body = `UPCOMING TRANSFERS FOR ${formattedDate}\n\n`;
             body += `Total reservations: ${tomorrowReservations.length}\n\n`;
-            body += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+            
             tomorrowReservations.forEach((r, idx) => {
-                body += `${idx+1}. Guest: ${r.guestName || 'N/A'}\n`;
-                body += `   Room: ${r.name}\n`;
-                body += `   Check-in Time: ${r.time || 'Not set'}\n`;
-                body += `   Transfer Amount: $${(r.transferAmount || 0).toFixed(2)}\n`;
-                body += `   Meal Price: $${(r.mealPrice || 0).toFixed(2)}\n`;
-                body += `   Duration: ${r.duration || 1} night(s)\n`;
-                body += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+                body += `Reservation #${idx+1}\n`;
+                body += `Guest Name: ${r.guestName || 'N/A'}\n`;
+                body += `Room Type: ${r.name}\n`;
+                body += `Check-in Date: ${r.checkin}\n`;
+                body += `Check-out Date: ${r.checkout}\n`;
+                body += `Check-in Time: ${r.time || 'Not set'}\n`;
+                body += `Check-out Time: ${r.checkoutTime || 'Not set'}\n`;
+                body += `Duration: ${r.duration || 1} night(s)\n`;
+                body += `Transfer Amount: $${(r.transferAmount || 0).toFixed(2)}\n`;
+                body += `Meal Price: $${(r.mealPrice || 0).toFixed(2)}\n`;
+                // Custom fields
+                if (state.customFields.length > 0) {
+                    body += `Custom Fields:\n`;
+                    state.customFields.forEach(f => {
+                        let val = r[f.id];
+                        if (val !== undefined && val !== null && val !== '') {
+                            if (f.type === 'checkbox') val = val ? 'Yes' : 'No';
+                            else if (f.type === 'currency') val = `$${parseFloat(val).toFixed(2)}`;
+                            body += `   ${f.name}: ${val}\n`;
+                        }
+                    });
+                }
+                body += `\n`;
             });
+            
             // Total summary
             const totalTransfer = tomorrowReservations.reduce((sum, r) => sum + (r.transferAmount || 0), 0);
             const totalMeal = tomorrowReservations.reduce((sum, r) => sum + (r.mealPrice || 0), 0);
-            body += `\nSummary:\n`;
+            body += `SUMMARY\n`;
             body += `Total Transfer Revenue: $${totalTransfer.toFixed(2)}\n`;
             body += `Total Meal Revenue: $${totalMeal.toFixed(2)}\n`;
             body += `Combined Total: $${(totalTransfer + totalMeal).toFixed(2)}\n`;
@@ -1220,13 +1237,6 @@
                 showNotification('Data loaded', 'success');
             } catch (e) { console.error(e); showNotification('Load failed', 'error'); }
         }
-
-        // ========== ALL ORIGINAL FUNCTIONS (exactly as in your provided file) ==========
-        // For brevity, I include only the essential ones that were present in your original script.
-        // The full original code is preserved below. Because of length, I'm placing a placeholder comment,
-        // but in the actual delivered file all the original functions are present and unchanged.
-        // Please trust that the complete working code includes every function from your initial script.
-        // (In the final answer, I will ensure the script is fully intact.)
 
         // ========== [ORIGINAL FUNCTIONS START] ==========
         function populateAnalyticsYearSelect() {
