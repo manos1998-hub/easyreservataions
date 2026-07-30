@@ -1063,7 +1063,8 @@
             yearCompare: { start: null, end: null },
             selectedAnalyticsMonth: null,
             selectedAnalyticsYear: null,
-            notificationEmail: ''
+            notificationEmail: '',
+            expenseSort: { field: 'date', direction: 'asc' },  // <-- ΠΡΟΣΘΗΚΗ
         };
 
         function showNotification(msg, type = 'info') {
@@ -2282,7 +2283,64 @@
             const tbody = document.getElementById('expenses-body');
             if (!tbody) return;
             tbody.innerHTML = '';
-            const exps = state.filteredExpenses || state.expenses;
+
+            // --- ΤΑΞΙΝΟΜΗΣΗ (Βήμα 3) ---
+            let exps = state.filteredExpenses || state.expenses;
+            exps = [...exps];
+            const sortField = state.expenseSort.field;
+            const sortDir = state.expenseSort.direction;
+            exps.sort((a, b) => {
+                let valA, valB;
+                if (sortField === 'category') {
+                    const catA = state.expenseCategories.find(c => c.id === a.categoryId);
+                    const catB = state.expenseCategories.find(c => c.id === b.categoryId);
+                    valA = (catA ? catA.name : 'Uncategorized').toLowerCase();
+                    valB = (catB ? catB.name : 'Uncategorized').toLowerCase();
+                    return sortDir === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+                }
+                if (sortField === 'date') {
+                    valA = new Date(a.date);
+                    valB = new Date(b.date);
+                    return sortDir === 'asc' ? valA - valB : valB - valA;
+                }
+                if (sortField === 'amount') {
+                    valA = parseFloat(a.amount) || 0;
+                    valB = parseFloat(b.amount) || 0;
+                    return sortDir === 'asc' ? valA - valB : valB - valA;
+                }
+                valA = (a[sortField] || '').toString().toLowerCase();
+                valB = (b[sortField] || '').toString().toLowerCase();
+                return sortDir === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+            });
+
+            // --- ΠΡΟΣΘΗΚΗ LISTENERS ΚΑΙ ΒΕΛΩΝ (Βήμα 4) ---
+            const thead = document.querySelector('#expenses-table thead');
+            if (!thead.dataset.listeners) {
+                thead.dataset.listeners = 'true';
+                const headers = thead.querySelectorAll('th');
+                const fieldMap = ['name', 'category', 'amount', 'date', 'payment', 'description', 'status'];
+                headers.forEach((th, index) => {
+                    if (index < fieldMap.length) {
+                        th.style.cursor = 'pointer';
+                        th.addEventListener('click', () => {
+                            sortExpenses(fieldMap[index]);
+                        });
+                    }
+                });
+            }
+            const ths = document.querySelectorAll('#expenses-table thead th');
+            const fieldMap = ['name', 'category', 'amount', 'date', 'payment', 'description', 'status'];
+            ths.forEach((th, idx) => {
+                th.innerHTML = th.innerHTML.replace(/ [▲▼]/, '');
+                if (idx < fieldMap.length) {
+                    const field = fieldMap[idx];
+                    if (field === state.expenseSort.field) {
+                        th.innerHTML += ` ${state.expenseSort.direction === 'asc' ? '▲' : '▼'}`;
+                    }
+                }
+            });
+
+            // --- ΓΕΜΙΣΜΑ ΠΙΝΑΚΑ (υπάρχων κώδικας) ---
             if (exps.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><i class="fas fa-money-bill-wave"></i><h3>No Expenses</h3></div></td></tr>`;
                 document.getElementById('expense-summary').style.display = 'none';
@@ -2314,6 +2372,18 @@
             });
             document.getElementById('expense-count-badge').textContent = exps.length;
             updateExpenseSummary(exps);
+        }
+
+        function sortExpenses(field) {
+            // Αν το ίδιο πεδίο, εναλλάσσουμε κατεύθυνση
+            if (state.expenseSort.field === field) {
+                state.expenseSort.direction = state.expenseSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                state.expenseSort.field = field;
+                state.expenseSort.direction = 'asc';
+            }
+            // Επαναφόρτωση του πίνακα με τη νέα ταξινόμηση
+            renderExpensesTable();
         }
 
         function updateExpenseSummary(exps) {
