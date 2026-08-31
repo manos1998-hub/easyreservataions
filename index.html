@@ -657,13 +657,27 @@
                     <div class="expense-table-header">
                         <div class="expense-table-title"><i class="fas fa-table"></i> All Expenses <span id="expense-count-badge" style="background-color: var(--expense-color); color: white; padding: 4px 10px; border-radius: 20px; font-size: 13px; margin-left: 10px;">0</span></div>
                         <div class="expense-table-actions">
+                            <button class="btn btn-danger btn-sm" id="bulk-delete-expenses-btn" disabled><i class="fas fa-trash-alt"></i> Delete Selected</button>
+                            <button class="btn btn-primary btn-sm" id="bulk-edit-expenses-btn" disabled><i class="fas fa-edit"></i> Edit Selected</button>
                             <button class="btn btn-secondary btn-sm" id="refresh-expense-table-btn"><i class="fas fa-sync-alt"></i> Refresh</button>
                             <button class="btn btn-expense btn-sm" id="export-expenses-btn"><i class="fas fa-file-excel"></i> Export</button>
                         </div>
                     </div>
                     <div class="expense-table-wrapper">
                         <table class="expense-table" id="expenses-table">
-                            <thead><tr><th>Name</th><th>Category</th><th>Amount</th><th>Date</th><th>Payment</th><th>Description</th><th>Status</th><th>Actions</th></tr></thead>
+                            <thead>
+                                <tr>
+                                    <th><input type="checkbox" id="select-all-expenses"></th>
+                                    <th>Name</th>
+                                    <th>Category</th>
+                                    <th>Amount</th>
+                                    <th>Date</th>
+                                    <th>Payment</th>
+                                    <th>Description</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
                             <tbody id="expenses-body"></tbody>
                         </table>
                     </div>
@@ -1065,6 +1079,7 @@
             selectedAnalyticsYear: null,
             notificationEmail: '',
             expenseSort: { field: 'date', direction: 'asc' },  // <-- ΠΡΟΣΘΗΚΗ
+            selectedExpenses: [],   // <-- ΠΡΟΣΘΗΚΗ
         };
 
         function showNotification(msg, type = 'info') {
@@ -2284,7 +2299,12 @@
             if (!tbody) return;
             tbody.innerHTML = '';
 
-            // --- ΤΑΞΙΝΟΜΗΣΗ (Βήμα 3) ---
+            // Επαναφορά επιλογών
+            state.selectedExpenses = [];
+            const selectAll = document.getElementById('select-all-expenses');
+            if (selectAll) selectAll.checked = false;
+
+            // --- ΤΑΞΙΝΟΜΗΣΗ ---
             let exps = state.filteredExpenses || state.expenses;
             exps = [...exps];
             const sortField = state.expenseSort.field;
@@ -2313,45 +2333,52 @@
                 return sortDir === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
             });
 
-            // --- ΠΡΟΣΘΗΚΗ LISTENERS ΚΑΙ ΒΕΛΩΝ (Βήμα 4) ---
+            // --- ΠΡΟΣΘΗΚΗ LISTENERS ΚΑΙ ΒΕΛΩΝ (μόνο μία φορά) ---
             const thead = document.querySelector('#expenses-table thead');
             if (!thead.dataset.listeners) {
                 thead.dataset.listeners = 'true';
                 const headers = thead.querySelectorAll('th');
+                // Οι στήλες είναι: checkbox (0), name (1), category (2), amount (3), date (4), payment (5), description (6), status (7), actions (8)
+                // Για ταξινόμηση χρησιμοποιούμε τα πεδία από name (1) έως status (7)
                 const fieldMap = ['name', 'category', 'amount', 'date', 'payment', 'description', 'status'];
                 headers.forEach((th, index) => {
-                    if (index < fieldMap.length) {
+                    // index 0 = checkbox, οπότε ξεκινάμε από το 1
+                    if (index >= 1 && index <= 7) {
                         th.style.cursor = 'pointer';
                         th.addEventListener('click', () => {
-                            sortExpenses(fieldMap[index]);
+                            sortExpenses(fieldMap[index - 1]);
                         });
                     }
                 });
             }
+
+            // --- ΕΝΗΜΕΡΩΣΗ ΒΕΛΩΝ ---
             const ths = document.querySelectorAll('#expenses-table thead th');
             const fieldMap = ['name', 'category', 'amount', 'date', 'payment', 'description', 'status'];
             ths.forEach((th, idx) => {
                 th.innerHTML = th.innerHTML.replace(/ [▲▼]/, '');
-                if (idx < fieldMap.length) {
-                    const field = fieldMap[idx];
+                if (idx >= 1 && idx <= 7) {
+                    const field = fieldMap[idx - 1];
                     if (field === state.expenseSort.field) {
                         th.innerHTML += ` ${state.expenseSort.direction === 'asc' ? '▲' : '▼'}`;
                     }
                 }
             });
 
-            // --- ΓΕΜΙΣΜΑ ΠΙΝΑΚΑ (υπάρχων κώδικας) ---
+            // --- ΓΕΜΙΣΜΑ ΠΙΝΑΚΑ ---
             if (exps.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><i class="fas fa-money-bill-wave"></i><h3>No Expenses</h3></div></td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state"><i class="fas fa-money-bill-wave"></i><h3>No Expenses</h3></div></td></tr>`;
                 document.getElementById('expense-summary').style.display = 'none';
                 return;
             }
+
             exps.forEach(e => {
                 const cat = state.expenseCategories.find(c => c.id === e.categoryId);
                 const tr = document.createElement('tr');
                 tr.className = e.status === 'paid' ? 'status-paid' : 'status-pending';
                 tr.dataset.id = e.id;
                 tr.innerHTML = `
+                    <td><input type="checkbox" class="expense-select" data-id="${e.id}"></td>
                     <td>${e.name}</td>
                     <td><span class="category-badge" style="background-color:${cat?.color}20; color:${cat?.color};">${cat?.name||'Uncategorized'}</span></td>
                     <td class="expense-cell">$${parseFloat(e.amount).toFixed(2)}</td>
@@ -2365,13 +2392,136 @@
                     </div></td>
                 `;
                 tr.addEventListener('click', (event) => {
-                    if (event.target.closest('.btn-icon') || event.target.closest('button')) return;
+                    if (event.target.closest('.btn-icon') || event.target.closest('button') || event.target.closest('input[type="checkbox"]')) return;
                     window.editExpense(e.id);
                 });
                 tbody.appendChild(tr);
             });
+
+            // Ενημέρωση των κουμπιών (θα είναι απενεργοποιημένα)
+            updateExpenseSelection();
+
             document.getElementById('expense-count-badge').textContent = exps.length;
             updateExpenseSummary(exps);
+        }
+
+        // Διαχείριση επιλογής όλων
+        function toggleSelectAllExpenses() {
+            const checked = document.getElementById('select-all-expenses').checked;
+            document.querySelectorAll('.expense-select').forEach(cb => cb.checked = checked);
+            updateExpenseSelection();
+        }
+
+        // Ενημέρωση επιλεγμένων IDs και ενεργοποίηση κουμπιών
+        function updateExpenseSelection() {
+            const selected = [];
+            document.querySelectorAll('.expense-select:checked').forEach(cb => {
+                selected.push(cb.dataset.id);
+            });
+            state.selectedExpenses = selected;
+            const deleteBtn = document.getElementById('bulk-delete-expenses-btn');
+            const editBtn = document.getElementById('bulk-edit-expenses-btn');
+            if (deleteBtn) deleteBtn.disabled = selected.length === 0;
+            if (editBtn) editBtn.disabled = selected.length === 0;
+        }
+
+        // Μαζική διαγραφή
+        async function bulkDeleteExpenses() {
+            if (state.selectedExpenses.length === 0) return;
+            if (!confirm(`Διαγραφή ${state.selectedExpenses.length} εξόδων;`)) return;
+            try {
+                const batch = writeBatch(db);
+                state.selectedExpenses.forEach(id => {
+                    batch.delete(doc(db, 'expenses', id));
+                });
+                await batch.commit();
+                state.selectedExpenses = [];
+                await loadAllData();
+                showNotification('Επιλεγμένα έξοδα διαγράφηκαν', 'success');
+            } catch (e) {
+                console.error(e);
+                showNotification('Σφάλμα κατά τη μαζική διαγραφή', 'error');
+            }
+        }
+
+        // Μαζική επεξεργασία – ανοίγει modal με πεδία προς ενημέρωση
+        function bulkEditExpenses() {
+            if (state.selectedExpenses.length === 0) return;
+            // Δημιουργία modal
+            const modal = document.createElement('div');
+            modal.className = 'modal active';
+            modal.id = 'bulk-edit-expense-modal';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width:500px;">
+                    <div class="modal-header">
+                        <div class="modal-title">Μαζική Επεξεργασία (${state.selectedExpenses.length} εξόδων)</div>
+                        <button class="modal-close" onclick="document.getElementById('bulk-edit-expense-modal').remove()"><i class="fas fa-times"></i></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Ενημέρωσε τα πεδία που θέλεις να αλλάξουν. Όσα αφήσεις κενά δεν θα τροποποιηθούν.</p>
+                        <div class="form-group"><label>Κατηγορία</label>
+                            <select id="bulk-edit-category" class="form-control">
+                                <option value="">(Χωρίς αλλαγή)</option>
+                                ${state.expenseCategories.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div class="form-group"><label>Κατάσταση</label>
+                            <select id="bulk-edit-status" class="form-control">
+                                <option value="">(Χωρίς αλλαγή)</option>
+                                <option value="paid">Paid</option>
+                                <option value="pending">Pending</option>
+                            </select>
+                        </div>
+                        <div class="form-group"><label>Μέθοδος Πληρωμής</label>
+                            <select id="bulk-edit-payment" class="form-control">
+                                <option value="">(Χωρίς αλλαγή)</option>
+                                <option value="cash">Cash</option>
+                                <option value="credit_card">Credit Card</option>
+                                <option value="bank_transfer">Bank Transfer</option>
+                                <option value="check">Check</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" onclick="document.getElementById('bulk-edit-expense-modal').remove()">Ακύρωση</button>
+                        <button class="btn btn-primary" id="bulk-save-edit-expenses">Αποθήκευση</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            document.getElementById('bulk-save-edit-expenses').addEventListener('click', async () => {
+                const categoryId = document.getElementById('bulk-edit-category').value;
+                const status = document.getElementById('bulk-edit-status').value;
+                const payment = document.getElementById('bulk-edit-payment').value;
+
+                const updateData = {};
+                if (categoryId) updateData.categoryId = categoryId;
+                if (status) updateData.status = status;
+                if (payment) updateData.payment = payment;
+
+                if (Object.keys(updateData).length === 0) {
+                    showNotification('Δεν επέλεξες κανένα πεδίο για ενημέρωση', 'error');
+                    return;
+                }
+
+                try {
+                    const batch = writeBatch(db);
+                    state.selectedExpenses.forEach(id => {
+                        const ref = doc(db, 'expenses', id);
+                        batch.update(ref, updateData);
+                    });
+                    await batch.commit();
+                    state.selectedExpenses = [];
+                    await loadAllData();
+                    modal.remove();
+                    showNotification('Επιλεγμένα έξοδα ενημερώθηκαν', 'success');
+                } catch (e) {
+                    console.error(e);
+                    showNotification('Σφάλμα κατά τη μαζική ενημέρωση', 'error');
+                }
+            });
         }
 
         function sortExpenses(field) {
@@ -3257,7 +3407,18 @@
             // Email notification buttons
             document.getElementById('save-email-settings-btn')?.addEventListener('click', saveEmailSettings);
             document.getElementById('send-tomorrow-reminder-btn')?.addEventListener('click', sendTomorrowReminder);
-        });
+                    // --- Bulk actions for expenses ---
+            document.getElementById('select-all-expenses')?.addEventListener('change', toggleSelectAllExpenses);
+
+            document.addEventListener('change', function(e) {
+                if (e.target.classList.contains('expense-select')) {
+                    updateExpenseSelection();
+                }
+            });
+
+            document.getElementById('bulk-delete-expenses-btn')?.addEventListener('click', bulkDeleteExpenses);
+            document.getElementById('bulk-edit-expenses-btn')?.addEventListener('click', bulkEditExpenses);
+            }); 
 
         window.deleteCommissionStat = deleteCommissionStat;
         window.deleteNoCommissionStat = deleteNoCommissionStat;
