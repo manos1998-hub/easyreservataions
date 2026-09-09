@@ -301,10 +301,13 @@
         .calendar-reservation-detail-item span { color: var(--text-primary); font-weight: 500; }
         .reservation-duration-display { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background-color: rgba(37, 99, 235, 0.1); border-radius: 20px; font-size: 12px; font-weight: 600; color: var(--primary-color); margin-top: 8px; }
         .reservation-duration-display i { font-size: 11px; }
+        /* μικρή βελτίωση για το export */
+        .btn-export-comprehensive { background-color: #0ea5e9; color: white; }
+        .btn-export-comprehensive:hover { background-color: #0284c7; }
     </style>
 </head>
 <body>
-    <!-- ========== FULL HTML STRUCTURE (with updated Settings panel) ========== -->
+    <!-- ========== FULL HTML STRUCTURE (με το νέο κουμπί export) ========== -->
     <div class="container">
         <!-- Sidebar Navigation -->
         <div class="sidebar">
@@ -640,7 +643,7 @@
                             <div style="display: flex; gap: 12px; margin-top: 24px;"><button class="btn btn-expense" id="add-expense-btn"><i class="fas fa-plus"></i> Add Expense</button><button class="btn btn-secondary" id="clear-expense-form-btn"><i class="fas fa-eraser"></i> Clear Form</button></div>
                         </div>
                     </div>
-                     <div class="panel" style="background-color: #e8ffea;"> 
+                     <div class="panel" style="background-color: #e8ffea;">
                         <div class="panel-header"><h2><i class="fas fa-filter"></i> Filter Expenses</h2></div>
                         <div class="panel-body">
                             <div class="form-group"><label class="form-label">Expense Name</label><input type="text" class="form-control" id="expense-filter-name" placeholder="Filter by name"></div>
@@ -957,12 +960,11 @@
                 </div>
             </div>
 
-            <!-- ========== UPDATED SETTINGS CONTENT ========== -->
+            <!-- ========== SETTINGS CONTENT ========== -->
             <div class="content-wrapper" id="settings-content" style="display: none;">
                 <div class="panel">
                     <div class="panel-header"><h2><i class="fas fa-cog"></i> System Settings</h2></div>
                     <div class="panel-body">
-                        <!-- Email Notification Settings -->
                         <h3 style="margin-bottom: 16px;"><i class="fas fa-envelope"></i> Email Notifications</h3>
                         <div class="form-group">
                             <label class="form-label">Notification Email Address</label>
@@ -1032,10 +1034,10 @@
         </div>
     </div>
 
-    <!-- ========== FIREBASE SCRIPT (with email notification feature) ========== -->
+    <!-- ========== FIREBASE SCRIPT (με το νέο comprehensive export) ========== -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { 
+        import {
             getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc,
             query, orderBy, where, writeBatch
         } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
@@ -1078,8 +1080,8 @@
             selectedAnalyticsMonth: null,
             selectedAnalyticsYear: null,
             notificationEmail: '',
-            expenseSort: { field: 'date', direction: 'asc' },  // <-- ΠΡΟΣΘΗΚΗ
-            selectedExpenses: [],   // <-- ΠΡΟΣΘΗΚΗ
+            expenseSort: { field: 'date', direction: 'asc' },
+            selectedExpenses: [],
         };
 
         function showNotification(msg, type = 'info') {
@@ -1095,7 +1097,7 @@
             return Math.max(0, Math.ceil((new Date(checkout) - new Date(checkin)) / (1000*60*60*24)));
         }
 
-        // ========== EMAIL NOTIFICATION FUNCTIONS (UPDATED) ==========
+        // ========== EMAIL NOTIFICATION FUNCTIONS ==========
         async function loadEmailSettings() {
             try {
                 const snap = await getDocs(emailSettingsCol);
@@ -1147,11 +1149,10 @@
             const tomorrowDate = new Date();
             tomorrowDate.setDate(tomorrowDate.getDate() + 1);
             const formattedDate = tomorrowDate.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-            
-            // Build email body without separator lines and with ALL fields
+
             let body = `UPCOMING TRANSFERS `;
             body += `Total reservations: ${tomorrowReservations.length}\n\n`;
-            
+
             tomorrowReservations.forEach((r, idx) => {
                 body += `Reservation #${idx+1}\n`;
                 body += `Guest Name: ${r.guestName || 'N/A'}\n`;
@@ -1163,7 +1164,6 @@
                 body += `Duration: ${r.duration || 1} night(s)\n`;
                 body += `Transfer Amount: $${(r.transferAmount || 0).toFixed(2)}\n`;
                 body += `Meal Price: $${(r.mealPrice || 0).toFixed(2)}\n`;
-                // Custom fields
                 if (state.customFields.length > 0) {
                     body += `Custom Fields:\n`;
                     state.customFields.forEach(f => {
@@ -1177,8 +1177,7 @@
                 }
                 body += `\n`;
             });
-            
-            // Total summary
+
             const totalTransfer = tomorrowReservations.reduce((sum, r) => sum + (r.transferAmount || 0), 0);
             const totalMeal = tomorrowReservations.reduce((sum, r) => sum + (r.mealPrice || 0), 0);
             body += `SUMMARY\n`;
@@ -1193,6 +1192,7 @@
             showNotification('Opening your email client...', 'success');
         }
 
+        // ========== ΦΟΡΤΩΣΗ ΟΛΩΝ ΤΩΝ ΔΕΔΟΜΕΝΩΝ ==========
         async function loadAllData() {
             try {
                 const [customSnap, resSnap, catSnap, expSnap, settingsSnap, commSnap, noCommSnap] = await Promise.all([
@@ -1210,7 +1210,7 @@
                 state.expenses = expSnap.docs.map(d => ({ id: d.id, ...d.data() }));
                 state.commissionStats = commSnap.docs.map(d => ({ id: d.id, ...d.data() }));
                 state.noCommissionStats = noCommSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-                
+
                 if (!settingsSnap.empty) {
                     const settingsData = settingsSnap.docs[0].data();
                     state.fieldOrder = settingsData.fieldOrder || [];
@@ -1254,7 +1254,7 @@
             } catch (e) { console.error(e); showNotification('Load failed', 'error'); }
         }
 
-        // ========== [ORIGINAL FUNCTIONS START] ==========
+        // ========== [ΟΛΕΣ ΟΙ ΥΠΑΡΧΟΥΣΕΣ ΣΥΝΑΡΤΗΣΕΙΣ ΠΑΡΑΜΕΝΟΥΝ ΙΔΙΕΣ] ==========
         function populateAnalyticsYearSelect() {
             const years = new Set();
             state.reservations.forEach(r => r.checkin && years.add(new Date(r.checkin).getFullYear()));
@@ -1978,8 +1978,8 @@
                         <option value="cancelled" ${field.defaultValue==='cancelled'?'selected':''}>Cancelled</option>
                     </select>`;
                 } else {
-                    inputHtml = `<input type="${field.type==='date'?'date':field.type==='currency'||field.type==='number'?'number':'text'}" 
-                        class="form-control" id="${field.id}" value="${field.defaultValue || ''}" 
+                    inputHtml = `<input type="${field.type==='date'?'date':field.type==='currency'||field.type==='number'?'number':'text'}"
+                        class="form-control" id="${field.id}" value="${field.defaultValue || ''}"
                         ${field.type==='currency'?'step="0.01"':''} placeholder="${field.name}">`;
                 }
                 div.innerHTML = `
@@ -2023,23 +2023,23 @@
             const checkoutTime = document.getElementById('reservation-checkout-time').value;
             const transferAmount = parseFloat(document.getElementById('reservation-transfer').value) || 0;
             const mealPrice = parseFloat(document.getElementById('reservation-meal').value) || 0;
-            if (!room || !guest || !checkin || !checkout || !time || !checkoutTime) { 
-                showNotification('Fill all required fields (Room, Guest, Dates, Times)', 'error'); 
-                return; 
+            if (!room || !guest || !checkin || !checkout || !time || !checkoutTime) {
+                showNotification('Fill all required fields (Room, Guest, Dates, Times)', 'error');
+                return;
             }
             if (new Date(checkout) < new Date(checkin)) { showNotification('Check-out after check-in', 'error'); return; }
             const duration = calculateDuration(checkin, checkout);
-            const newRes = { 
-                name: room, 
+            const newRes = {
+                name: room,
                 guestName: guest,
-                checkin, 
-                checkout, 
-                duration, 
+                checkin,
+                checkout,
+                duration,
                 time,
                 checkoutTime,
-                transferAmount, 
-                mealPrice, 
-                createdAt: new Date().toISOString() 
+                transferAmount,
+                mealPrice,
+                createdAt: new Date().toISOString()
             };
             state.customFields.forEach(f => {
                 const el = document.getElementById(f.id);
@@ -2298,13 +2298,10 @@
             const tbody = document.getElementById('expenses-body');
             if (!tbody) return;
             tbody.innerHTML = '';
-
-            // Επαναφορά επιλογών
             state.selectedExpenses = [];
             const selectAll = document.getElementById('select-all-expenses');
             if (selectAll) selectAll.checked = false;
 
-            // --- ΤΑΞΙΝΟΜΗΣΗ ---
             let exps = state.filteredExpenses || state.expenses;
             exps = [...exps];
             const sortField = state.expenseSort.field;
@@ -2333,16 +2330,12 @@
                 return sortDir === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
             });
 
-            // --- ΠΡΟΣΘΗΚΗ LISTENERS ΚΑΙ ΒΕΛΩΝ (μόνο μία φορά) ---
             const thead = document.querySelector('#expenses-table thead');
             if (!thead.dataset.listeners) {
                 thead.dataset.listeners = 'true';
                 const headers = thead.querySelectorAll('th');
-                // Οι στήλες είναι: checkbox (0), name (1), category (2), amount (3), date (4), payment (5), description (6), status (7), actions (8)
-                // Για ταξινόμηση χρησιμοποιούμε τα πεδία από name (1) έως status (7)
                 const fieldMap = ['name', 'category', 'amount', 'date', 'payment', 'description', 'status'];
                 headers.forEach((th, index) => {
-                    // index 0 = checkbox, οπότε ξεκινάμε από το 1
                     if (index >= 1 && index <= 7) {
                         th.style.cursor = 'pointer';
                         th.addEventListener('click', () => {
@@ -2352,7 +2345,6 @@
                 });
             }
 
-            // --- ΕΝΗΜΕΡΩΣΗ ΒΕΛΩΝ ---
             const ths = document.querySelectorAll('#expenses-table thead th');
             const fieldMap = ['name', 'category', 'amount', 'date', 'payment', 'description', 'status'];
             ths.forEach((th, idx) => {
@@ -2365,7 +2357,6 @@
                 }
             });
 
-            // --- ΓΕΜΙΣΜΑ ΠΙΝΑΚΑ ---
             if (exps.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state"><i class="fas fa-money-bill-wave"></i><h3>No Expenses</h3></div></td></tr>`;
                 document.getElementById('expense-summary').style.display = 'none';
@@ -2398,21 +2389,17 @@
                 tbody.appendChild(tr);
             });
 
-            // Ενημέρωση των κουμπιών (θα είναι απενεργοποιημένα)
             updateExpenseSelection();
-
             document.getElementById('expense-count-badge').textContent = exps.length;
             updateExpenseSummary(exps);
         }
 
-        // Διαχείριση επιλογής όλων
         function toggleSelectAllExpenses() {
             const checked = document.getElementById('select-all-expenses').checked;
             document.querySelectorAll('.expense-select').forEach(cb => cb.checked = checked);
             updateExpenseSelection();
         }
 
-        // Ενημέρωση επιλεγμένων IDs και ενεργοποίηση κουμπιών
         function updateExpenseSelection() {
             const selected = [];
             document.querySelectorAll('.expense-select:checked').forEach(cb => {
@@ -2425,7 +2412,6 @@
             if (editBtn) editBtn.disabled = selected.length === 0;
         }
 
-        // Μαζική διαγραφή
         async function bulkDeleteExpenses() {
             if (state.selectedExpenses.length === 0) return;
             if (!confirm(`Διαγραφή ${state.selectedExpenses.length} εξόδων;`)) return;
@@ -2444,10 +2430,8 @@
             }
         }
 
-        // Μαζική επεξεργασία – ανοίγει modal με πεδία προς ενημέρωση
         function bulkEditExpenses() {
             if (state.selectedExpenses.length === 0) return;
-            // Δημιουργία modal
             const modal = document.createElement('div');
             modal.className = 'modal active';
             modal.id = 'bulk-edit-expense-modal';
@@ -2525,14 +2509,12 @@
         }
 
         function sortExpenses(field) {
-            // Αν το ίδιο πεδίο, εναλλάσσουμε κατεύθυνση
             if (state.expenseSort.field === field) {
                 state.expenseSort.direction = state.expenseSort.direction === 'asc' ? 'desc' : 'asc';
             } else {
                 state.expenseSort.field = field;
                 state.expenseSort.direction = 'asc';
             }
-            // Επαναφόρτωση του πίνακα με τη νέα ταξινόμηση
             renderExpensesTable();
         }
 
@@ -2601,7 +2583,7 @@
             if (!grid) return;
             const year = state.currentCalendarDate.getFullYear();
             const month = state.currentCalendarDate.getMonth();
-            document.getElementById('calendar-month-year').textContent = 
+            document.getElementById('calendar-month-year').textContent =
                 new Date(year, month).toLocaleString('default', { month:'long', year:'numeric' });
             grid.innerHTML = '';
             const firstDay = new Date(year, month, 1).getDay();
@@ -2609,7 +2591,7 @@
             for (let i=0; i<firstDay; i++) grid.appendChild(document.createElement('div')).className = 'calendar-day empty';
             for (let d=1; d<=daysInMonth; d++) {
                 const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-                const dayReservations = state.reservations.filter(r => 
+                const dayReservations = state.reservations.filter(r =>
                     new Date(r.checkin) <= new Date(dateStr) && new Date(r.checkout) > new Date(dateStr)
                 );
                 const dayDiv = document.createElement('div');
@@ -2649,7 +2631,7 @@
             const container = document.getElementById('selected-date-reservations');
             const title = document.getElementById('selected-date-title');
             title.textContent = `Reservations for ${dateStr}`;
-            const dayRes = state.reservations.filter(r => 
+            const dayRes = state.reservations.filter(r =>
                 new Date(r.checkin) <= new Date(dateStr) && new Date(r.checkout) > new Date(dateStr)
             );
             if (dayRes.length === 0) {
@@ -2689,6 +2671,7 @@
             });
         }
 
+        // ========== ΒΟΗΘΗΤΙΚΗ ΣΥΝΑΡΤΗΣΗ ΓΙΑ CSV ==========
         function exportToCSV(data, filename) {
             if (!data || data.length === 0) { showNotification('No data to export', 'error'); return; }
             const headers = Object.keys(data[0]);
@@ -2696,12 +2679,12 @@
             csvRows.push(headers.join(','));
             for (const row of data) {
                 const values = headers.map(h => {
-                    const val = row[h] || '';
+                    const val = row[h] !== undefined && row[h] !== null ? row[h] : '';
                     return `"${String(val).replace(/"/g, '""')}"`;
                 });
                 csvRows.push(values.join(','));
             }
-            const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
+            const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
@@ -2710,6 +2693,285 @@
             window.URL.revokeObjectURL(url);
         }
 
+        // ========== ΝΕΟ COMPREHENSIVE EXPORT ==========
+        function exportComprehensiveAnalytics() {
+            // 1. Παίρνουμε τα φιλτραρισμένα δεδομένα όπως ακριβώς τα βλέπει ο χρήστης στο Analytics
+            const monthly = getAnalyticsFilteredData();
+            const months = Object.keys(monthly).sort();
+
+            // Καθορίζουμε το εύρος ημερομηνιών που χρησιμοποιείται για το φιλτράρισμα
+            let startDate, endDate;
+            const monthFilterActive = state.selectedAnalyticsMonth && state.selectedAnalyticsYear;
+            if (monthFilterActive) {
+                const year = state.selectedAnalyticsYear;
+                const month = state.selectedAnalyticsMonth - 1;
+                startDate = new Date(year, month, 1);
+                endDate = new Date(year, month + 1, 0, 23, 59, 59);
+            } else {
+                const period = document.getElementById('analytics-period').value;
+                if (period === 'all') {
+                    startDate = new Date(0);
+                } else {
+                    startDate = new Date();
+                    startDate.setMonth(startDate.getMonth() - parseInt(period));
+                }
+                endDate = new Date();
+            }
+
+            const personalCat = state.expenseCategories.find(c => c.name === 'PERSONAL');
+            const personalCatId = personalCat ? personalCat.id : null;
+
+            // ---- SECTION 1: MONTHLY ANALYTICS (όπως στον πίνακα) ----
+            const monthlyData = months.map(m => {
+                const [y, mo] = m.split('-').map(Number);
+                const days = new Date(y, mo, 0).getDate();
+                const maxNights = days * 4;
+                const nights = monthly[m].nights || 0;
+                const occupancy = maxNights > 0 ? ((nights / maxNights) * 100).toFixed(1) : '0.0';
+                const totalIncome = monthly[m].transfer + monthly[m].meal + monthly[m].commission + monthly[m].nocommission;
+                const regularExp = monthly[m].expenses - monthly[m].personalExpenses;
+                const profit = totalIncome - regularExp;
+                const net = profit - monthly[m].personalExpenses;
+                const margin = totalIncome > 0 ? ((profit / totalIncome) * 100).toFixed(1) : '0.0';
+                return {
+                    'Period': m,
+                    'Transfer': monthly[m].transfer.toFixed(2),
+                    'Meal': monthly[m].meal.toFixed(2),
+                    'Commission': monthly[m].commission.toFixed(2),
+                    'No Commission': monthly[m].nocommission.toFixed(2),
+                    'Total Income': totalIncome.toFixed(2),
+                    'Expenses (regular)': regularExp.toFixed(2),
+                    'Profit': profit.toFixed(2),
+                    'Personal Expenses': monthly[m].personalExpenses.toFixed(2),
+                    'Net (after personal)': net.toFixed(2),
+                    'Margin %': margin,
+                    'Nights': nights,
+                    'Occupancy %': occupancy
+                };
+            });
+
+            // ---- SECTION 2: ROOM-WISE TRANSFERS (all reservations with transfer > 0, filtered by period) ----
+            const transferReservations = state.reservations.filter(r => {
+                if (!r.checkin) return false;
+                const d = new Date(r.checkin);
+                if (d < startDate || d > endDate) return false;
+                return (r.transferAmount || 0) > 0;
+            });
+            const transferRows = transferReservations.map(r => ({
+                'Room Type': r.name || '',
+                'Guest Name': r.guestName || '',
+                'Check-in': r.checkin || '',
+                'Check-out': r.checkout || '',
+                'Duration': r.duration || 1,
+                'Check-in Time': r.time || '',
+                'Check-out Time': r.checkoutTime || '',
+                'Transfer ($)': (r.transferAmount || 0).toFixed(2),
+                'Meal ($)': (r.mealPrice || 0).toFixed(2)
+            }));
+
+            // ---- SECTION 3: ALL RESERVATIONS (λεπτομερής λίστα, φιλτραρισμένες) ----
+            const allReservationsFiltered = state.reservations.filter(r => {
+                if (!r.checkin) return false;
+                const d = new Date(r.checkin);
+                return d >= startDate && d <= endDate;
+            });
+            const allResRows = allReservationsFiltered.map(r => {
+                const row = {
+                    'Room Type': r.name || '',
+                    'Guest Name': r.guestName || '',
+                    'Check-in': r.checkin || '',
+                    'Check-out': r.checkout || '',
+                    'Duration': r.duration || 1,
+                    'Check-in Time': r.time || '',
+                    'Check-out Time': r.checkoutTime || '',
+                    'Transfer ($)': (r.transferAmount || 0).toFixed(2),
+                    'Meal ($)': (r.mealPrice || 0).toFixed(2)
+                };
+                state.customFields.forEach(f => {
+                    let val = r[f.id];
+                    if (val !== undefined && val !== null && val !== '') {
+                        if (f.type === 'checkbox') val = val ? 'Yes' : 'No';
+                        else if (f.type === 'currency') val = parseFloat(val).toFixed(2);
+                        row[f.name] = val;
+                    } else {
+                        row[f.name] = '';
+                    }
+                });
+                return row;
+            });
+
+            // ---- SECTION 4: EXPENSE CATEGORIES (grouped, filtered by period) ----
+            const expensesFiltered = state.expenses.filter(e => {
+                if (!e.date) return false;
+                const d = new Date(e.date);
+                return d >= startDate && d <= endDate;
+            });
+            const catTotals = {};
+            expensesFiltered.forEach(e => {
+                if (e.categoryId === personalCatId) return; // αφαιρούμε τα personal από τα κανονικά έξοδα
+                const cat = state.expenseCategories.find(c => c.id === e.categoryId);
+                const name = cat ? cat.name : 'Uncategorized';
+                catTotals[name] = (catTotals[name] || 0) + parseFloat(e.amount);
+            });
+            const catRows = Object.entries(catTotals).map(([cat, amt]) => ({
+                'Category': cat,
+                'Total Amount ($)': amt.toFixed(2)
+            }));
+
+            // ---- SECTION 5: ALL EXPENSES (λεπτομερής λίστα, filtered) ----
+            const allExpRows = expensesFiltered.map(e => {
+                const cat = state.expenseCategories.find(c => c.id === e.categoryId);
+                return {
+                    'Name': e.name || '',
+                    'Category': cat ? cat.name : 'Uncategorized',
+                    'Amount ($)': parseFloat(e.amount).toFixed(2),
+                    'Date': e.date || '',
+                    'Payment': e.payment || '',
+                    'Description': e.description || '',
+                    'Status': e.status || ''
+                };
+            });
+
+            // ---- SECTION 6: COMMISSION RECORDS (filtered by period) ----
+            const commFiltered = state.commissionStats.filter(s => {
+                if (!s.month) return false;
+                const [y, m] = s.month.split('-').map(Number);
+                const d = new Date(y, m-1, 1);
+                return d >= startDate && d <= endDate;
+            });
+            const commRows = commFiltered.map(s => ({
+                'Month': s.month || '',
+                'Room': s.room || '',
+                'Income ($)': (s.income || 0).toFixed(2),
+                'Stays': s.stays || 0
+            }));
+
+            // ---- SECTION 7: NO-COMMISSION RECORDS (filtered by period) ----
+            const noCommFiltered = state.noCommissionStats.filter(s => {
+                if (!s.month) return false;
+                const [y, m] = s.month.split('-').map(Number);
+                const d = new Date(y, m-1, 1);
+                return d >= startDate && d <= endDate;
+            });
+            const noCommRows = noCommFiltered.map(s => ({
+                'Month': s.month || '',
+                'Room': s.room || '',
+                'Income ($)': (s.income || 0).toFixed(2),
+                'Stays': s.stays || 0
+            }));
+
+            // ---- SECTION 8: SUMMARY STATISTICS ----
+            const totalTransfer = monthlyData.reduce((s, r) => s + parseFloat(r.Transfer), 0);
+            const totalMeal = monthlyData.reduce((s, r) => s + parseFloat(r.Meal), 0);
+            const totalCommission = monthlyData.reduce((s, r) => s + parseFloat(r.Commission), 0);
+            const totalNoCommission = monthlyData.reduce((s, r) => s + parseFloat(r['No Commission']), 0);
+            const totalIncome = totalTransfer + totalMeal + totalCommission + totalNoCommission;
+            const totalRegularExp = monthlyData.reduce((s, r) => s + parseFloat(r['Expenses (regular)']), 0);
+            const totalPersonalExp = monthlyData.reduce((s, r) => s + parseFloat(r['Personal Expenses']), 0);
+            const totalProfit = totalIncome - totalRegularExp;
+            const totalNet = totalProfit - totalPersonalExp;
+            const totalNights = monthlyData.reduce((s, r) => s + parseInt(r.Nights || 0), 0);
+            const avgMargin = monthlyData.length > 0 ? (monthlyData.reduce((s, r) => s + parseFloat(r['Margin %']), 0) / monthlyData.length).toFixed(1) : '0.0';
+            const summaryRows = [
+                { 'Metric': 'Total Transfer Income', 'Value': `$${totalTransfer.toFixed(2)}` },
+                { 'Metric': 'Total Meal Income', 'Value': `$${totalMeal.toFixed(2)}` },
+                { 'Metric': 'Total Commission Income', 'Value': `$${totalCommission.toFixed(2)}` },
+                { 'Metric': 'Total No-Commission Income', 'Value': `$${totalNoCommission.toFixed(2)}` },
+                { 'Metric': 'Total Income (all sources)', 'Value': `$${totalIncome.toFixed(2)}` },
+                { 'Metric': 'Total Regular Expenses', 'Value': `$${totalRegularExp.toFixed(2)}` },
+                { 'Metric': 'Total Personal Expenses', 'Value': `$${totalPersonalExp.toFixed(2)}` },
+                { 'Metric': 'Total Profit (before personal)', 'Value': `$${totalProfit.toFixed(2)}` },
+                { 'Metric': 'Total Net (after personal)', 'Value': `$${totalNet.toFixed(2)}` },
+                { 'Metric': 'Total Nights', 'Value': `${totalNights}` },
+                { 'Metric': 'Average Profit Margin', 'Value': `${avgMargin}%` },
+                { 'Metric': 'Number of Months', 'Value': `${months.length}` },
+                { 'Metric': 'Number of Reservations', 'Value': `${allReservationsFiltered.length}` },
+                { 'Metric': 'Number of Transfers', 'Value': `${transferReservations.length}` },
+                { 'Metric': 'Number of Expenses', 'Value': `${expensesFiltered.length}` },
+                { 'Metric': 'Number of Commission Records', 'Value': `${commFiltered.length}` },
+                { 'Metric': 'Number of No-Commission Records', 'Value': `${noCommFiltered.length}` }
+            ];
+
+            // ---- ΣΥΝΘΕΣΗ ΟΛΩΝ ΤΩΝ ΤΜΗΜΑΤΩΝ ΣΕ ΕΝΑ CSV ----
+            const allData = [];
+
+            // Section 1: Monthly Analytics
+            allData.push({ ' ': '=== MONTHLY ANALYTICS ===' });
+            if (monthlyData.length > 0) {
+                allData.push(Object.keys(monthlyData[0]).reduce((acc, k) => ({ ...acc, [k]: k }), {}));
+                monthlyData.forEach(r => allData.push(r));
+            } else {
+                allData.push({ ' ': 'No data available for this period.' });
+            }
+
+            allData.push({ ' ': '' });
+            allData.push({ ' ': '=== ROOM-WISE TRANSFERS (filtered) ===' });
+            if (transferRows.length > 0) {
+                allData.push(Object.keys(transferRows[0]).reduce((acc, k) => ({ ...acc, [k]: k }), {}));
+                transferRows.forEach(r => allData.push(r));
+            } else {
+                allData.push({ ' ': 'No transfers in this period.' });
+            }
+
+            allData.push({ ' ': '' });
+            allData.push({ ' ': '=== ALL RESERVATIONS (filtered) ===' });
+            if (allResRows.length > 0) {
+                allData.push(Object.keys(allResRows[0]).reduce((acc, k) => ({ ...acc, [k]: k }), {}));
+                allResRows.forEach(r => allData.push(r));
+            } else {
+                allData.push({ ' ': 'No reservations in this period.' });
+            }
+
+            allData.push({ ' ': '' });
+            allData.push({ ' ': '=== EXPENSE CATEGORIES (grouped) ===' });
+            if (catRows.length > 0) {
+                allData.push(Object.keys(catRows[0]).reduce((acc, k) => ({ ...acc, [k]: k }), {}));
+                catRows.forEach(r => allData.push(r));
+            } else {
+                allData.push({ ' ': 'No expenses in this period.' });
+            }
+
+            allData.push({ ' ': '' });
+            allData.push({ ' ': '=== ALL EXPENSES (filtered) ===' });
+            if (allExpRows.length > 0) {
+                allData.push(Object.keys(allExpRows[0]).reduce((acc, k) => ({ ...acc, [k]: k }), {}));
+                allExpRows.forEach(r => allData.push(r));
+            } else {
+                allData.push({ ' ': 'No expenses in this period.' });
+            }
+
+            allData.push({ ' ': '' });
+            allData.push({ ' ': '=== COMMISSION RECORDS (filtered) ===' });
+            if (commRows.length > 0) {
+                allData.push(Object.keys(commRows[0]).reduce((acc, k) => ({ ...acc, [k]: k }), {}));
+                commRows.forEach(r => allData.push(r));
+            } else {
+                allData.push({ ' ': 'No commission records in this period.' });
+            }
+
+            allData.push({ ' ': '' });
+            allData.push({ ' ': '=== NO-COMMISSION RECORDS (filtered) ===' });
+            if (noCommRows.length > 0) {
+                allData.push(Object.keys(noCommRows[0]).reduce((acc, k) => ({ ...acc, [k]: k }), {}));
+                noCommRows.forEach(r => allData.push(r));
+            } else {
+                allData.push({ ' ': 'No no-commission records in this period.' });
+            }
+
+            allData.push({ ' ': '' });
+            allData.push({ ' ': '=== SUMMARY STATISTICS ===' });
+            if (summaryRows.length > 0) {
+                allData.push(Object.keys(summaryRows[0]).reduce((acc, k) => ({ ...acc, [k]: k }), {}));
+                summaryRows.forEach(r => allData.push(r));
+            }
+
+            // ---- ΚΑΤΕΒΑΣΜΑ ----
+            const filename = `analytics_comprehensive_${new Date().toISOString().split('T')[0]}.csv`;
+            exportToCSV(allData, filename);
+            showNotification('Comprehensive export completed!', 'success');
+        }
+
+        // ========== [ΟΛΕΣ ΟΙ ΥΠΑΡΧΟΥΣΕΣ WINDOW FUNCTIONS] ==========
         window.editReservation = (id) => {
             const r = state.reservations.find(r => r.id === id);
             if (!r) return;
@@ -2825,6 +3087,8 @@
         });
 
         window.deleteExpense = (id) => { if (confirm('Delete expense?')) deleteExpense(id); };
+        window.deleteCommissionStat = deleteCommissionStat;
+        window.deleteNoCommissionStat = deleteNoCommissionStat;
 
         function showPage(page) {
             state.currentPage = page;
@@ -3143,102 +3407,7 @@
             });
         }
 
-        document.getElementById('export-dashboard-btn')?.addEventListener('click', () => {
-            const data = state.reservations.map(r => ({
-                'Room Type': r.name,
-                'Guest Name': r.guestName || '',
-                'Check-in': r.checkin,
-                'Check-out': r.checkout,
-                Duration: r.duration,
-                'Check-in Time': r.time,
-                'Check-out Time': r.checkoutTime,
-                Transfer: r.transferAmount || 0,
-                Meal: r.mealPrice || 0,
-                ...state.customFields.reduce((acc, f) => ({ ...acc, [f.name]: r[f.id] }), {})
-            }));
-            exportToCSV(data, 'reservations.csv');
-        });
-        document.getElementById('export-reservations-btn')?.addEventListener('click', () => {
-            const data = state.reservations.map(r => ({
-                'Room Type': r.name,
-                'Guest Name': r.guestName || '',
-                'Check-in': r.checkin,
-                'Check-out': r.checkout,
-                Duration: r.duration,
-                'Check-in Time': r.time,
-                'Check-out Time': r.checkoutTime,
-                Transfer: r.transferAmount || 0,
-                Meal: r.mealPrice || 0,
-                ...state.customFields.reduce((acc, f) => ({ ...acc, [f.name]: r[f.id] }), {})
-            }));
-            exportToCSV(data, 'reservations.csv');
-        });
-        document.getElementById('export-expenses-btn')?.addEventListener('click', () => {
-            const data = state.expenses.map(e => {
-                const cat = state.expenseCategories.find(c => c.id === e.categoryId);
-                return {
-                    Name: e.name,
-                    Category: cat ? cat.name : 'Uncategorized',
-                    Amount: e.amount,
-                    Date: e.date,
-                    Payment: e.payment,
-                    Description: e.description,
-                    Status: e.status
-                };
-            });
-            exportToCSV(data, 'expenses.csv');
-        });
-        document.getElementById('export-analytics-btn')?.addEventListener('click', () => {
-            const monthly = getAnalyticsFilteredData();
-            const months = Object.keys(monthly).sort();
-            const data = months.map(m => {
-                const [y, mo] = m.split('-').map(Number);
-                const days = new Date(y, mo, 0).getDate();
-                const maxNights = days * 4;
-                const nights = monthly[m].nights || 0;
-                const occupancy = maxNights > 0 ? ((nights / maxNights) * 100).toFixed(1) : '0.0';
-                const totalIncome = monthly[m].transfer + monthly[m].meal + monthly[m].commission + monthly[m].nocommission;
-                const regularExp = monthly[m].expenses - monthly[m].personalExpenses;
-                const profit = totalIncome - regularExp;
-                return {
-                    Period: m,
-                    Transfer: monthly[m].transfer.toFixed(2),
-                    Meal: monthly[m].meal.toFixed(2),
-                    Commission: monthly[m].commission.toFixed(2),
-                    NoCommission: monthly[m].nocommission.toFixed(2),
-                    TotalIncome: totalIncome.toFixed(2),
-                    Expenses: regularExp.toFixed(2),
-                    Profit: profit.toFixed(2),
-                    PersonalExpenses: monthly[m].personalExpenses.toFixed(2),
-                    NetAfterPersonal: (profit - monthly[m].personalExpenses).toFixed(2),
-                    Nights: nights,
-                    Occupancy: occupancy + '%'
-                };
-            });
-            exportToCSV(data, 'analytics.csv');
-        });
-        document.getElementById('export-transfers-btn')?.addEventListener('click', () => {
-            const transfers = state.reservations.filter(r => (r.transferAmount || 0) > 0);
-            const data = transfers.map(r => ({
-                Room: r.name,
-                'Guest Name': r.guestName || '',
-                Checkin: r.checkin,
-                Checkout: r.checkout,
-                Transfer: r.transferAmount || 0,
-                Meal: r.mealPrice || 0,
-                Duration: r.duration || 1
-            }));
-            exportToCSV(data, 'transfers.csv');
-        });
-        document.getElementById('refresh-table-btn')?.addEventListener('click', () => {
-            renderReservationsTable();
-            showNotification('Reservations table refreshed', 'success');
-        });
-        document.getElementById('refresh-expense-table-btn')?.addEventListener('click', () => {
-            renderExpensesTable();
-            showNotification('Expenses table refreshed', 'success');
-        });
-
+        // ========== EVENT LISTENERS ==========
         document.addEventListener('DOMContentLoaded', async () => {
             const today = new Date().toISOString().split('T')[0];
             const tomorrow = new Date(Date.now()+86400000).toISOString().split('T')[0];
@@ -3407,7 +3576,8 @@
             // Email notification buttons
             document.getElementById('save-email-settings-btn')?.addEventListener('click', saveEmailSettings);
             document.getElementById('send-tomorrow-reminder-btn')?.addEventListener('click', sendTomorrowReminder);
-                    // --- Bulk actions for expenses ---
+
+            // Bulk actions for expenses
             document.getElementById('select-all-expenses')?.addEventListener('change', toggleSelectAllExpenses);
 
             document.addEventListener('change', function(e) {
@@ -3418,10 +3588,78 @@
 
             document.getElementById('bulk-delete-expenses-btn')?.addEventListener('click', bulkDeleteExpenses);
             document.getElementById('bulk-edit-expenses-btn')?.addEventListener('click', bulkEditExpenses);
-            }); 
 
-        window.deleteCommissionStat = deleteCommissionStat;
-        window.deleteNoCommissionStat = deleteNoCommissionStat;
+            // ========== ΝΕΟΣ LISTENER ΓΙΑ ΤΟ COMPREHENSIVE EXPORT ==========
+            document.getElementById('export-analytics-btn')?.addEventListener('click', exportComprehensiveAnalytics);
+
+            // Υπάρχοντες export listeners (παραμένουν)
+            document.getElementById('export-dashboard-btn')?.addEventListener('click', () => {
+                const data = state.reservations.map(r => ({
+                    'Room Type': r.name,
+                    'Guest Name': r.guestName || '',
+                    'Check-in': r.checkin,
+                    'Check-out': r.checkout,
+                    Duration: r.duration,
+                    'Check-in Time': r.time,
+                    'Check-out Time': r.checkoutTime,
+                    Transfer: r.transferAmount || 0,
+                    Meal: r.mealPrice || 0,
+                    ...state.customFields.reduce((acc, f) => ({ ...acc, [f.name]: r[f.id] }), {})
+                }));
+                exportToCSV(data, 'reservations.csv');
+            });
+            document.getElementById('export-reservations-btn')?.addEventListener('click', () => {
+                const data = state.reservations.map(r => ({
+                    'Room Type': r.name,
+                    'Guest Name': r.guestName || '',
+                    'Check-in': r.checkin,
+                    'Check-out': r.checkout,
+                    Duration: r.duration,
+                    'Check-in Time': r.time,
+                    'Check-out Time': r.checkoutTime,
+                    Transfer: r.transferAmount || 0,
+                    Meal: r.mealPrice || 0,
+                    ...state.customFields.reduce((acc, f) => ({ ...acc, [f.name]: r[f.id] }), {})
+                }));
+                exportToCSV(data, 'reservations.csv');
+            });
+            document.getElementById('export-expenses-btn')?.addEventListener('click', () => {
+                const data = state.expenses.map(e => {
+                    const cat = state.expenseCategories.find(c => c.id === e.categoryId);
+                    return {
+                        Name: e.name,
+                        Category: cat ? cat.name : 'Uncategorized',
+                        Amount: e.amount,
+                        Date: e.date,
+                        Payment: e.payment,
+                        Description: e.description,
+                        Status: e.status
+                    };
+                });
+                exportToCSV(data, 'expenses.csv');
+            });
+            document.getElementById('export-transfers-btn')?.addEventListener('click', () => {
+                const transfers = state.reservations.filter(r => (r.transferAmount || 0) > 0);
+                const data = transfers.map(r => ({
+                    Room: r.name,
+                    'Guest Name': r.guestName || '',
+                    Checkin: r.checkin,
+                    Checkout: r.checkout,
+                    Transfer: r.transferAmount || 0,
+                    Meal: r.mealPrice || 0,
+                    Duration: r.duration || 1
+                }));
+                exportToCSV(data, 'transfers.csv');
+            });
+            document.getElementById('refresh-table-btn')?.addEventListener('click', () => {
+                renderReservationsTable();
+                showNotification('Reservations table refreshed', 'success');
+            });
+            document.getElementById('refresh-expense-table-btn')?.addEventListener('click', () => {
+                renderExpensesTable();
+                showNotification('Expenses table refreshed', 'success');
+            });
+        });
     </script>
 </body>
 </html>
