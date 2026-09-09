@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- SheetJS for professional Excel export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         /* ========== FULL ORIGINAL STYLES (unchanged) ========== */
         :root {
@@ -304,7 +306,7 @@
     </style>
 </head>
 <body>
-    <!-- ========== FULL HTML STRUCTURE ========== -->
+    <!-- ========== FULL HTML STRUCTURE (unchanged) ========== -->
     <div class="container">
         <!-- Sidebar Navigation -->
         <div class="sidebar">
@@ -1031,7 +1033,7 @@
         </div>
     </div>
 
-    <!-- ========== FIREBASE SCRIPT (με το νέο comprehensive export) ========== -->
+    <!-- ========== FIREBASE SCRIPT (με professional Excel export) ========== -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
         import {
@@ -2668,7 +2670,7 @@
             });
         }
 
-        // ========== ΒΟΗΘΗΤΙΚΗ ΣΥΝΑΡΤΗΣΗ ΓΙΑ CSV (με BOM) ==========
+        // ========== ΒΟΗΘΗΤΙΚΗ ΣΥΝΑΡΤΗΣΗ ΓΙΑ EXPORT ==========
         function exportToCSV(data, filename) {
             if (!data || data.length === 0) { showNotification('No data to export', 'error'); return; }
             const headers = Object.keys(data[0]);
@@ -2691,7 +2693,7 @@
             window.URL.revokeObjectURL(url);
         }
 
-        // ========== ΝΕΟ COMPREHENSIVE EXPORT (επαγγελματικό, με ενιαίες στήλες) ==========
+        // ========== ΕΠΑΓΓΕΛΜΑΤΙΚΟ EXPORT ΣΕ EXCEL (πολλαπλά φύλλα) ==========
         function exportComprehensiveAnalytics() {
             // 1. Παίρνουμε τα φιλτραρισμένα δεδομένα
             const monthly = getAnalyticsFilteredData();
@@ -2732,7 +2734,6 @@
                 const net = profit - monthly[m].personalExpenses;
                 const margin = totalIncome > 0 ? ((profit / totalIncome) * 100).toFixed(1) : '0.0';
                 return {
-                    'Section': 'Monthly Analytics',
                     'Period': m,
                     'Transfer': monthly[m].transfer.toFixed(2),
                     'Meal': monthly[m].meal.toFixed(2),
@@ -2757,8 +2758,6 @@
                 return (r.transferAmount || 0) > 0;
             });
             const transferRows = transferReservations.map(r => ({
-                'Section': 'Transfers',
-                'Period': '',
                 'Room Type': r.name || '',
                 'Guest Name': r.guestName || '',
                 'Check-in': r.checkin || '',
@@ -2778,8 +2777,6 @@
             });
             const allResRows = allReservationsFiltered.map(r => {
                 const row = {
-                    'Section': 'Reservations',
-                    'Period': '',
                     'Room Type': r.name || '',
                     'Guest Name': r.guestName || '',
                     'Check-in': r.checkin || '',
@@ -2790,7 +2787,6 @@
                     'Transfer ($)': (r.transferAmount || 0).toFixed(2),
                     'Meal ($)': (r.mealPrice || 0).toFixed(2)
                 };
-                // Προσθήκη custom πεδίων
                 state.customFields.forEach(f => {
                     let val = r[f.id];
                     if (val !== undefined && val !== null && val !== '') {
@@ -2818,7 +2814,6 @@
                 catTotals[name] = (catTotals[name] || 0) + parseFloat(e.amount);
             });
             const catRows = Object.entries(catTotals).map(([cat, amt]) => ({
-                'Section': 'Expense Categories',
                 'Category': cat,
                 'Total Amount ($)': amt.toFixed(2)
             }));
@@ -2827,7 +2822,6 @@
             const allExpRows = expensesFiltered.map(e => {
                 const cat = state.expenseCategories.find(c => c.id === e.categoryId);
                 return {
-                    'Section': 'Expenses',
                     'Name': e.name || '',
                     'Category': cat ? cat.name : 'Uncategorized',
                     'Amount ($)': parseFloat(e.amount).toFixed(2),
@@ -2846,7 +2840,6 @@
                 return d >= startDate && d <= endDate;
             });
             const commRows = commFiltered.map(s => ({
-                'Section': 'Commission',
                 'Month': s.month || '',
                 'Room': s.room || '',
                 'Income ($)': (s.income || 0).toFixed(2),
@@ -2861,7 +2854,6 @@
                 return d >= startDate && d <= endDate;
             });
             const noCommRows = noCommFiltered.map(s => ({
-                'Section': 'No Commission',
                 'Month': s.month || '',
                 'Room': s.room || '',
                 'Income ($)': (s.income || 0).toFixed(2),
@@ -2881,72 +2873,70 @@
             const totalNights = monthlyData.reduce((s, r) => s + parseInt(r.Nights || 0), 0);
             const avgMargin = monthlyData.length > 0 ? (monthlyData.reduce((s, r) => s + parseFloat(r['Margin %']), 0) / monthlyData.length).toFixed(1) : '0.0';
             const summaryRows = [
-                { 'Section': 'Summary', 'Metric': 'Total Transfer Income', 'Value': `$${totalTransfer.toFixed(2)}` },
-                { 'Section': 'Summary', 'Metric': 'Total Meal Income', 'Value': `$${totalMeal.toFixed(2)}` },
-                { 'Section': 'Summary', 'Metric': 'Total Commission Income', 'Value': `$${totalCommission.toFixed(2)}` },
-                { 'Section': 'Summary', 'Metric': 'Total No-Commission Income', 'Value': `$${totalNoCommission.toFixed(2)}` },
-                { 'Section': 'Summary', 'Metric': 'Total Income (all sources)', 'Value': `$${totalIncome.toFixed(2)}` },
-                { 'Section': 'Summary', 'Metric': 'Total Regular Expenses', 'Value': `$${totalRegularExp.toFixed(2)}` },
-                { 'Section': 'Summary', 'Metric': 'Total Personal Expenses', 'Value': `$${totalPersonalExp.toFixed(2)}` },
-                { 'Section': 'Summary', 'Metric': 'Total Profit (before personal)', 'Value': `$${totalProfit.toFixed(2)}` },
-                { 'Section': 'Summary', 'Metric': 'Total Net (after personal)', 'Value': `$${totalNet.toFixed(2)}` },
-                { 'Section': 'Summary', 'Metric': 'Total Nights', 'Value': `${totalNights}` },
-                { 'Section': 'Summary', 'Metric': 'Average Profit Margin', 'Value': `${avgMargin}%` },
-                { 'Section': 'Summary', 'Metric': 'Number of Months', 'Value': `${months.length}` },
-                { 'Section': 'Summary', 'Metric': 'Number of Reservations', 'Value': `${allReservationsFiltered.length}` },
-                { 'Section': 'Summary', 'Metric': 'Number of Transfers', 'Value': `${transferReservations.length}` },
-                { 'Section': 'Summary', 'Metric': 'Number of Expenses', 'Value': `${expensesFiltered.length}` },
-                { 'Section': 'Summary', 'Metric': 'Number of Commission Records', 'Value': `${commFiltered.length}` },
-                { 'Section': 'Summary', 'Metric': 'Number of No-Commission Records', 'Value': `${noCommFiltered.length}` }
+                { 'Metric': 'Total Transfer Income', 'Value': `$${totalTransfer.toFixed(2)}` },
+                { 'Metric': 'Total Meal Income', 'Value': `$${totalMeal.toFixed(2)}` },
+                { 'Metric': 'Total Commission Income', 'Value': `$${totalCommission.toFixed(2)}` },
+                { 'Metric': 'Total No-Commission Income', 'Value': `$${totalNoCommission.toFixed(2)}` },
+                { 'Metric': 'Total Income (all sources)', 'Value': `$${totalIncome.toFixed(2)}` },
+                { 'Metric': 'Total Regular Expenses', 'Value': `$${totalRegularExp.toFixed(2)}` },
+                { 'Metric': 'Total Personal Expenses', 'Value': `$${totalPersonalExp.toFixed(2)}` },
+                { 'Metric': 'Total Profit (before personal)', 'Value': `$${totalProfit.toFixed(2)}` },
+                { 'Metric': 'Total Net (after personal)', 'Value': `$${totalNet.toFixed(2)}` },
+                { 'Metric': 'Total Nights', 'Value': `${totalNights}` },
+                { 'Metric': 'Average Profit Margin', 'Value': `${avgMargin}%` },
+                { 'Metric': 'Number of Months', 'Value': `${months.length}` },
+                { 'Metric': 'Number of Reservations', 'Value': `${allReservationsFiltered.length}` },
+                { 'Metric': 'Number of Transfers', 'Value': `${transferReservations.length}` },
+                { 'Metric': 'Number of Expenses', 'Value': `${expensesFiltered.length}` },
+                { 'Metric': 'Number of Commission Records', 'Value': `${commFiltered.length}` },
+                { 'Metric': 'Number of No-Commission Records', 'Value': `${noCommFiltered.length}` }
             ];
 
-            // ---- Συνένωση όλων των γραμμών ----
-            const allRows = [
-                ...monthlyData,
-                ...transferRows,
-                ...allResRows,
-                ...catRows,
-                ...allExpRows,
-                ...commRows,
-                ...noCommRows,
-                ...summaryRows
-            ];
+            // ---- Δημιουργία workbook με πολλαπλά φύλλα ----
+            const wb = XLSX.utils.book_new();
 
-            if (allRows.length === 0) {
-                showNotification('No data to export for this period.', 'error');
-                return;
-            }
+            // Φύλλο 1: Monthly Analytics
+            const ws1 = XLSX.utils.json_to_sheet(monthlyData);
+            XLSX.utils.book_append_sheet(wb, ws1, 'Monthly Analytics');
 
-            // ---- Δημιουργία ενιαίου συνόλου στηλών ----
-            const allKeys = new Set();
-            allRows.forEach(row => {
-                Object.keys(row).forEach(k => allKeys.add(k));
-            });
-            // Βάζουμε τη στήλη 'Section' πρώτη
-            const headerOrder = ['Section', ...Array.from(allKeys).filter(k => k !== 'Section')];
+            // Φύλλο 2: Transfers
+            const ws2 = XLSX.utils.json_to_sheet(transferRows);
+            XLSX.utils.book_append_sheet(wb, ws2, 'Transfers');
 
-            // ---- Δημιουργία CSV ----
-            const csvRows = [];
-            csvRows.push(headerOrder.join(','));
+            // Φύλλο 3: All Reservations
+            const ws3 = XLSX.utils.json_to_sheet(allResRows);
+            XLSX.utils.book_append_sheet(wb, ws3, 'Reservations');
 
-            allRows.forEach(row => {
-                const values = headerOrder.map(h => {
-                    const val = row[h] !== undefined && row[h] !== null ? row[h] : '';
-                    return `"${String(val).replace(/"/g, '""')}"`;
-                });
-                csvRows.push(values.join(','));
-            });
+            // Φύλλο 4: Expense Categories
+            const ws4 = XLSX.utils.json_to_sheet(catRows);
+            XLSX.utils.book_append_sheet(wb, ws4, 'Expense Categories');
 
-            // Προσθήκη BOM για UTF-8
-            const BOM = '\uFEFF';
-            const blob = new Blob([BOM + csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+            // Φύλλο 5: All Expenses
+            const ws5 = XLSX.utils.json_to_sheet(allExpRows);
+            XLSX.utils.book_append_sheet(wb, ws5, 'Expenses');
+
+            // Φύλλο 6: Commission
+            const ws6 = XLSX.utils.json_to_sheet(commRows);
+            XLSX.utils.book_append_sheet(wb, ws6, 'Commission');
+
+            // Φύλλο 7: No Commission
+            const ws7 = XLSX.utils.json_to_sheet(noCommRows);
+            XLSX.utils.book_append_sheet(wb, ws7, 'No Commission');
+
+            // Φύλλο 8: Summary
+            const ws8 = XLSX.utils.json_to_sheet(summaryRows);
+            XLSX.utils.book_append_sheet(wb, ws8, 'Summary');
+
+            // Αποθήκευση αρχείου
+            const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+            const blob = new Blob([wbout], { type: 'application/octet-stream' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `analytics_comprehensive_${new Date().toISOString().split('T')[0]}.csv`;
+            a.download = `analytics_comprehensive_${new Date().toISOString().split('T')[0]}.xlsx`;
             a.click();
             window.URL.revokeObjectURL(url);
-            showNotification('Comprehensive export completed!', 'success');
+            showNotification('Professional Excel export completed!', 'success');
         }
 
         // ========== [ΟΛΕΣ ΟΙ ΥΠΑΡΧΟΥΣΕΣ WINDOW FUNCTIONS] ==========
