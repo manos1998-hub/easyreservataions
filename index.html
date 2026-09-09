@@ -2668,7 +2668,7 @@
             });
         }
 
-        // ========== ΒΟΗΘΗΤΙΚΗ ΣΥΝΑΡΤΗΣΗ ΓΙΑ CSV ==========
+        // ========== ΒΟΗΘΗΤΙΚΗ ΣΥΝΑΡΤΗΣΗ ΓΙΑ CSV (με BOM) ==========
         function exportToCSV(data, filename) {
             if (!data || data.length === 0) { showNotification('No data to export', 'error'); return; }
             const headers = Object.keys(data[0]);
@@ -2681,7 +2681,8 @@
                 });
                 csvRows.push(values.join(','));
             }
-            const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+            const BOM = '\uFEFF';
+            const blob = new Blob([BOM + csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
@@ -2690,13 +2691,13 @@
             window.URL.revokeObjectURL(url);
         }
 
-        // ========== ΝΕΟ COMPREHENSIVE EXPORT ==========
+        // ========== ΝΕΟ COMPREHENSIVE EXPORT (επαγγελματικό, με ενιαίες στήλες) ==========
         function exportComprehensiveAnalytics() {
-            // 1. Παίρνουμε τα φιλτραρισμένα δεδομένα όπως ακριβώς τα βλέπει ο χρήστης στο Analytics
+            // 1. Παίρνουμε τα φιλτραρισμένα δεδομένα
             const monthly = getAnalyticsFilteredData();
             const months = Object.keys(monthly).sort();
 
-            // Καθορίζουμε το εύρος ημερομηνιών που χρησιμοποιείται για το φιλτράρισμα
+            // Καθορίζουμε το εύρος ημερομηνιών
             let startDate, endDate;
             const monthFilterActive = state.selectedAnalyticsMonth && state.selectedAnalyticsYear;
             if (monthFilterActive) {
@@ -2718,7 +2719,7 @@
             const personalCat = state.expenseCategories.find(c => c.name === 'PERSONAL');
             const personalCatId = personalCat ? personalCat.id : null;
 
-            // ---- SECTION 1: MONTHLY ANALYTICS (όπως στον πίνακα) ----
+            // ---- 1. Μηνιαία Ανάλυση ----
             const monthlyData = months.map(m => {
                 const [y, mo] = m.split('-').map(Number);
                 const days = new Date(y, mo, 0).getDate();
@@ -2748,7 +2749,7 @@
                 };
             });
 
-            // ---- SECTION 2: ROOM-WISE TRANSFERS (all reservations with transfer > 0, filtered by period) ----
+            // ---- 2. Μεταφορές (transfer > 0) ----
             const transferReservations = state.reservations.filter(r => {
                 if (!r.checkin) return false;
                 const d = new Date(r.checkin);
@@ -2756,7 +2757,8 @@
                 return (r.transferAmount || 0) > 0;
             });
             const transferRows = transferReservations.map(r => ({
-                'Section': 'Transfer',
+                'Section': 'Transfers',
+                'Period': '',
                 'Room Type': r.name || '',
                 'Guest Name': r.guestName || '',
                 'Check-in': r.checkin || '',
@@ -2768,7 +2770,7 @@
                 'Meal ($)': (r.mealPrice || 0).toFixed(2)
             }));
 
-            // ---- SECTION 3: ALL RESERVATIONS (λεπτομερής λίστα, φιλτραρισμένες) ----
+            // ---- 3. Όλες οι κρατήσεις (λεπτομερώς) ----
             const allReservationsFiltered = state.reservations.filter(r => {
                 if (!r.checkin) return false;
                 const d = new Date(r.checkin);
@@ -2776,7 +2778,8 @@
             });
             const allResRows = allReservationsFiltered.map(r => {
                 const row = {
-                    'Section': 'Reservation',
+                    'Section': 'Reservations',
+                    'Period': '',
                     'Room Type': r.name || '',
                     'Guest Name': r.guestName || '',
                     'Check-in': r.checkin || '',
@@ -2787,6 +2790,7 @@
                     'Transfer ($)': (r.transferAmount || 0).toFixed(2),
                     'Meal ($)': (r.mealPrice || 0).toFixed(2)
                 };
+                // Προσθήκη custom πεδίων
                 state.customFields.forEach(f => {
                     let val = r[f.id];
                     if (val !== undefined && val !== null && val !== '') {
@@ -2800,7 +2804,7 @@
                 return row;
             });
 
-            // ---- SECTION 4: EXPENSE CATEGORIES (grouped, filtered by period) ----
+            // ---- 4. Κατηγορίες εξόδων (ομαδοποιημένες) ----
             const expensesFiltered = state.expenses.filter(e => {
                 if (!e.date) return false;
                 const d = new Date(e.date);
@@ -2808,22 +2812,22 @@
             });
             const catTotals = {};
             expensesFiltered.forEach(e => {
-                if (e.categoryId === personalCatId) return; // αφαιρούμε τα personal από τα κανονικά έξοδα
+                if (e.categoryId === personalCatId) return;
                 const cat = state.expenseCategories.find(c => c.id === e.categoryId);
                 const name = cat ? cat.name : 'Uncategorized';
                 catTotals[name] = (catTotals[name] || 0) + parseFloat(e.amount);
             });
             const catRows = Object.entries(catTotals).map(([cat, amt]) => ({
-                'Section': 'Expense Category',
+                'Section': 'Expense Categories',
                 'Category': cat,
                 'Total Amount ($)': amt.toFixed(2)
             }));
 
-            // ---- SECTION 5: ALL EXPENSES (λεπτομερής λίστα, filtered) ----
+            // ---- 5. Όλα τα έξοδα (λεπτομερώς) ----
             const allExpRows = expensesFiltered.map(e => {
                 const cat = state.expenseCategories.find(c => c.id === e.categoryId);
                 return {
-                    'Section': 'Expense',
+                    'Section': 'Expenses',
                     'Name': e.name || '',
                     'Category': cat ? cat.name : 'Uncategorized',
                     'Amount ($)': parseFloat(e.amount).toFixed(2),
@@ -2834,7 +2838,7 @@
                 };
             });
 
-            // ---- SECTION 6: COMMISSION RECORDS (filtered by period) ----
+            // ---- 6. Προμήθειες ----
             const commFiltered = state.commissionStats.filter(s => {
                 if (!s.month) return false;
                 const [y, m] = s.month.split('-').map(Number);
@@ -2849,7 +2853,7 @@
                 'Stays': s.stays || 0
             }));
 
-            // ---- SECTION 7: NO-COMMISSION RECORDS (filtered by period) ----
+            // ---- 7. Χωρίς προμήθεια ----
             const noCommFiltered = state.noCommissionStats.filter(s => {
                 if (!s.month) return false;
                 const [y, m] = s.month.split('-').map(Number);
@@ -2864,7 +2868,7 @@
                 'Stays': s.stays || 0
             }));
 
-            // ---- SECTION 8: SUMMARY STATISTICS ----
+            // ---- 8. Σύνοψη ----
             const totalTransfer = monthlyData.reduce((s, r) => s + parseFloat(r.Transfer), 0);
             const totalMeal = monthlyData.reduce((s, r) => s + parseFloat(r.Meal), 0);
             const totalCommission = monthlyData.reduce((s, r) => s + parseFloat(r.Commission), 0);
@@ -2896,10 +2900,7 @@
                 { 'Section': 'Summary', 'Metric': 'Number of No-Commission Records', 'Value': `${noCommFiltered.length}` }
             ];
 
-            // ---- ΣΥΝΘΕΣΗ ΟΛΩΝ ΤΩΝ ΤΜΗΜΑΤΩΝ ΣΕ ΕΝΑ CSV (με ενιαίες στήλες) ----
-            // Για να έχουμε ενιαίες στήλες, θα χρησιμοποιήσουμε ένα σύνολο στηλών από όλα τα δεδομένα.
-            // Θα συγκεντρώσουμε όλα τα rows σε έναν πίνακα και θα δημιουργήσουμε το CSV με όλες τις στήλες.
-            // Πρώτα βρίσκουμε όλες τις πιθανές στήλες.
+            // ---- Συνένωση όλων των γραμμών ----
             const allRows = [
                 ...monthlyData,
                 ...transferRows,
@@ -2911,21 +2912,20 @@
                 ...summaryRows
             ];
 
-            // Αν δεν υπάρχουν δεδομένα, βγαίνουμε
             if (allRows.length === 0) {
                 showNotification('No data to export for this period.', 'error');
                 return;
             }
 
-            // Δημιουργούμε ένα σύνολο από όλες τις στήλες
+            // ---- Δημιουργία ενιαίου συνόλου στηλών ----
             const allKeys = new Set();
             allRows.forEach(row => {
                 Object.keys(row).forEach(k => allKeys.add(k));
             });
-            // Βάζουμε τη στήλη 'Section' πρώτη για ευκολία
+            // Βάζουμε τη στήλη 'Section' πρώτη
             const headerOrder = ['Section', ...Array.from(allKeys).filter(k => k !== 'Section')];
 
-            // Δημιουργούμε το CSV με τις στήλες σε σταθερή σειρά
+            // ---- Δημιουργία CSV ----
             const csvRows = [];
             csvRows.push(headerOrder.join(','));
 
@@ -2937,7 +2937,9 @@
                 csvRows.push(values.join(','));
             });
 
-            const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+            // Προσθήκη BOM για UTF-8
+            const BOM = '\uFEFF';
+            const blob = new Blob([BOM + csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
