@@ -301,13 +301,10 @@
         .calendar-reservation-detail-item span { color: var(--text-primary); font-weight: 500; }
         .reservation-duration-display { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background-color: rgba(37, 99, 235, 0.1); border-radius: 20px; font-size: 12px; font-weight: 600; color: var(--primary-color); margin-top: 8px; }
         .reservation-duration-display i { font-size: 11px; }
-        /* μικρή βελτίωση για το export */
-        .btn-export-comprehensive { background-color: #0ea5e9; color: white; }
-        .btn-export-comprehensive:hover { background-color: #0284c7; }
     </style>
 </head>
 <body>
-    <!-- ========== FULL HTML STRUCTURE (με το νέο κουμπί export) ========== -->
+    <!-- ========== FULL HTML STRUCTURE ========== -->
     <div class="container">
         <!-- Sidebar Navigation -->
         <div class="sidebar">
@@ -2734,6 +2731,7 @@
                 const net = profit - monthly[m].personalExpenses;
                 const margin = totalIncome > 0 ? ((profit / totalIncome) * 100).toFixed(1) : '0.0';
                 return {
+                    'Section': 'Monthly Analytics',
                     'Period': m,
                     'Transfer': monthly[m].transfer.toFixed(2),
                     'Meal': monthly[m].meal.toFixed(2),
@@ -2758,6 +2756,7 @@
                 return (r.transferAmount || 0) > 0;
             });
             const transferRows = transferReservations.map(r => ({
+                'Section': 'Transfer',
                 'Room Type': r.name || '',
                 'Guest Name': r.guestName || '',
                 'Check-in': r.checkin || '',
@@ -2777,6 +2776,7 @@
             });
             const allResRows = allReservationsFiltered.map(r => {
                 const row = {
+                    'Section': 'Reservation',
                     'Room Type': r.name || '',
                     'Guest Name': r.guestName || '',
                     'Check-in': r.checkin || '',
@@ -2814,6 +2814,7 @@
                 catTotals[name] = (catTotals[name] || 0) + parseFloat(e.amount);
             });
             const catRows = Object.entries(catTotals).map(([cat, amt]) => ({
+                'Section': 'Expense Category',
                 'Category': cat,
                 'Total Amount ($)': amt.toFixed(2)
             }));
@@ -2822,6 +2823,7 @@
             const allExpRows = expensesFiltered.map(e => {
                 const cat = state.expenseCategories.find(c => c.id === e.categoryId);
                 return {
+                    'Section': 'Expense',
                     'Name': e.name || '',
                     'Category': cat ? cat.name : 'Uncategorized',
                     'Amount ($)': parseFloat(e.amount).toFixed(2),
@@ -2840,6 +2842,7 @@
                 return d >= startDate && d <= endDate;
             });
             const commRows = commFiltered.map(s => ({
+                'Section': 'Commission',
                 'Month': s.month || '',
                 'Room': s.room || '',
                 'Income ($)': (s.income || 0).toFixed(2),
@@ -2854,6 +2857,7 @@
                 return d >= startDate && d <= endDate;
             });
             const noCommRows = noCommFiltered.map(s => ({
+                'Section': 'No Commission',
                 'Month': s.month || '',
                 'Room': s.room || '',
                 'Income ($)': (s.income || 0).toFixed(2),
@@ -2873,101 +2877,73 @@
             const totalNights = monthlyData.reduce((s, r) => s + parseInt(r.Nights || 0), 0);
             const avgMargin = monthlyData.length > 0 ? (monthlyData.reduce((s, r) => s + parseFloat(r['Margin %']), 0) / monthlyData.length).toFixed(1) : '0.0';
             const summaryRows = [
-                { 'Metric': 'Total Transfer Income', 'Value': `$${totalTransfer.toFixed(2)}` },
-                { 'Metric': 'Total Meal Income', 'Value': `$${totalMeal.toFixed(2)}` },
-                { 'Metric': 'Total Commission Income', 'Value': `$${totalCommission.toFixed(2)}` },
-                { 'Metric': 'Total No-Commission Income', 'Value': `$${totalNoCommission.toFixed(2)}` },
-                { 'Metric': 'Total Income (all sources)', 'Value': `$${totalIncome.toFixed(2)}` },
-                { 'Metric': 'Total Regular Expenses', 'Value': `$${totalRegularExp.toFixed(2)}` },
-                { 'Metric': 'Total Personal Expenses', 'Value': `$${totalPersonalExp.toFixed(2)}` },
-                { 'Metric': 'Total Profit (before personal)', 'Value': `$${totalProfit.toFixed(2)}` },
-                { 'Metric': 'Total Net (after personal)', 'Value': `$${totalNet.toFixed(2)}` },
-                { 'Metric': 'Total Nights', 'Value': `${totalNights}` },
-                { 'Metric': 'Average Profit Margin', 'Value': `${avgMargin}%` },
-                { 'Metric': 'Number of Months', 'Value': `${months.length}` },
-                { 'Metric': 'Number of Reservations', 'Value': `${allReservationsFiltered.length}` },
-                { 'Metric': 'Number of Transfers', 'Value': `${transferReservations.length}` },
-                { 'Metric': 'Number of Expenses', 'Value': `${expensesFiltered.length}` },
-                { 'Metric': 'Number of Commission Records', 'Value': `${commFiltered.length}` },
-                { 'Metric': 'Number of No-Commission Records', 'Value': `${noCommFiltered.length}` }
+                { 'Section': 'Summary', 'Metric': 'Total Transfer Income', 'Value': `$${totalTransfer.toFixed(2)}` },
+                { 'Section': 'Summary', 'Metric': 'Total Meal Income', 'Value': `$${totalMeal.toFixed(2)}` },
+                { 'Section': 'Summary', 'Metric': 'Total Commission Income', 'Value': `$${totalCommission.toFixed(2)}` },
+                { 'Section': 'Summary', 'Metric': 'Total No-Commission Income', 'Value': `$${totalNoCommission.toFixed(2)}` },
+                { 'Section': 'Summary', 'Metric': 'Total Income (all sources)', 'Value': `$${totalIncome.toFixed(2)}` },
+                { 'Section': 'Summary', 'Metric': 'Total Regular Expenses', 'Value': `$${totalRegularExp.toFixed(2)}` },
+                { 'Section': 'Summary', 'Metric': 'Total Personal Expenses', 'Value': `$${totalPersonalExp.toFixed(2)}` },
+                { 'Section': 'Summary', 'Metric': 'Total Profit (before personal)', 'Value': `$${totalProfit.toFixed(2)}` },
+                { 'Section': 'Summary', 'Metric': 'Total Net (after personal)', 'Value': `$${totalNet.toFixed(2)}` },
+                { 'Section': 'Summary', 'Metric': 'Total Nights', 'Value': `${totalNights}` },
+                { 'Section': 'Summary', 'Metric': 'Average Profit Margin', 'Value': `${avgMargin}%` },
+                { 'Section': 'Summary', 'Metric': 'Number of Months', 'Value': `${months.length}` },
+                { 'Section': 'Summary', 'Metric': 'Number of Reservations', 'Value': `${allReservationsFiltered.length}` },
+                { 'Section': 'Summary', 'Metric': 'Number of Transfers', 'Value': `${transferReservations.length}` },
+                { 'Section': 'Summary', 'Metric': 'Number of Expenses', 'Value': `${expensesFiltered.length}` },
+                { 'Section': 'Summary', 'Metric': 'Number of Commission Records', 'Value': `${commFiltered.length}` },
+                { 'Section': 'Summary', 'Metric': 'Number of No-Commission Records', 'Value': `${noCommFiltered.length}` }
             ];
 
-            // ---- ΣΥΝΘΕΣΗ ΟΛΩΝ ΤΩΝ ΤΜΗΜΑΤΩΝ ΣΕ ΕΝΑ CSV ----
-            const allData = [];
+            // ---- ΣΥΝΘΕΣΗ ΟΛΩΝ ΤΩΝ ΤΜΗΜΑΤΩΝ ΣΕ ΕΝΑ CSV (με ενιαίες στήλες) ----
+            // Για να έχουμε ενιαίες στήλες, θα χρησιμοποιήσουμε ένα σύνολο στηλών από όλα τα δεδομένα.
+            // Θα συγκεντρώσουμε όλα τα rows σε έναν πίνακα και θα δημιουργήσουμε το CSV με όλες τις στήλες.
+            // Πρώτα βρίσκουμε όλες τις πιθανές στήλες.
+            const allRows = [
+                ...monthlyData,
+                ...transferRows,
+                ...allResRows,
+                ...catRows,
+                ...allExpRows,
+                ...commRows,
+                ...noCommRows,
+                ...summaryRows
+            ];
 
-            // Section 1: Monthly Analytics
-            allData.push({ ' ': '=== MONTHLY ANALYTICS ===' });
-            if (monthlyData.length > 0) {
-                allData.push(Object.keys(monthlyData[0]).reduce((acc, k) => ({ ...acc, [k]: k }), {}));
-                monthlyData.forEach(r => allData.push(r));
-            } else {
-                allData.push({ ' ': 'No data available for this period.' });
+            // Αν δεν υπάρχουν δεδομένα, βγαίνουμε
+            if (allRows.length === 0) {
+                showNotification('No data to export for this period.', 'error');
+                return;
             }
 
-            allData.push({ ' ': '' });
-            allData.push({ ' ': '=== ROOM-WISE TRANSFERS (filtered) ===' });
-            if (transferRows.length > 0) {
-                allData.push(Object.keys(transferRows[0]).reduce((acc, k) => ({ ...acc, [k]: k }), {}));
-                transferRows.forEach(r => allData.push(r));
-            } else {
-                allData.push({ ' ': 'No transfers in this period.' });
-            }
+            // Δημιουργούμε ένα σύνολο από όλες τις στήλες
+            const allKeys = new Set();
+            allRows.forEach(row => {
+                Object.keys(row).forEach(k => allKeys.add(k));
+            });
+            // Βάζουμε τη στήλη 'Section' πρώτη για ευκολία
+            const headerOrder = ['Section', ...Array.from(allKeys).filter(k => k !== 'Section')];
 
-            allData.push({ ' ': '' });
-            allData.push({ ' ': '=== ALL RESERVATIONS (filtered) ===' });
-            if (allResRows.length > 0) {
-                allData.push(Object.keys(allResRows[0]).reduce((acc, k) => ({ ...acc, [k]: k }), {}));
-                allResRows.forEach(r => allData.push(r));
-            } else {
-                allData.push({ ' ': 'No reservations in this period.' });
-            }
+            // Δημιουργούμε το CSV με τις στήλες σε σταθερή σειρά
+            const csvRows = [];
+            csvRows.push(headerOrder.join(','));
 
-            allData.push({ ' ': '' });
-            allData.push({ ' ': '=== EXPENSE CATEGORIES (grouped) ===' });
-            if (catRows.length > 0) {
-                allData.push(Object.keys(catRows[0]).reduce((acc, k) => ({ ...acc, [k]: k }), {}));
-                catRows.forEach(r => allData.push(r));
-            } else {
-                allData.push({ ' ': 'No expenses in this period.' });
-            }
+            allRows.forEach(row => {
+                const values = headerOrder.map(h => {
+                    const val = row[h] !== undefined && row[h] !== null ? row[h] : '';
+                    return `"${String(val).replace(/"/g, '""')}"`;
+                });
+                csvRows.push(values.join(','));
+            });
 
-            allData.push({ ' ': '' });
-            allData.push({ ' ': '=== ALL EXPENSES (filtered) ===' });
-            if (allExpRows.length > 0) {
-                allData.push(Object.keys(allExpRows[0]).reduce((acc, k) => ({ ...acc, [k]: k }), {}));
-                allExpRows.forEach(r => allData.push(r));
-            } else {
-                allData.push({ ' ': 'No expenses in this period.' });
-            }
-
-            allData.push({ ' ': '' });
-            allData.push({ ' ': '=== COMMISSION RECORDS (filtered) ===' });
-            if (commRows.length > 0) {
-                allData.push(Object.keys(commRows[0]).reduce((acc, k) => ({ ...acc, [k]: k }), {}));
-                commRows.forEach(r => allData.push(r));
-            } else {
-                allData.push({ ' ': 'No commission records in this period.' });
-            }
-
-            allData.push({ ' ': '' });
-            allData.push({ ' ': '=== NO-COMMISSION RECORDS (filtered) ===' });
-            if (noCommRows.length > 0) {
-                allData.push(Object.keys(noCommRows[0]).reduce((acc, k) => ({ ...acc, [k]: k }), {}));
-                noCommRows.forEach(r => allData.push(r));
-            } else {
-                allData.push({ ' ': 'No no-commission records in this period.' });
-            }
-
-            allData.push({ ' ': '' });
-            allData.push({ ' ': '=== SUMMARY STATISTICS ===' });
-            if (summaryRows.length > 0) {
-                allData.push(Object.keys(summaryRows[0]).reduce((acc, k) => ({ ...acc, [k]: k }), {}));
-                summaryRows.forEach(r => allData.push(r));
-            }
-
-            // ---- ΚΑΤΕΒΑΣΜΑ ----
-            const filename = `analytics_comprehensive_${new Date().toISOString().split('T')[0]}.csv`;
-            exportToCSV(allData, filename);
+            const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `analytics_comprehensive_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            window.URL.revokeObjectURL(url);
             showNotification('Comprehensive export completed!', 'success');
         }
 
