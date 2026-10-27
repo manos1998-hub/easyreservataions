@@ -303,10 +303,78 @@
         .calendar-reservation-detail-item span { color: var(--text-primary); font-weight: 500; }
         .reservation-duration-display { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background-color: rgba(37, 99, 235, 0.1); border-radius: 20px; font-size: 12px; font-weight: 600; color: var(--primary-color); margin-top: 8px; }
         .reservation-duration-display i { font-size: 11px; }
+        
+        /* ========== IMPROVEMENTS (add before </style>) ========== */
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .loading-overlay {
+            position: fixed; inset: 0; background: rgba(15,23,42,0.6); backdrop-filter: blur(4px);
+            display: flex; align-items: center; justify-content: center; gap: 16px;
+            z-index: 99999; opacity: 0; pointer-events: none; transition: opacity 0.2s;
+        }
+        .loading-overlay.active { opacity: 1; pointer-events: all; }
+        .loading-spinner { width: 48px; height: 48px; border: 4px solid rgba(255,255,255,0.2);
+            border-top-color: white; border-radius: 50%; animation: spin 0.9s linear infinite; }
+        .loading-text { color: white; font-weight: 600; font-size: 16px; }
+
+        /* Sticky table headers */
+        .data-table thead th, .expense-table thead th { position: sticky; top: 0; z-index: 2; }
+
+        /* Search bar */
+        .search-bar { position: relative; flex-grow: 1; max-width: 280px; margin-right: 12px; }
+        .search-bar input { width: 100%; padding: 9px 12px 9px 36px; border: 1px solid var(--border-color);
+            border-radius: var(--radius-md); font-size: 14px; font-family: 'Inter', sans-serif; }
+        .search-bar input:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+        .search-bar i.fa-search { position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+            color: var(--text-secondary); font-size: 13px; pointer-events: none; }
+
+        /* Calendar improvements */
+        .calendar-day.selected { background: rgba(37,99,235,0.08) !important; border-color: var(--primary-color) !important;
+            box-shadow: 0 0 0 2px rgba(37,99,235,0.25) inset; }
+        .calendar-day.has-reservations { border-color: rgba(37,99,235,0.35); }
+        .calendar-day.checkin-day .calendar-day-number { color: var(--success-color); font-weight: 800; }
+        .calendar-day.checkout-day .calendar-day-number { color: var(--warning-color); font-weight: 800; }
+        .calendar-day .day-marker { position: absolute; top: 6px; right: 28px; font-size: 10px; font-weight: 700; }
+        .calendar-day.checkin-day .day-marker { color: var(--success-color); }
+        .calendar-day.checkout-day .day-marker { color: var(--warning-color); }
+
+        /* Week view */
+        .calendar-week-view { display: none; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-bottom: 24px; }
+        .calendar-week-view.active { display: grid; }
+        .calendar-week-column { background: var(--card-bg); border: 1px solid var(--border-color);
+            border-radius: var(--radius-md); padding: 8px; min-height: 340px; display: flex;
+            flex-direction: column; gap: 6px; overflow-y: auto; }
+        .calendar-week-column.today { border-color: var(--primary-color); background: rgba(37,99,235,0.04); }
+        .calendar-week-header { font-size: 12px; font-weight: 700; text-align: center;
+            padding-bottom: 8px; border-bottom: 1px solid var(--border-color); margin-bottom: 4px; }
+        .calendar-week-header .dow { color: var(--text-secondary); text-transform: uppercase; font-size: 10px; letter-spacing: 0.5px; }
+        .calendar-week-header .dom { color: var(--text-primary); font-size: 20px; }
+        .calendar-week-column .calendar-reservation { cursor: pointer; padding: 6px; font-size: 11px; }
+        .calendar-week-column .calendar-reservation:hover { filter: brightness(0.95); transform: translateX(2px); }
+
+        /* Day detail sections */
+        .day-section-title { margin: 14px 0 8px; font-size: 13px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px; }
+        .day-section-title .count-badge { background: currentColor; color: white; padding: 2px 8px;
+            border-radius: 10px; font-size: 11px; opacity: 0.9; }
+        .day-section-title .count-badge span { color: #fff; }
+
+        @media (max-width: 900px) {
+            .calendar-week-view { grid-template-columns: 1fr; }
+            .calendar-week-column { min-height: 180px; }
+            .search-bar { max-width: 100%; margin-bottom: 8px; }
+        }
+
     </style>
 </head>
 <body>
-    <!-- ========== FULL HTML STRUCTURE (unchanged) ========== -->
+     <!-- ========== FULL HTML STRUCTURE (unchanged) ========== -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Loading...</div>
+    </div>
     <div class="container">
         <!-- Sidebar Navigation -->
         <div class="sidebar">
@@ -447,6 +515,12 @@
                     <div class="table-header">
                         <div class="table-title"><i class="fas fa-table"></i> All Reservations <span id="reservation-count-badge" style="background-color: var(--primary-color); color: white; padding: 4px 10px; border-radius: 20px; font-size: 13px; margin-left: 10px;">0</span></div>
                         <div class="table-actions">
+                            <div class="search-bar">
+                                <i class="fas fa-search"></i>
+                                <input type="text" id="reservation-search" placeholder="Search guest, room, dates...">
+                            </div>
+                            <button class="btn btn-secondary btn-sm" id="refresh-table-btn"><i class="fas fa-sync-alt"></i> Refresh</button>
+                            <button class="btn btn-primary btn-sm" id="filter-table-btn"><i class="fas fa-filter"></i> Filter</button>
                             <button class="btn btn-secondary btn-sm" id="refresh-table-btn"><i class="fas fa-sync-alt"></i> Refresh</button>
                             <button class="btn btn-primary btn-sm" id="filter-table-btn"><i class="fas fa-filter"></i> Filter</button>
                             <button class="btn btn-secondary btn-sm" id="clear-filters-btn" style="display: none;"><i class="fas fa-times"></i> Clear Filters</button>
@@ -493,6 +567,7 @@
                     <div class="calendar-day-header">Sun</div><div class="calendar-day-header">Mon</div><div class="calendar-day-header">Tue</div><div class="calendar-day-header">Wed</div><div class="calendar-day-header">Thu</div><div class="calendar-day-header">Fri</div><div class="calendar-day-header">Sat</div>
                 </div>
                 <div class="calendar-grid" id="calendar-days-grid"></div>
+                <div class="calendar-week-view" id="calendar-week-grid"></div>
                 <div class="calendar-reservation-details" id="calendar-reservation-details">
                     <div class="calendar-details-header">
                         <div class="calendar-details-date" id="selected-date-title">Select a date</div>
@@ -1081,6 +1156,7 @@
             notificationEmail: '',
             expenseSort: { field: 'date', direction: 'asc' },
             selectedExpenses: [],
+            searchTerm: '',
         };
 
         function showNotification(msg, type = 'info') {
@@ -1092,6 +1168,18 @@
             document.body.appendChild(n);
             setTimeout(() => { n.style.animation = 'slideOut 0.3s ease'; setTimeout(() => n.remove(), 300); }, 3000);
         }
+        /* ========== NEW: Loading helpers ========== */
+        function showLoading(text = 'Loading...') {
+            const o = document.getElementById('loading-overlay');
+            if (o) {
+                o.querySelector('.loading-text').textContent = text;
+                o.classList.add('active');
+            }
+        }
+        function hideLoading() {
+            document.getElementById('loading-overlay')?.classList.remove('active');
+        }
+
         function calculateDuration(checkin, checkout) {
             return Math.max(0, Math.ceil((new Date(checkout) - new Date(checkin)) / (1000*60*60*24)));
         }
@@ -1191,8 +1279,9 @@
             showNotification('Opening your email client...', 'success');
         }
 
-        // ========== ΦΟΡΤΩΣΗ ΟΛΩΝ ΤΩΝ ΔΕΔΟΜΕΝΩΝ ==========
-        async function loadAllData() {
+                // ========== ΦΟΡΤΩΣΗ ΟΛΩΝ ΤΩΝ ΔΕΔΟΜΕΝΩΝ (βελτιωμένη) ==========
+        async function loadAllData(showOverlay = false) {
+            if (showOverlay) showLoading('Loading data...');
             try {
                 const [customSnap, resSnap, catSnap, expSnap, settingsSnap, commSnap, noCommSnap] = await Promise.all([
                     getDocs(query(customFieldsCol, orderBy('createdAt'))),
@@ -1214,9 +1303,19 @@
                     const settingsData = settingsSnap.docs[0].data();
                     state.fieldOrder = settingsData.fieldOrder || [];
                     state.activeExpenseFilters = settingsData.expenseFilters || {};
+                    // NEW: restore calendar state (safe — only adds new field)
+                    if (settingsData.calendarState) {
+                        state.calendarView = settingsData.calendarState.view || 'month';
+                        if (settingsData.calendarState.currentDate) {
+                            state.currentCalendarDate = new Date(settingsData.calendarState.currentDate);
+                        }
+                        state.selectedCalendarDate = settingsData.calendarState.selectedDate || null;
+                    }
                 } else {
                     state.fieldOrder = state.customFields.map(f => f.id);
-                    if (state.fieldOrder.length) await addDoc(settingsCol, { fieldOrder: state.fieldOrder, expenseFilters: {} });
+                    if (state.fieldOrder.length) {
+                        await addDoc(settingsCol, { fieldOrder: state.fieldOrder, expenseFilters: {} });
+                    }
                 }
 
                 await loadEmailSettings();
@@ -1236,7 +1335,6 @@
                 populateNoCommissionRoomFilter();
                 renderCommissionSummary();
                 renderNoCommissionSummary();
-
                 populateAnalyticsYearSelect();
 
                 if (state.currentPage === 'calendar') renderCalendar();
@@ -1250,7 +1348,33 @@
                     renderTransferAnalytics();
                 }
                 showNotification('Data loaded', 'success');
-            } catch (e) { console.error(e); showNotification('Load failed', 'error'); }
+            } catch (e) {
+                console.error(e);
+                showNotification('Load failed', 'error');
+            } finally {
+                if (showOverlay) hideLoading();
+            }
+        }
+
+        /* ========== NEW: saveCalendarState — γράφει μόνο το νέο πεδίο ========== */
+        async function saveCalendarState() {
+            try {
+                const snap = await getDocs(settingsCol);
+                const calendarState = {
+                    view: state.calendarView,
+                    currentDate: state.currentCalendarDate.toISOString().split('T')[0],
+                    selectedDate: state.selectedCalendarDate
+                };
+                if (!snap.empty) {
+                    await updateDoc(doc(db, 'settings', snap.docs[0].id), { calendarState });
+                } else {
+                    await addDoc(settingsCol, {
+                        fieldOrder: state.fieldOrder,
+                        expenseFilters: state.activeExpenseFilters,
+                        calendarState
+                    });
+                }
+            } catch (e) { console.error('saveCalendarState', e); }
         }
 
         // ========== [ΟΛΕΣ ΟΙ ΥΠΑΡΧΟΥΣΕΣ ΣΥΝΑΡΤΗΣΕΙΣ ΠΑΡΑΜΕΝΟΥΝ ΙΔΙΕΣ] ==========
@@ -2088,18 +2212,33 @@
             });
         }
 
-        function renderReservationsTable() {
+                function renderReservationsTable() {
             const thead = document.getElementById('reservations-thead');
             const tbody = document.getElementById('reservations-body');
             if (!thead || !tbody) return;
+
             let headerHtml = '<tr><th>Room Type</th><th>Guest Name</th><th>Check-in</th><th>Check-out</th><th>Duration</th><th>Check-in Time</th><th>Check-out Time</th><th>Transfer ($)</th><th>Meal ($)</th>';
             state.customFields.forEach(f => { headerHtml += `<th>${f.name}</th>`; });
             headerHtml += '<th>Actions</th></tr>';
             thead.innerHTML = headerHtml;
             tbody.innerHTML = '';
-            const res = state.filteredReservations || state.reservations;
+
+            let res = state.filteredReservations || state.reservations;
+
+            // NEW: apply search term
+            if (state.searchTerm) {
+                const term = state.searchTerm.toLowerCase();
+                res = res.filter(r =>
+                    (r.name || '').toLowerCase().includes(term) ||
+                    (r.guestName || '').toLowerCase().includes(term) ||
+                    (r.checkin || '').includes(term) ||
+                    (r.checkout || '').includes(term)
+                );
+            }
+
             if (res.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="${9 + state.customFields.length + 1}"><div class="empty-state"><i class="fas fa-calendar-times"></i><h3>No Reservations</h3></div></td></tr>`;
+                document.getElementById('reservation-count-badge').textContent = '0';
                 return;
             }
             res.forEach(r => {
@@ -2113,8 +2252,7 @@
                     <td>${r.time || ''}</td>
                     <td>${r.checkoutTime || ''}</td>
                     <td class="currency-cell">$${(r.transferAmount || 0).toFixed(2)}</td>
-                    <td class="currency-cell">$${(r.mealPrice || 0).toFixed(2)}</td>
-                `;
+                    <td class="currency-cell">$${(r.mealPrice || 0).toFixed(2)}</td>`;
                 state.customFields.forEach(f => {
                     let val = r[f.id];
                     if (f.type === 'checkbox') {
@@ -2577,97 +2715,246 @@
             saveSettings();
         }
 
-        function renderCalendar() {
+                function renderCalendar() {
+            const monthGrid = document.getElementById('calendar-days-grid');
+            const monthHeaders = document.getElementById('calendar-days-headers');
+            const weekGrid = document.getElementById('calendar-week-grid');
+            if (!monthGrid || !weekGrid) return;
+
+            if (state.calendarView === 'week') {
+                monthGrid.style.display = 'none';
+                monthHeaders.style.display = 'none';
+                weekGrid.classList.add('active');
+                renderWeekView();
+            } else {
+                monthGrid.style.display = '';
+                monthHeaders.style.display = '';
+                weekGrid.classList.remove('active');
+                renderMonthView();
+            }
+
+            document.getElementById('calendar-month-view-btn')?.classList.toggle('active', state.calendarView === 'month');
+            document.getElementById('calendar-week-view-btn')?.classList.toggle('active', state.calendarView === 'week');
+
+            if (state.selectedCalendarDate) showDayReservations(state.selectedCalendarDate);
+        }
+
+        function getRoomClass(roomName) {
+            if (roomName === 'Apartment 1') return 'reservation-room-single';
+            if (roomName === 'Apartment 2') return 'reservation-room-double';
+            if (roomName === 'Studio') return 'reservation-room-suite';
+            if (roomName === 'Villa') return 'reservation-room-vip';
+            if (roomName === 'Horizon') return 'reservation-room-deluxe';
+            return 'reservation-pending';
+        }
+
+        function renderMonthView() {
             const grid = document.getElementById('calendar-days-grid');
-            if (!grid) return;
             const year = state.currentCalendarDate.getFullYear();
             const month = state.currentCalendarDate.getMonth();
             document.getElementById('calendar-month-year').textContent =
-                new Date(year, month).toLocaleString('default', { month:'long', year:'numeric' });
+                new Date(year, month).toLocaleString('default', { month: 'long', year: 'numeric' });
             grid.innerHTML = '';
             const firstDay = new Date(year, month, 1).getDay();
-            const daysInMonth = new Date(year, month+1, 0).getDate();
-            for (let i=0; i<firstDay; i++) grid.appendChild(document.createElement('div')).className = 'calendar-day empty';
-            for (let d=1; d<=daysInMonth; d++) {
-                const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const todayStr = new Date().toISOString().split('T')[0];
+
+            for (let i = 0; i < firstDay; i++) {
+                const empty = document.createElement('div');
+                empty.className = 'calendar-day empty';
+                grid.appendChild(empty);
+            }
+            for (let d = 1; d <= daysInMonth; d++) {
+                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
                 const dayReservations = state.reservations.filter(r =>
                     new Date(r.checkin) <= new Date(dateStr) && new Date(r.checkout) > new Date(dateStr)
                 );
+                const isCheckin = state.reservations.some(r => r.checkin === dateStr);
+                const isCheckout = state.reservations.some(r => r.checkout === dateStr);
+
                 const dayDiv = document.createElement('div');
                 dayDiv.className = 'calendar-day';
                 dayDiv.dataset.date = dateStr;
-                if (dateStr === new Date().toISOString().split('T')[0]) dayDiv.classList.add('today');
-                dayDiv.innerHTML = `<div class="calendar-day-number">${d}</div>`;
+                if (dateStr === todayStr) dayDiv.classList.add('today');
+                if (dateStr === state.selectedCalendarDate) dayDiv.classList.add('selected');
+                if (dayReservations.length > 0) dayDiv.classList.add('has-reservations');
+                if (isCheckin) dayDiv.classList.add('checkin-day');
+                if (isCheckout) dayDiv.classList.add('checkout-day');
+
+                let markerHtml = '';
+                if (isCheckin) markerHtml += '<span class="day-marker" title="Check-in">↓</span>';
+                if (isCheckout) markerHtml += '<span class="day-marker" style="top:18px;" title="Check-out">↑</span>';
+
+                dayDiv.innerHTML = `<div class="calendar-day-number">${d}</div>${markerHtml}`;
+
                 if (dayReservations.length > 0) {
                     const indicator = document.createElement('div');
                     indicator.className = 'calendar-reservation-indicator';
-                    dayReservations.slice(0,3).forEach(r => {
+                    dayReservations.slice(0, 3).forEach(r => {
+                        const totalNights = Math.ceil((new Date(r.checkout) - new Date(r.checkin)) / 86400000);
+                        const dayIndex = Math.ceil((new Date(dateStr) - new Date(r.checkin)) / 86400000);
+                        let multiClass = '';
+                        if (totalNights > 1) {
+                            if (dayIndex === 0) multiClass = 'reservation-multi-day-start';
+                            else if (dayIndex === totalNights - 1) multiClass = 'reservation-multi-day-end';
+                            else multiClass = 'reservation-multi-day-middle';
+                        }
                         const resDiv = document.createElement('div');
-                        let roomClass = 'reservation-pending';
-                        if (r.name === 'Apartment 1') roomClass = 'reservation-room-single';
-                        else if (r.name === 'Apartment 2') roomClass = 'reservation-room-double';
-                        else if (r.name === 'Studio') roomClass = 'reservation-room-suite';
-                        else if (r.name === 'Villa') roomClass = 'reservation-room-vip';
-                        else if (r.name === 'Horizon') roomClass = 'reservation-room-deluxe';
-                        resDiv.className = `calendar-reservation ${roomClass}`;
+                        resDiv.className = `calendar-reservation ${getRoomClass(r.name)} ${multiClass}`.trim();
+                        resDiv.title = `${r.name} – ${r.guestName || ''}`;
                         resDiv.innerHTML = `<div class="time">${r.time || ''}</div><div class="name">${r.name}</div>`;
+                        resDiv.addEventListener('click', e => { e.stopPropagation(); window.editReservation(r.id); });
                         indicator.appendChild(resDiv);
                     });
                     if (dayReservations.length > 3) {
                         const more = document.createElement('div');
-                        more.textContent = `+${dayReservations.length-3} more`;
+                        more.textContent = `+${dayReservations.length - 3} more`;
                         more.style.fontStyle = 'italic';
+                        more.style.fontSize = '10px';
                         indicator.appendChild(more);
                     }
                     dayDiv.appendChild(indicator);
+                    const countBadge = document.createElement('div');
+                    countBadge.className = 'calendar-reservation-count';
+                    countBadge.textContent = dayReservations.length;
+                    dayDiv.appendChild(countBadge);
                 }
                 dayDiv.addEventListener('click', () => showDayReservations(dateStr));
                 grid.appendChild(dayDiv);
             }
         }
 
+        function renderWeekView() {
+            const grid = document.getElementById('calendar-week-grid');
+            grid.innerHTML = '';
+            const d = new Date(state.currentCalendarDate);
+            const weekStart = new Date(d);
+            weekStart.setDate(d.getDate() - d.getDay());
+            const weekEnd = new Date(weekStart);
+            weekEnd.setDate(weekStart.getDate() + 6);
+
+            document.getElementById('calendar-month-year').textContent =
+                `${weekStart.toLocaleDateString('default', { month: 'short', day: 'numeric' })} – ${weekEnd.toLocaleDateString('default', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+
+            const todayStr = new Date().toISOString().split('T')[0];
+
+            for (let i = 0; i < 7; i++) {
+                const dayDate = new Date(weekStart);
+                dayDate.setDate(weekStart.getDate() + i);
+                const dateStr = dayDate.toISOString().split('T')[0];
+                const col = document.createElement('div');
+                col.className = 'calendar-week-column';
+                if (dateStr === todayStr) col.classList.add('today');
+                col.innerHTML = `
+                    <div class="calendar-week-header">
+                        <div class="dow">${dayDate.toLocaleDateString('default', { weekday: 'short' })}</div>
+                        <div class="dom">${dayDate.getDate()}</div>
+                    </div>`;
+                const dayRes = state.reservations.filter(r =>
+                    new Date(r.checkin) <= new Date(dateStr) && new Date(r.checkout) > new Date(dateStr)
+                );
+                dayRes.forEach(r => {
+                    const item = document.createElement('div');
+                    item.className = `calendar-reservation ${getRoomClass(r.name)}`;
+                    item.innerHTML = `<div class="time"><i class="fas fa-clock" style="font-size:9px;"></i> ${r.time || ''}</div>
+                        <div class="name">${r.name}</div><div class="name">${r.guestName || ''}</div>`;
+                    item.addEventListener('click', () => window.editReservation(r.id));
+                    col.appendChild(item);
+                });
+                if (dayRes.length === 0) {
+                    const empty = document.createElement('div');
+                    empty.style.cssText = 'color:var(--text-secondary);font-size:11px;text-align:center;padding:20px 0;font-style:italic;';
+                    empty.textContent = 'No reservations';
+                    col.appendChild(empty);
+                }
+                col.addEventListener('click', e => {
+                    if (e.target.closest('.calendar-reservation')) return;
+                    showDayReservations(dateStr);
+                });
+                grid.appendChild(col);
+            }
+        }
+
+                function createReservationItem(r) {
+            const item = document.createElement('div');
+            item.className = 'calendar-reservation-item';
+            let detailsHtml = `
+                <div class="calendar-reservation-header">
+                    <span class="calendar-reservation-title">${r.name} (${r.guestName || 'No guest'})</span>
+                    <div class="action-buttons">
+                        <button class="btn-icon edit" onclick="window.editReservation('${r.id}')"><i class="fas fa-edit"></i></button>
+                        <button class="btn-icon delete" onclick="window.deleteReservation('${r.id}')"><i class="fas fa-trash-alt"></i></button>
+                    </div>
+                </div>
+                <div class="calendar-reservation-detail-grid">
+                    <div class="calendar-reservation-detail"><strong>Check-in:</strong> ${r.checkin} ${r.time || ''}</div>
+                    <div class="calendar-reservation-detail"><strong>Check-out:</strong> ${r.checkout} ${r.checkoutTime || ''}</div>
+                    <div class="calendar-reservation-detail"><strong>Duration:</strong> ${r.duration} nights</div>
+                    <div class="calendar-reservation-detail"><strong>Transfer:</strong> $${(r.transferAmount || 0).toFixed(2)}</div>
+                    <div class="calendar-reservation-detail"><strong>Meal:</strong> $${(r.mealPrice || 0).toFixed(2)}</div>`;
+            state.customFields.forEach(f => {
+                let val = r[f.id];
+                if (val !== undefined && val !== null && val !== '') {
+                    if (f.type === 'checkbox') val = val ? 'Yes' : 'No';
+                    else if (f.type === 'currency') val = `$${parseFloat(val).toFixed(2)}`;
+                    detailsHtml += `<div class="calendar-reservation-detail"><strong>${f.name}:</strong> ${val}</div>`;
+                }
+            });
+            detailsHtml += '</div>';
+            item.innerHTML = detailsHtml;
+            return item;
+        }
+
         function showDayReservations(dateStr) {
+            state.selectedCalendarDate = dateStr;
+            saveCalendarState();
+
             const container = document.getElementById('selected-date-reservations');
             const title = document.getElementById('selected-date-title');
-            title.textContent = `Reservations for ${dateStr}`;
-            const dayRes = state.reservations.filter(r =>
-                new Date(r.checkin) <= new Date(dateStr) && new Date(r.checkout) > new Date(dateStr)
+            const dateObj = new Date(dateStr);
+            title.textContent = dateObj.toLocaleDateString('default', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+            // Refresh highlight στο month view
+            if (state.calendarView === 'month') {
+                document.querySelectorAll('.calendar-day').forEach(d => {
+                    d.classList.toggle('selected', d.dataset.date === dateStr);
+                });
+            }
+
+            const checkins = state.reservations.filter(r => r.checkin === dateStr);
+            const checkouts = state.reservations.filter(r => r.checkout === dateStr);
+            const inHouse = state.reservations.filter(r =>
+                new Date(r.checkin) < new Date(dateStr) && new Date(r.checkout) > new Date(dateStr)
             );
-            if (dayRes.length === 0) {
-                container.innerHTML = '<div class="calendar-no-reservations">No reservations</div>';
+
+            container.innerHTML = '';
+            if (checkins.length === 0 && checkouts.length === 0 && inHouse.length === 0) {
+                container.innerHTML = `<div class="calendar-no-reservations">
+                    <i class="fas fa-calendar-day"></i>
+                    <h3 style="font-size:16px;">No activity</h3>
+                    <p style="font-size:13px;">No check-ins, check-outs, or in-house guests on this day.</p>
+                </div>`;
                 return;
             }
-            container.innerHTML = '';
-            dayRes.forEach(r => {
-                const item = document.createElement('div');
-                item.className = 'calendar-reservation-item';
-                let detailsHtml = `
-                    <div class="calendar-reservation-header">
-                        <span class="calendar-reservation-title">${r.name} (${r.guestName || 'No guest'})</span>
-                        <div class="action-buttons">
-                            <button class="btn-icon edit" onclick="window.editReservation('${r.id}')"><i class="fas fa-edit"></i></button>
-                            <button class="btn-icon delete" onclick="window.deleteReservation('${r.id}')"><i class="fas fa-trash-alt"></i></button>
-                        </div>
-                    </div>
-                    <div class="calendar-reservation-detail-grid">
-                        <div class="calendar-reservation-detail"><strong>Check-in:</strong> ${r.checkin} ${r.time || ''}</div>
-                        <div class="calendar-reservation-detail"><strong>Check-out:</strong> ${r.checkout} ${r.checkoutTime || ''}</div>
-                        <div class="calendar-reservation-detail"><strong>Duration:</strong> ${r.duration} nights</div>
-                        <div class="calendar-reservation-detail"><strong>Transfer:</strong> $${(r.transferAmount || 0).toFixed(2)}</div>
-                        <div class="calendar-reservation-detail"><strong>Meal:</strong> $${(r.mealPrice || 0).toFixed(2)}</div>
-                `;
-                state.customFields.forEach(f => {
-                    let val = r[f.id];
-                    if (val !== undefined && val !== null && val !== '') {
-                        if (f.type === 'checkbox') val = val ? 'Yes' : 'No';
-                        else if (f.type === 'currency') val = `$${parseFloat(val).toFixed(2)}`;
-                        detailsHtml += `<div class="calendar-reservation-detail"><strong>${f.name}:</strong> ${val}</div>`;
-                    }
-                });
-                detailsHtml += '</div>';
-                item.innerHTML = detailsHtml;
-                container.appendChild(item);
-            });
+
+            if (checkins.length > 0) {
+                const sec = document.createElement('div');
+                sec.innerHTML = `<h4 class="day-section-title" style="color:var(--success-color);"><i class="fas fa-sign-in-alt"></i> Check-ins <span class="count-badge" style="background:var(--success-color);">${checkins.length}</span></h4>`;
+                checkins.forEach(r => sec.appendChild(createReservationItem(r)));
+                container.appendChild(sec);
+            }
+            if (inHouse.length > 0) {
+                const sec = document.createElement('div');
+                sec.innerHTML = `<h4 class="day-section-title" style="color:var(--primary-color);"><i class="fas fa-bed"></i> In-House <span class="count-badge" style="background:var(--primary-color);">${inHouse.length}</span></h4>`;
+                inHouse.forEach(r => sec.appendChild(createReservationItem(r)));
+                container.appendChild(sec);
+            }
+            if (checkouts.length > 0) {
+                const sec = document.createElement('div');
+                sec.innerHTML = `<h4 class="day-section-title" style="color:var(--warning-color);"><i class="fas fa-sign-out-alt"></i> Check-outs <span class="count-badge" style="background:var(--warning-color);">${checkouts.length}</span></h4>`;
+                checkouts.forEach(r => sec.appendChild(createReservationItem(r)));
+                container.appendChild(sec);
+            }
         }
 
         // ========== ΒΟΗΘΗΤΙΚΗ ΣΥΝΑΡΤΗΣΗ ΓΙΑ EXPORT ==========
@@ -3384,7 +3671,7 @@
             document.getElementById('reservation-time') && (document.getElementById('reservation-time').value = '12:00');
             document.getElementById('reservation-checkout-time') && (document.getElementById('reservation-checkout-time').value = '10:00');
             document.getElementById('expense-date') && (document.getElementById('expense-date').value = today);
-            await loadAllData();
+            await loadAllData(true);
 
             document.querySelectorAll('.type-option').forEach(opt => {
                 opt.addEventListener('click', function() {
@@ -3463,23 +3750,49 @@
             document.getElementById('reservations-stats-tab-btn')?.addEventListener('click', () => showPage('reservations-stats'));
             document.getElementById('analytics-tab-btn')?.addEventListener('click', () => showPage('analytics'));
             document.getElementById('settings-tab-btn')?.addEventListener('click', () => showPage('settings'));
+                        // ========== ΝΕΟΙ CALENDAR LISTENERS ==========
             document.getElementById('calendar-prev-month')?.addEventListener('click', () => {
-                state.currentCalendarDate.setMonth(state.currentCalendarDate.getMonth()-1);
+                if (state.calendarView === 'week') {
+                    state.currentCalendarDate.setDate(state.currentCalendarDate.getDate() - 7);
+                } else {
+                    state.currentCalendarDate.setMonth(state.currentCalendarDate.getMonth() - 1);
+                }
                 renderCalendar();
+                saveCalendarState();
             });
             document.getElementById('calendar-next-month')?.addEventListener('click', () => {
-                state.currentCalendarDate.setMonth(state.currentCalendarDate.getMonth()+1);
+                if (state.calendarView === 'week') {
+                    state.currentCalendarDate.setDate(state.currentCalendarDate.getDate() + 7);
+                } else {
+                    state.currentCalendarDate.setMonth(state.currentCalendarDate.getMonth() + 1);
+                }
                 renderCalendar();
+                saveCalendarState();
             });
             document.getElementById('calendar-today')?.addEventListener('click', () => {
                 state.currentCalendarDate = new Date();
+                state.selectedCalendarDate = new Date().toISOString().split('T')[0];
                 renderCalendar();
+                saveCalendarState();
             });
-            document.getElementById('calendar-month-view-btn')?.addEventListener('click', () => { state.calendarView = 'month'; renderCalendar(); });
-            document.getElementById('calendar-week-view-btn')?.addEventListener('click', () => { state.calendarView = 'week'; renderCalendar(); });
+            document.getElementById('calendar-month-view-btn')?.addEventListener('click', () => {
+                state.calendarView = 'month';
+                renderCalendar();
+                saveCalendarState();
+            });
+            document.getElementById('calendar-week-view-btn')?.addEventListener('click', () => {
+                state.calendarView = 'week';
+                renderCalendar();
+                saveCalendarState();
+            });
             document.getElementById('add-reservation-from-calendar')?.addEventListener('click', () => {
                 showPage('dashboard');
-                if (state.selectedCalendarDate) document.getElementById('reservation-checkin').value = state.selectedCalendarDate;
+                if (state.selectedCalendarDate) {
+                    document.getElementById('reservation-checkin').value = state.selectedCalendarDate;
+                    const next = new Date(state.selectedCalendarDate);
+                    next.setDate(next.getDate() + 1);
+                    document.getElementById('reservation-checkout').value = next.toISOString().split('T')[0];
+                }
             });
             document.getElementById('apply-transfer-filter')?.addEventListener('click', () => {
                 const room = document.getElementById('transfer-filter-room').value;
@@ -3618,6 +3931,10 @@
                     Duration: r.duration || 1
                 }));
                 exportToCSV(data, 'transfers.csv');
+            });
+            document.getElementById('reservation-search')?.addEventListener('input', (e) => {
+                state.searchTerm = e.target.value;
+                renderReservationsTable();
             });
             document.getElementById('refresh-table-btn')?.addEventListener('click', () => {
                 renderReservationsTable();
