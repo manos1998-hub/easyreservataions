@@ -247,15 +247,102 @@
         .calendar-current-month { font-size: 20px; font-weight: 700; color: var(--text-primary); min-width: 200px; text-align: center; }
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-bottom: 24px; }
         .calendar-day-header { text-align: center; padding: 12px; font-weight: 600; color: var(--text-secondary); font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .calendar-day { aspect-ratio: 1; background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 12px; display: flex; flex-direction: column; cursor: pointer; transition: var(--transition); position: relative; overflow: hidden; }
-        .calendar-day:hover { background-color: var(--light-bg); border-color: var(--primary-color); }
-        .calendar-day.empty { background-color: transparent; border: none; cursor: default; }
-        .calendar-day.today { background-color: rgba(37, 99, 235, 0.05); border-color: var(--primary-color); }
-        .calendar-day-number { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
-        .calendar-reservation-indicator { display: flex; flex-direction: column; gap: 4px; margin-top: 4px; font-size: 10px; }
-        .calendar-reservation { font-size: 10px; padding: 3px 4px; border-radius: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; flex-direction: column; line-height: 1.2; position: relative; }
-        .calendar-reservation .time { font-weight: 600; }
-        .calendar-reservation .name { font-weight: 500; font-size: 9px; }
+                /* ========== ΝΕΟ DESIGN ΗΜΕΡΟΛΟΓΙΟΥ ========== */
+        .calendar-day { 
+            min-height: 130px; /* Σταθερό ύψος αντί για τεράγωνο */
+            background-color: var(--card-bg); 
+            border: 1px solid var(--border-color); 
+            border-radius: 6px; 
+            padding: 8px; 
+            display: flex; 
+            flex-direction: column; 
+            cursor: pointer; 
+            transition: all 0.2s ease; 
+            position: relative; 
+            overflow: hidden; 
+        }
+        .calendar-day:hover { 
+            background-color: var(--light-bg); 
+            border-color: var(--primary-color); 
+            box-shadow: var(--shadow-sm); 
+        }
+        .calendar-day.empty { 
+            background-color: #f8fafc; 
+            border: 1px dashed var(--border-color); 
+            cursor: default; 
+            min-height: 130px; 
+        }
+        .calendar-day.today { 
+            background-color: rgba(37, 99, 235, 0.03); 
+            border: 2px solid var(--primary-color); 
+        }
+        
+        /* Ο αριθμός της ημέρας */
+        .calendar-day-number { 
+            font-size: 14px; 
+            font-weight: 700; 
+            color: var(--text-secondary); 
+            margin-bottom: 8px; 
+            align-self: flex-start; 
+            width: 26px;
+            height: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+        .calendar-day.today .calendar-day-number { 
+            background-color: var(--primary-color); 
+            color: white; 
+        }
+
+        /* Το container των κρατήσεων */
+        .calendar-reservation-indicator { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 4px; 
+            flex-grow: 1; 
+            overflow-y: auto; 
+        }
+        
+        /* Η "μπαλίτσα" της κράτησης */
+        .calendar-reservation { 
+            font-size: 11px; 
+            padding: 4px 6px; 
+            border-radius: 4px; 
+            white-space: nowrap; 
+            overflow: hidden; 
+            text-overflow: ellipsis; 
+            display: flex; 
+            align-items: center; 
+            gap: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        .calendar-reservation:hover { 
+            transform: scale(0.98); 
+            filter: brightness(0.95); 
+        }
+        .calendar-reservation .time { 
+            font-size: 10px; 
+            opacity: 0.9; 
+            background: rgba(255,255,255,0.6); 
+            padding: 1px 4px; 
+            border-radius: 3px; 
+            font-weight: 700;
+        }
+        .calendar-reservation .name { 
+            font-weight: 700; 
+            font-size: 11px; 
+            text-overflow: ellipsis; 
+            overflow: hidden; 
+        }
+        
+        /* Στυλ για τις πολυήμερες κρατήσεις (να φαίνονται ενωμένες) */
+        .reservation-multi-day-start { border-top-right-radius: 0; border-bottom-right-radius: 0; margin-right: -5px; }
+        .reservation-multi-day-middle { border-radius: 0; margin-left: -5px; margin-right: -5px; }
+        .reservation-multi-day-end { border-top-left-radius: 0; border-bottom-left-radius: 0; margin-left: -5px; }
         .calendar-reservation .room-type { font-weight: 400; font-size: 8px; font-style: italic; }
         .calendar-reservation .duration { font-weight: 400; font-size: 8px; font-style: italic; color: var(--text-secondary); }
         .reservation-confirmed { background-color: rgba(16, 185, 129, 0.1); color: var(--success-color); border-left: 2px solid var(--success-color); }
@@ -266,12 +353,12 @@
         .reservation-multi-day-end { border-top-right-radius: 3px; border-bottom-right-radius: 3px; border-top-left-radius: 0; border-bottom-left-radius: 0; margin-left: -1px; }
         .reservation-multi-day-middle .time, .reservation-multi-day-middle .name, .reservation-multi-day-middle .room-type, .reservation-multi-day-middle .duration, .reservation-multi-day-end .time, .reservation-multi-day-end .name, .reservation-multi-day-end .room-type, .reservation-multi-day-end .duration { display: none; }
         .reservation-multi-day-middle::after, .reservation-multi-day-end::after { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: inherit; opacity: 0.3; z-index: 1; }
-        .reservation-room-single { background-color: rgba(14, 165, 233, 0.1); color: var(--accent-color); border-left: 2px solid var(--accent-color); }
-        .reservation-room-double { background-color: rgba(139, 92, 246, 0.1); color: var(--expense-color); border-left: 2px solid var(--expense-color); }
-        .reservation-room-suite { background-color: rgba(245, 158, 11, 0.1); color: var(--warning-color); border-left: 2px solid var(--warning-color); }
-        .reservation-room-vip { background-color: rgba(239, 68, 68, 0.1); color: var(--danger-color); border-left: 2px solid var(--danger-color); }
-        .reservation-room-family { background-color: rgba(16, 185, 129, 0.1); color: var(--success-color); border-left: 2px solid var(--success-color); }
-        .reservation-room-deluxe { background-color: rgba(37, 99, 235, 0.1); color: var(--primary-color); border-left: 2px solid var(--primary-color); }
+        .reservation-room-single { background-color: #e0f2fe; color: #0369a1; border-left: 4px solid #0ea5e9; }
+        .reservation-room-double { background-color: #f3e8ff; color: #6b21a8; border-left: 4px solid #8b5cf6; }
+        .reservation-room-suite { background-color: #fef3c7; color: #b45309; border-left: 4px solid #f59e0b; }
+        .reservation-room-vip { background-color: #fee2e2; color: #b91c1c; border-left: 4px solid #ef4444; }
+        .reservation-room-family { background-color: #d1fae5; color: #047857; border-left: 4px solid #10b981; }
+        .reservation-room-deluxe { background-color: #dbeafe; color: #1d4ed8; border-left: 4px solid #2563eb; }
         .calendar-reservation-count { position: absolute; top: 8px; right: 8px; width: 20px; height: 20px; background-color: var(--primary-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; }
         .calendar-reservation-details { background-color: var(--card-bg); border-radius: var(--radius-lg); padding: 24px; border: 1px solid var(--border-color); }
         .calendar-details-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border-color); }
@@ -364,7 +451,24 @@
             .calendar-week-view { grid-template-columns: 1fr; }
             .calendar-week-column { min-height: 180px; }
             .search-bar { max-width: 100%; margin-bottom: 8px; }
+        }   
+
+        /* ========== RESPONSIVE ΗΜΕΡΟΛΟΓΙΟ (ΓΙΑ ΚΙΝΗΤΑ) ========== */
+        .calendar-scroll-wrapper {
+            overflow-x: auto;
+            padding-bottom: 10px;
+            -webkit-overflow-scrolling: touch; /* Ομαλό scroll σε iOS */
         }
+        
+        @media (max-width: 900px) {
+            .calendar-grid {
+                min-width: 800px; /* Αναγκάζει το ημερολόγιο να απλωθεί */
+            }
+            .calendar-day {
+                min-height: 110px; /* Πιο κοντό ύψος για μικρές οθόνες */
+            }
+        }
+
 
     </style>
 </head>
@@ -563,7 +667,9 @@
                 <div class="calendar-grid" id="calendar-days-headers">
                     <div class="calendar-day-header">Sun</div><div class="calendar-day-header">Mon</div><div class="calendar-day-header">Tue</div><div class="calendar-day-header">Wed</div><div class="calendar-day-header">Thu</div><div class="calendar-day-header">Fri</div><div class="calendar-day-header">Sat</div>
                 </div>
-                <div class="calendar-grid" id="calendar-days-grid"></div>
+                <div class="calendar-scroll-wrapper">
+                    <div class="calendar-grid" id="calendar-days-grid"></div>
+                </div>
                 <div class="calendar-week-view" id="calendar-week-grid"></div>
                 <div class="calendar-reservation-details" id="calendar-reservation-details">
                     <div class="calendar-details-header">
