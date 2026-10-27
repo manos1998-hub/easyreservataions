@@ -341,60 +341,26 @@
             overflow: hidden; 
         }
         
-        /* ========== Στυλ για τις πολυήμερες κρατήσεις (ΕΝΩΜΕΝΕΣ) ========== */
-        .reservation-multi-day-start { 
-            border-top-left-radius: 4px; 
-            border-bottom-left-radius: 4px; 
-            border-top-right-radius: 0; 
-            border-bottom-right-radius: 0; 
-            margin-right: -12px; /* Γεφυρώνει το κενό */
-            position: relative;
-            z-index: 5;
-        }
-        .reservation-multi-day-middle { 
-            border-radius: 0; 
-            margin-left: -12px; 
-            margin-right: -12px; 
-            position: relative;
-            z-index: 5;
-        }
-        .reservation-multi-day-end { 
-            border-top-right-radius: 4px; 
-            border-bottom-right-radius: 4px; 
-            border-top-left-radius: 0; 
-            border-bottom-left-radius: 0; 
-            margin-left: -12px; 
-            position: relative;
-            z-index: 5;
-        }
-
-        /* Κρύβουμε το κείμενο στις μεσαίες και τελευταίες μέρες για να μη γεμίζει ο τόπος */
-        .reservation-multi-day-middle .time, .reservation-multi-day-middle .name, .reservation-multi-day-middle .room-type, .reservation-multi-day-middle .duration, 
-        .reservation-multi-day-end .time, .reservation-multi-day-end .name, .reservation-multi-day-end .room-type, .reservation-multi-day-end .duration { 
-            display: none; 
-        }
-        
-        /* Βοηθητικό εφέ για τις μεσαίες μέρες */
-        .reservation-multi-day-middle::after, .reservation-multi-day-end::after { 
-            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: inherit; opacity: 0.3; z-index: 1; 
-        }
-
-        /* Βασικά στυλ κρατήσεων */
+        /* Στυλ για τις πολυήμερες κρατήσεις (να φαίνονται ενωμένες) */
+        .reservation-multi-day-start { border-top-right-radius: 0; border-bottom-right-radius: 0; margin-right: -5px; }
+        .reservation-multi-day-middle { border-radius: 0; margin-left: -5px; margin-right: -5px; }
+        .reservation-multi-day-end { border-top-left-radius: 0; border-bottom-left-radius: 0; margin-left: -5px; }
         .calendar-reservation .room-type { font-weight: 400; font-size: 8px; font-style: italic; }
         .calendar-reservation .duration { font-weight: 400; font-size: 8px; font-style: italic; color: var(--text-secondary); }
         .reservation-confirmed { background-color: rgba(16, 185, 129, 0.1); color: var(--success-color); border-left: 2px solid var(--success-color); }
         .reservation-pending { background-color: rgba(245, 158, 11, 0.1); color: var(--warning-color); border-left: 2px solid var(--warning-color); }
         .reservation-cancelled { background-color: rgba(239, 68, 68, 0.1); color: var(--danger-color); border-left: 2px solid var(--danger-color); }
-        
-        /* Χρώματα Δωματίων */
+        .reservation-multi-day-start { border-top-left-radius: 3px; border-bottom-left-radius: 3px; border-top-right-radius: 0; border-bottom-right-radius: 0; margin-right: -1px; }
+        .reservation-multi-day-middle { border-radius: 0; margin: 0 -1px; }
+        .reservation-multi-day-end { border-top-right-radius: 3px; border-bottom-right-radius: 3px; border-top-left-radius: 0; border-bottom-left-radius: 0; margin-left: -1px; }
+        .reservation-multi-day-middle .time, .reservation-multi-day-middle .name, .reservation-multi-day-middle .room-type, .reservation-multi-day-middle .duration, .reservation-multi-day-end .time, .reservation-multi-day-end .name, .reservation-multi-day-end .room-type, .reservation-multi-day-end .duration { display: none; }
+        .reservation-multi-day-middle::after, .reservation-multi-day-end::after { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: inherit; opacity: 0.3; z-index: 1; }
         .reservation-room-single { background-color: #e0f2fe; color: #0369a1; border-left: 4px solid #0ea5e9; }
         .reservation-room-double { background-color: #f3e8ff; color: #6b21a8; border-left: 4px solid #8b5cf6; }
         .reservation-room-suite { background-color: #fef3c7; color: #b45309; border-left: 4px solid #f59e0b; }
         .reservation-room-vip { background-color: #fee2e2; color: #b91c1c; border-left: 4px solid #ef4444; }
         .reservation-room-family { background-color: #d1fae5; color: #047857; border-left: 4px solid #10b981; }
         .reservation-room-deluxe { background-color: #dbeafe; color: #1d4ed8; border-left: 4px solid #2563eb; }
-
-        /* Λοιπά στυλ ημερολογίου */
         .calendar-reservation-count { position: absolute; top: 8px; right: 8px; width: 20px; height: 20px; background-color: var(--primary-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; }
         .calendar-reservation-details { background-color: var(--card-bg); border-radius: var(--radius-lg); padding: 24px; border: 1px solid var(--border-color); }
         .calendar-details-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border-color); }
