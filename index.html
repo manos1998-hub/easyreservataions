@@ -3855,7 +3855,7 @@
                         title="${titleStr}">
                         <div class="res-guest">${r.guestName || 'No guest'}</div>
                         <div class="res-meta">
-                            <span><i class="fas fa-arrow-right-to-bracket"></i> ${r.time || '—'}</span>
+                            <span><i class="fas ${state.calendarFilters.checkout ? 'fa-arrow-right-from-bracket' : 'fa-arrow-right-to-bracket'}"></i> ${r.time || '—'}</span>
                             ${!r.isSingleDay ? `<span><i class="fas fa-moon"></i> ${r.duration || spanDays}n</span>` : ''}
                             ${transfer > 0 ? `<span><i class="fas fa-dollar-sign"></i> ${transfer.toFixed(0)}</span>` : ''}
                         </div>
@@ -4151,13 +4151,13 @@
                     </div>`;
                 };
 
-                if (checkins.length > 0) {
-                    html += `<div class="cal-day-section checkins">
+                if (checkouts.length > 0) {
+                    html += `<div class="cal-day-section checkouts">
                         <div class="cal-day-section-title">
-                            <i class="fas fa-arrow-right-to-bracket"></i> Check-ins
-                            <span class="count"><span>${checkins.length}</span></span>
+                            <i class="fas fa-arrow-right-from-bracket"></i> Check-outs
+                            <span class="count"><span>${checkouts.length}</span></span>
                         </div>
-                        ${checkins.map(buildCard).join('')}
+                        ${checkouts.map(buildCard).join('')}
                     </div>`;
                 }
                 if (inHouse.length > 0) {
@@ -4169,13 +4169,13 @@
                         ${inHouse.map(buildCard).join('')}
                     </div>`;
                 }
-                if (checkouts.length > 0) {
-                    html += `<div class="cal-day-section checkouts">
+                if (checkins.length > 0) {
+                    html += `<div class="cal-day-section checkins">
                         <div class="cal-day-section-title">
-                            <i class="fas fa-arrow-right-from-bracket"></i> Check-outs
-                            <span class="count"><span>${checkouts.length}</span></span>
+                            <i class="fas fa-arrow-right-to-bracket"></i> Check-ins
+                            <span class="count"><span>${checkins.length}</span></span>
                         </div>
-                        ${checkouts.map(buildCard).join('')}
+                        ${checkins.map(buildCard).join('')}
                     </div>`;
                 }
             }
