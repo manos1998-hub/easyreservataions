@@ -814,11 +814,10 @@
             box-shadow: 0 2px 8px rgba(16, 185, 129, 0.35);
         }
         .cal-filter-btn.cal-filter-checkout.active {
-            background: var(--warning-color);
+            background: #64748b; /* Γκρι χρώμα */
             color: white;
-            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.35);
+            box-shadow: 0 2px 8px rgba(100, 116, 139, 0.35);
         }
-
         /* ---- Flex modal (για να μένει σταθερό το footer) ---- */
         .modal-content-flex {
             display: flex;
@@ -866,6 +865,11 @@
         .qadd-duration-pill i { font-size: 12px; }
         .qadd-duration-pill strong { font-size: 16px; }
 
+        /* ---- Γκρι εμφάνιση για τις μπάρες στο Check Out mode ---- */
+        .cal-res-bar.checkout-mode {
+            background: linear-gradient(135deg, #94a3b8, #64748b) !important;
+            border-left-color: #cbd5e1 !important;
+        }
 
 
         /* ---- Responsive για τα νέα κουμπιά ---- */
@@ -1102,7 +1106,7 @@
                                 <i class="fas fa-arrow-right-to-bracket"></i> Check In
                             </button>
                             <button class="cal-filter-btn cal-filter-checkout" id="cal-filter-checkout" data-filter="checkout" title="Δείξε μόνο check-outs">
-                                <i class="fas fa-arrow-right-from-bracket"></i> Check Out
+                                <i class="fas fa-arrow-left-from-bracket"></i> Check Out
                             </button>
                         </div>
                         <button class="cal-btn-pill cal-btn-primary" id="add-reservation-from-calendar">
@@ -3850,13 +3854,13 @@
                         titleStr = `${r.name} — ${r.guestName || 'No guest'} (${r.checkin} → ${r.checkout})`;
                     }
 
-                    rowsHtml += `<div class="cal-res-bar ${continuesLeft ? 'continues-left' : ''} ${continuesRight ? 'continues-right' : ''}"
+                    rowsHtml += `<div class="cal-res-bar ${continuesLeft ? 'continues-left' : ''} ${continuesRight ? 'continues-right' : ''} ${state.calendarFilters.checkout ? 'checkout-mode' : ''}"
                         data-id="${r.id}"
                         style="left:${leftPct}%; width:${widthPct}%;"
                         title="${titleStr}">
                         <div class="res-guest">${r.guestName || 'No guest'}</div>
                         <div class="res-meta">
-                            <span><i class="fas ${state.calendarFilters.checkout ? 'fa-arrow-right-from-bracket' : 'fa-arrow-right-to-bracket'}"></i> ${r.time || '—'}</span>
+                            <span><i class="fas ${state.calendarFilters.checkout ? 'fa-arrow-left-from-bracket' : 'fa-arrow-right-to-bracket'}"></i> ${r.time || '—'}</span>
                             ${!r.isSingleDay ? `<span><i class="fas fa-moon"></i> ${r.duration || spanDays}n</span>` : ''}
                             ${transfer > 0 ? `<span><i class="fas fa-dollar-sign"></i> ${transfer.toFixed(0)}</span>` : ''}
                         </div>
