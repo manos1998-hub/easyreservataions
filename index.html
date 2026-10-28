@@ -2342,6 +2342,15 @@
             } catch (e) { console.error(e); showNotification('Delete failed', 'error'); }
         }
 
+        async function deleteNoCommissionStat(id) {
+            if (!confirm('Delete this record?')) return;
+            try {
+                await deleteDoc(doc(db, 'noCommissionStats', id));
+                await loadAllData();
+                showNotification('Record deleted', 'success');
+            } catch (e) { console.error(e); showNotification('Delete failed', 'error'); }
+        }
+
                 // ========== RESERVATIONS STATS (NEW LOGIC) ==========
         let rsActiveTab = 'commission';
 
