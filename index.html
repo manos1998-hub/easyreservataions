@@ -2008,13 +2008,10 @@
                 updateCategoryDropdowns();
                 renderExpensesTable();
                 updateStats();
-                renderCommissionStats();
-                renderNoCommissionStats();
-                renderTransferMealAuto();
-                populateCommissionRoomFilter();
-                populateNoCommissionRoomFilter();
-                renderCommissionSummary();
-                renderNoCommissionSummary();
+                // 🆕 ΝΕΑ ΣΥΝΑΡΤΗΣΗ ΓΙΑ ΤΟ RESERVATIONS STATS
+                if (typeof renderReservationsStats === 'function') {
+                    renderReservationsStats();
+                }
                 populateAnalyticsYearSelect();
 
                 if (state.currentPage === 'calendar') renderCalendar();
@@ -4273,7 +4270,9 @@
                 renderTransferAnalytics();
             }
             if (page === 'reservations-stats') {
-                renderReservationsStats();
+                if (typeof renderReservationsStats === 'function') {
+                    renderReservationsStats();
+                }
             }
         }
 
