@@ -4136,58 +4136,7 @@
         }
 
 
-        async function saveQuickAddReservation() {
-            const room = document.getElementById('qadd-room')?.value;
-            const guest = document.getElementById('qadd-guest')?.value.trim();
-            const checkin = document.getElementById('qadd-checkin')?.value;
-            const checkout = document.getElementById('qadd-checkout')?.value;
-            const time = document.getElementById('qadd-time')?.value;
-            const checkoutTime = document.getElementById('qadd-checkout-time')?.value;
-            const transferAmount = parseFloat(document.getElementById('qadd-transfer')?.value) || 0;
-            const mealPrice = parseFloat(document.getElementById('qadd-meal')?.value) || 0;
-
-            if (!room || !guest || !checkin || !checkout || !time || !checkoutTime) {
-                showNotification('Please fill all required fields', 'error');
-                return;
-            }
-            if (new Date(checkout) < new Date(checkin)) {
-                showNotification('Check-out must be after Check-in', 'error');
-                return;
-            }
-
-            const duration = calculateDuration(checkin, checkout);
-            const newRes = {
-                name: room,
-                guestName: guest,
-                checkin,
-                checkout,
-                duration,
-                time,
-                checkoutTime,
-                transferAmount,
-                mealPrice,
-                createdAt: new Date().toISOString()
-            };
-
-            state.customFields.forEach(f => {
-                const el = document.getElementById(`qadd-${f.id}`);
-                if (el) newRes[f.id] = f.type === 'checkbox' ? el.checked : el.value;
-            });
-
-            try {
-                await addDoc(reservationsCol, newRes);
-                document.getElementById('cal-quick-add-modal').classList.remove('active');
-                await loadAllData();
-                showNotification('Reservation created successfully!', 'success');
-            } catch (e) {
-                console.error(e);
-                showNotification('Error saving reservation', 'error');
-            }
-        }
-
-        function closeQuickAddModal() {
-            document.getElementById('cal-quick-add-modal')?.classList.remove('active');
-        }
+        
 
 
 
