@@ -1399,103 +1399,75 @@
                 </div>
             </div>
 
-            <!-- Reservations Stats Content -->
+                        <!-- Reservations Stats Content (NEW DESIGN) -->
             <div class="content-wrapper" id="reservations-stats-content" style="display: none;">
+                
+                <!-- KPIs -->
+                <div class="dashboard-stats" style="margin-bottom: 24px;">
+                    <div class="stat-card">
+                        <div class="stat-header"><div class="stat-title">Commission Income</div><div class="stat-icon" style="background-color: var(--primary-color);"><i class="fas fa-percentage"></i></div></div>
+                        <div class="stat-value" id="rs-kpi-commission">$0</div>
+                        <div class="stat-change positive"><i class="fas fa-arrow-up"></i> Από προμήθειες</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header"><div class="stat-title">No Commission Income</div><div class="stat-icon" style="background-color: var(--warning-color);"><i class="fas fa-times-circle"></i></div></div>
+                        <div class="stat-value" id="rs-kpi-nocommission">$0</div>
+                        <div class="stat-change positive"><i class="fas fa-arrow-up"></i> Χωρίς προμήθεια</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header"><div class="stat-title">Transfer & Meal</div><div class="stat-icon" style="background-color: var(--expense-color);"><i class="fas fa-truck"></i></div></div>
+                        <div class="stat-value" id="rs-kpi-transfer">$0</div>
+                        <div class="stat-change positive"><i class="fas fa-arrow-up"></i> Από κρατήσεις</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header"><div class="stat-title">Total Stays</div><div class="stat-icon" style="background-color: var(--success-color);"><i class="fas fa-moon"></i></div></div>
+                        <div class="stat-value" id="rs-kpi-stays">0</div>
+                        <div class="stat-change positive"><i class="fas fa-arrow-up"></i> Διανυκτερεύσεις</div>
+                    </div>
+                </div>
+
                 <div class="panel-container">
-                    <div class="panel">
-                        <div class="panel-header"><h2><i class="fas fa-percentage"></i> Commission</h2></div>
-                        <div class="panel-body">
-                            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px;">
-                                <input type="month" class="form-control" id="commission-month" placeholder="Month (YYYY-MM)">
-                                <select class="form-control" id="commission-room">
-                                    <option value="">Select Room</option>
-                                    <option value="Apartment 1">Apartment 1</option>
-                                    <option value="Apartment 2">Apartment 2</option>
-                                    <option value="Studio">Studio</option>
-                                    <option value="Villa">Villa</option>
-                                </select>
-                                <input type="number" class="form-control" id="commission-income" placeholder="Income" step="0.01">
-                                <input type="number" class="form-control" id="commission-tax" placeholder="Tax" step="0.01">
-                                <input type="number" class="form-control" id="commission-stays" placeholder="Total Stays" step="1">
-                            </div>
-                            <button class="btn btn-primary" id="add-commission-btn"><i class="fas fa-plus"></i> Add Commission Record</button>
-                            <div class="commission-filters" style="display: flex; gap: 10px; margin: 15px 0; flex-wrap: wrap;">
-                                <input type="month" id="commission-filter-month" class="form-control" style="width: auto;" placeholder="Filter by month">
-                                <select id="commission-filter-room" class="form-control" style="width: auto;">
-                                    <option value="">All Rooms</option>
-                                </select>
-                                <button class="btn btn-secondary btn-sm" id="apply-commission-filters"><i class="fas fa-filter"></i> Apply</button>
-                                <button class="btn btn-secondary btn-sm" id="clear-commission-filters"><i class="fas fa-times"></i> Clear</button>
-                            </div>
-                            <div class="table-wrapper" style="margin-top: 20px;">
-                                <table class="data-table" id="commission-table">
-                                    <thead><tr><th>Month</th><th>Room</th><th>Total Income</th><th>Total Stays</th><th>Actions</th></tr></thead>
-                                    <tbody id="commission-body"></tbody>
-                                </table>
-                            </div>
-                            <div class="commission-summary" style="margin-top: 30px;">
-                                <h4>Commission Summary by Room & Month</h4>
-                                <div class="table-wrapper">
-                                    <table class="data-table" id="commission-summary-table">
-                                        <thead><tr><th>Month</th><th>Room</th><th>Total Income</th><th>Total Stays</th><th>Occupancy %</th></tr></thead>
-                                        <tbody id="commission-summary-body"></tbody>
-                                    </table>
-                                </div>
-                            </div>
+                    <!-- Chart Panel -->
+                    <div class="panel" style="height: 100%;">
+                        <div class="panel-header"><h2><i class="fas fa-chart-pie"></i> Έσοδα ανά Δωμάτιο</h2></div>
+                        <div class="panel-body" style="position: relative; height: 300px; display: flex; justify-content: center;">
+                            <canvas id="rs-chart"></canvas>
                         </div>
                     </div>
+                    
+                    <!-- Tabs & Actions Panel -->
                     <div class="panel">
-                        <div class="panel-header"><h2><i class="fas fa-times-circle"></i> No Commission</h2></div>
-                        <div class="panel-body">
-                            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px;">
-                                <input type="month" class="form-control" id="no-commission-month" placeholder="Month (YYYY-MM)">
-                                <select class="form-control" id="no-commission-room">
-                                    <option value="">Select Room</option>
-                                    <option value="Apartment 1">Apartment 1</option>
-                                    <option value="Apartment 2">Apartment 2</option>
-                                    <option value="Studio">Studio</option>
-                                    <option value="Villa">Villa</option>
-                                </select>
-                                <input type="number" class="form-control" id="no-commission-income" placeholder="Total Income" step="0.01">
-                                <input type="number" class="form-control" id="no-commission-stays" placeholder="Total Stays" step="1">
-                            </div>
-                            <button class="btn btn-primary" id="add-no-commission-btn"><i class="fas fa-plus"></i> Add No Commission Record</button>
-                            <div class="no-commission-filters" style="display: flex; gap: 10px; margin: 15px 0; flex-wrap: wrap;">
-                                <input type="month" id="no-commission-filter-month" class="form-control" style="width: auto;" placeholder="Filter by month">
-                                <select id="no-commission-filter-room" class="form-control" style="width: auto;">
-                                    <option value="">All Rooms</option>
-                                </select>
-                                <button class="btn btn-secondary btn-sm" id="apply-no-commission-filters"><i class="fas fa-filter"></i> Apply</button>
-                                <button class="btn btn-secondary btn-sm" id="clear-no-commission-filters"><i class="fas fa-times"></i> Clear</button>
-                            </div>
-                            <div class="table-wrapper" style="margin-top: 20px;">
-                                <table class="data-table" id="no-commission-table">
-                                    <thead><tr><th>Month</th><th>Room</th><th>Total Income</th><th>Total Stays</th><th>Actions</th></tr></thead>
-                                    <tbody id="no-commission-body"></tbody>
-                                </table>
-                            </div>
-                            <div class="no-commission-summary" style="margin-top: 30px;">
-                                <h4>No Commission Summary by Room & Month</h4>
-                                <div class="table-wrapper">
-                                    <table class="data-table" id="no-commission-summary-table">
-                                        <thead><tr><th>Month</th><th>Room</th><th>Total Income</th><th>Total Stays</th><th>Occupancy %</th></tr></thead>
-                                        <tbody id="no-commission-summary-body"></tbody>
-                                    </table>
-                                </div>
-                            </div>
+                        <div class="tab-navigation">
+                            <button class="tab-btn active" data-rstab="commission"><i class="fas fa-percentage"></i> Commission</button>
+                            <button class="tab-btn" data-rstab="nocommission"><i class="fas fa-times-circle"></i> No Commission</button>
+                            <button class="tab-btn" data-rstab="transfers"><i class="fas fa-truck"></i> Transfers</button>
+                        </div>
+                        <div class="panel-body" style="display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; height: calc(100% - 57px); min-height: 250px;">
+                            <i class="fas fa-chart-line" style="font-size: 48px; color: var(--border-color); margin-bottom: 16px;"></i>
+                            <h3 style="font-size: 18px; margin-bottom: 8px;">Διαχείριση Δεδομένων</h3>
+                            <p style="color: var(--text-secondary); margin-bottom: 20px; max-width: 300px;">Επίλεξε μια καρτέλα από πάνω για να δεις τα δεδομένα ή πάτα το κουμπί για να προσθέσεις νέα εγγραφή.</p>
+                            <button class="btn btn-primary" id="rs-add-record-btn" style="width: 100%; max-width: 250px;"><i class="fas fa-plus"></i> Προσθήκη Νέας Εγγραφής</button>
                         </div>
                     </div>
                 </div>
-                <div class="panel" style="margin-top: 24px;">
-                    <div class="panel-header"><h2><i class="fas fa-truck"></i> Transfer & Meal Income (from reservations)</h2></div>
-                    <div class="panel-body">
-                        <div class="table-wrapper">
-                            <table class="data-table" id="transfer-meal-auto-table">
-                                <thead><tr><th>Month</th><th>Transfer Income</th><th>Meal Income</th><th>Total</th></tr></thead>
-                                <tbody id="transfer-meal-auto-body"></tbody>
-                            </table>
+
+                <!-- Active Tab Content -->
+                <div class="table-container" style="margin-top: 24px;">
+                    <div class="table-header">
+                        <div class="table-title" id="rs-table-title"><i class="fas fa-table"></i> Commission Records</div>
+                        <div class="table-actions">
+                            <input type="month" id="rs-filter-month" class="form-control form-control-sm" style="width: auto;">
+                            <select id="rs-filter-room" class="form-control form-control-sm" style="width: auto;">
+                                <option value="">Όλα τα Δωμάτια</option>
+                            </select>
+                            <button class="btn btn-secondary btn-sm" id="rs-clear-filters"><i class="fas fa-times"></i> Καθαρισμός</button>
                         </div>
-                        <button class="btn btn-secondary btn-sm" id="refresh-transfer-meal-btn" style="margin-top: 10px;"><i class="fas fa-sync-alt"></i> Refresh</button>
+                    </div>
+                    <div class="table-wrapper">
+                        <table class="data-table" id="rs-data-table">
+                            <thead id="rs-table-head"></thead>
+                            <tbody id="rs-table-body"></tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -1776,6 +1748,40 @@
             <div class="modal-footer">
                 <button class="btn btn-secondary" id="cal-quick-add-cancel"><i class="fas fa-times"></i> Cancel</button>
                 <button class="btn btn-success" id="cal-quick-add-save"><i class="fas fa-save"></i> Save Reservation</button>
+            </div>
+        </div>
+    </div>
+
+        <!-- Modals για Reservations Stats -->
+    <div class="modal" id="rs-add-commission-modal">
+        <div class="modal-content">
+            <div class="modal-header"><div class="modal-title">Προσθήκη Commission</div><button class="modal-close" onclick="document.getElementById('rs-add-commission-modal').classList.remove('active')"><i class="fas fa-times"></i></button></div>
+            <div class="modal-body">
+                <div class="form-group"><label class="form-label">Μήνας</label><input type="month" class="form-control" id="rs-comm-month"></div>
+                <div class="form-group"><label class="form-label">Δωμάτιο</label><select class="form-control" id="rs-comm-room"><option value="Apartment 1">Apartment 1</option><option value="Apartment 2">Apartment 2</option><option value="Studio">Studio</option><option value="Villa">Villa</option><option value="Horizon">Horizon</option></select></div>
+                <div class="form-group"><label class="form-label">Income ($)</label><input type="number" class="form-control" id="rs-comm-income" step="0.01"></div>
+                <div class="form-group"><label class="form-label">Tax ($)</label><input type="number" class="form-control" id="rs-comm-tax" step="0.01"></div>
+                <div class="form-group"><label class="form-label">Total Stays</label><input type="number" class="form-control" id="rs-comm-stays" step="1"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="document.getElementById('rs-add-commission-modal').classList.remove('active')">Ακύρωση</button>
+                <button class="btn btn-primary" id="rs-save-commission-btn">Αποθήκευση</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="rs-add-nocommission-modal">
+        <div class="modal-content">
+            <div class="modal-header"><div class="modal-title">Προσθήκη No Commission</div><button class="modal-close" onclick="document.getElementById('rs-add-nocommission-modal').classList.remove('active')"><i class="fas fa-times"></i></button></div>
+            <div class="modal-body">
+                <div class="form-group"><label class="form-label">Μήνας</label><input type="month" class="form-control" id="rs-nocomm-month"></div>
+                <div class="form-group"><label class="form-label">Δωμάτιο</label><select class="form-control" id="rs-nocomm-room"><option value="Apartment 1">Apartment 1</option><option value="Apartment 2">Apartment 2</option><option value="Studio">Studio</option><option value="Villa">Villa</option><option value="Horizon">Horizon</option></select></div>
+                <div class="form-group"><label class="form-label">Income ($)</label><input type="number" class="form-control" id="rs-nocomm-income" step="0.01"></div>
+                <div class="form-group"><label class="form-label">Total Stays</label><input type="number" class="form-control" id="rs-nocomm-stays" step="1"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="document.getElementById('rs-add-nocommission-modal').classList.remove('active')">Ακύρωση</button>
+                <button class="btn btn-primary" id="rs-save-nocommission-btn">Αποθήκευση</button>
             </div>
         </div>
     </div>
@@ -2336,229 +2342,155 @@
             } catch (e) { console.error(e); showNotification('Delete failed', 'error'); }
         }
 
-        function populateCommissionRoomFilter() {
-            const rooms = [...new Set(state.commissionStats.map(s => s.room).filter(Boolean))];
-            const select = document.getElementById('commission-filter-room');
-            if (select) {
-                select.innerHTML = '<option value="">All Rooms</option>';
-                rooms.forEach(room => {
-                    const option = document.createElement('option');
-                    option.value = room;
-                    option.textContent = room;
-                    select.appendChild(option);
+                // ========== RESERVATIONS STATS (NEW LOGIC) ==========
+        let rsActiveTab = 'commission';
+
+        function renderReservationsStats() {
+            // 1. Υπολογισμός KPIs
+            const totalComm = state.commissionStats.reduce((s, c) => s + (c.income || 0), 0);
+            const totalNoComm = state.noCommissionStats.reduce((s, c) => s + (c.income || 0), 0);
+            const totalTransfer = state.reservations.reduce((s, r) => s + (r.transferAmount || 0) + (r.mealPrice || 0), 0);
+            const totalStays = state.commissionStats.reduce((s, c) => s + (c.stays || 0), 0) + 
+                               state.noCommissionStats.reduce((s, c) => s + (c.stays || 0), 0);
+
+            document.getElementById('rs-kpi-commission').textContent = `$${totalComm.toFixed(2)}`;
+            document.getElementById('rs-kpi-nocommission').textContent = `$${totalNoComm.toFixed(2)}`;
+            document.getElementById('rs-kpi-transfer').textContent = `$${totalTransfer.toFixed(2)}`;
+            document.getElementById('rs-kpi-stays').textContent = totalStays;
+
+            // 2. Γράφημα ανά Δωμάτιο
+            if (state.charts.rsChart) state.charts.rsChart.destroy();
+            const roomTotals = {};
+            state.commissionStats.forEach(c => { roomTotals[c.room] = (roomTotals[c.room] || 0) + (c.income || 0); });
+            state.noCommissionStats.forEach(c => { roomTotals[c.room] = (roomTotals[c.room] || 0) + (c.income || 0); });
+            
+            const ctx = document.getElementById('rs-chart')?.getContext('2d');
+            if (ctx) {
+                state.charts.rsChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: Object.keys(roomTotals),
+                        datasets: [{ data: Object.values(roomTotals), backgroundColor: ['#0284c7', '#7c3aed', '#d97706', '#dc2626', '#059669'] }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
                 });
             }
-        }
 
-        function getFilteredCommissionStats() {
-            let filtered = state.commissionStats;
-            if (state.commissionFilters.month) {
-                filtered = filtered.filter(s => s.month === state.commissionFilters.month);
+            // 3. Ενημέρωση Select Φίλτρου Δωματίων
+            const roomFilter = document.getElementById('rs-filter-room');
+            if (roomFilter) {
+                const rooms = [...new Set([...state.commissionStats.map(s => s.room), ...state.noCommissionStats.map(s => s.room)].filter(Boolean))];
+                roomFilter.innerHTML = '<option value="">Όλα τα Δωμάτια</option>' + rooms.map(r => `<option value="${r}">${r}</option>`).join('');
             }
-            if (state.commissionFilters.room) {
-                filtered = filtered.filter(s => s.room === state.commissionFilters.room);
-            }
-            return filtered;
+
+            // 4. Σχεδίαση Πίνακα
+            renderRsTable();
         }
 
-        function renderCommissionStats() {
-            const tbody = document.getElementById('commission-body');
-            if (!tbody) return;
-            const filtered = getFilteredCommissionStats();
-            tbody.innerHTML = '';
-            if (filtered.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state">No commission records</div></td></tr>';
-                return;
-            }
-            filtered.forEach(stat => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${stat.month}</td>
-                    <td>${stat.room || ''}</td>
-                    <td class="currency-cell">$${(stat.income || 0).toFixed(2)}</td>
-                    <td>${stat.stays || 0}</td>
-                    <td><div class="action-buttons"><button class="btn-icon delete" onclick="window.deleteCommissionStat('${stat.id}')"><i class="fas fa-trash-alt"></i></button></div></td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
+        function renderRsTable() {
+            const thead = document.getElementById('rs-table-head');
+            const tbody = document.getElementById('rs-table-body');
+            const title = document.getElementById('rs-table-title');
+            const filterMonth = document.getElementById('rs-filter-month').value;
+            const filterRoom = document.getElementById('rs-filter-room').value;
 
-        function renderCommissionSummary() {
-            const tbody = document.getElementById('commission-summary-body');
-            if (!tbody) return;
-            const filtered = getFilteredCommissionStats();
-            const grouped = {};
-            filtered.forEach(s => {
-                const key = s.month + '|' + s.room;
-                if (!grouped[key]) {
-                    grouped[key] = { month: s.month, room: s.room, income: 0, stays: 0 };
-                }
-                grouped[key].income += s.income || 0;
-                grouped[key].stays += s.stays || 0;
-            });
-            const sorted = Object.values(grouped).sort((a,b) => a.month.localeCompare(b.month) || a.room.localeCompare(b.room));
-            tbody.innerHTML = '';
-            if (sorted.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state">No data</div></td></tr>';
-                return;
-            }
-            sorted.forEach(item => {
-                const [year, month] = item.month.split('-').map(Number);
-                const daysInMonth = new Date(year, month, 0).getDate();
-                const occupancy = item.stays > 0 ? ((item.stays / daysInMonth) * 100).toFixed(1) : '0.0';
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${item.month}</td>
-                    <td>${item.room}</td>
-                    <td class="currency-cell">$${item.income.toFixed(2)}</td>
-                    <td>${item.stays}</td>
-                    <td>${occupancy}%</td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
+            if (!thead || !tbody) return;
 
-        function applyCommissionFilters() {
-            state.commissionFilters.month = document.getElementById('commission-filter-month').value;
-            state.commissionFilters.room = document.getElementById('commission-filter-room').value;
-            renderCommissionStats();
-            renderCommissionSummary();
-        }
-
-        function clearCommissionFilters() {
-            state.commissionFilters = { month: '', room: '' };
-            document.getElementById('commission-filter-month').value = '';
-            document.getElementById('commission-filter-room').value = '';
-            renderCommissionStats();
-            renderCommissionSummary();
-        }
-
-        async function addNoCommissionStat() {
-            const month = document.getElementById('no-commission-month').value;
-            const room = document.getElementById('no-commission-room').value;
-            const income = parseFloat(document.getElementById('no-commission-income').value) || 0;
-            const stays = parseInt(document.getElementById('no-commission-stays').value) || 0;
-            if (!month || !room || income === 0 || stays === 0) {
-                showNotification('Please fill month, room, income and stays', 'error');
-                return;
-            }
-            const newStat = { month, room, income, stays, createdAt: new Date().toISOString() };
-            try {
-                await addDoc(noCommissionStatsCol, newStat);
-                await loadAllData();
-                document.getElementById('no-commission-month').value = '';
-                document.getElementById('no-commission-room').value = '';
-                document.getElementById('no-commission-income').value = '';
-                document.getElementById('no-commission-stays').value = '';
-                showNotification('No commission record added', 'success');
-            } catch (e) { console.error(e); showNotification('Error adding', 'error'); }
-        }
-
-        async function deleteNoCommissionStat(id) {
-            if (!confirm('Delete this record?')) return;
-            try {
-                await deleteDoc(doc(db, 'noCommissionStats', id));
-                await loadAllData();
-                showNotification('Record deleted', 'success');
-            } catch (e) { console.error(e); showNotification('Delete failed', 'error'); }
-        }
-
-        function populateNoCommissionRoomFilter() {
-            const rooms = [...new Set(state.noCommissionStats.map(s => s.room).filter(Boolean))];
-            const select = document.getElementById('no-commission-filter-room');
-            if (select) {
-                select.innerHTML = '<option value="">All Rooms</option>';
-                rooms.forEach(room => {
-                    const option = document.createElement('option');
-                    option.value = room;
-                    option.textContent = room;
-                    select.appendChild(option);
+            if (rsActiveTab === 'transfers') {
+                title.innerHTML = '<i class="fas fa-truck"></i> Transfer & Meal Income (Auto)';
+                document.getElementById('rs-add-record-btn').style.display = 'none';
+                thead.innerHTML = `<tr><th>Μήνας</th><th>Transfer</th><th>Meal</th><th>Total</th></tr>`;
+                
+                const monthly = {};
+                state.reservations.forEach(r => {
+                    if (!r.checkin) return;
+                    const month = r.checkin.substring(0, 7);
+                    if (filterMonth && month !== filterMonth) return;
+                    if (filterRoom && r.name !== filterRoom) return;
+                    if (!monthly[month]) monthly[month] = { transfer: 0, meal: 0 };
+                    monthly[month].transfer += (r.transferAmount || 0);
+                    monthly[month].meal += (r.mealPrice || 0);
                 });
-            }
-        }
 
-        function getFilteredNoCommissionStats() {
-            let filtered = state.noCommissionStats;
-            if (state.noCommissionFilters.month) {
-                filtered = filtered.filter(s => s.month === state.noCommissionFilters.month);
-            }
-            if (state.noCommissionFilters.room) {
-                filtered = filtered.filter(s => s.room === state.noCommissionFilters.room);
-            }
-            return filtered;
-        }
-
-        function renderNoCommissionStats() {
-            const tbody = document.getElementById('no-commission-body');
-            if (!tbody) return;
-            const filtered = getFilteredNoCommissionStats();
-            tbody.innerHTML = '';
-            if (filtered.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state">No no-commission records</div></td></tr>';
-                return;
-            }
-            filtered.forEach(stat => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${stat.month}</td>
-                    <td>${stat.room || ''}</td>
-                    <td class="currency-cell">$${(stat.income || 0).toFixed(2)}</td>
-                    <td>${stat.stays || 0}</td>
-                    <td><div class="action-buttons"><button class="btn-icon delete" onclick="window.deleteNoCommissionStat('${stat.id}')"><i class="fas fa-trash-alt"></i></button></div></td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        function renderNoCommissionSummary() {
-            const tbody = document.getElementById('no-commission-summary-body');
-            if (!tbody) return;
-            const filtered = getFilteredNoCommissionStats();
-            const grouped = {};
-            filtered.forEach(s => {
-                const key = s.month + '|' + s.room;
-                if (!grouped[key]) {
-                    grouped[key] = { month: s.month, room: s.room, income: 0, stays: 0 };
+                const sorted = Object.keys(monthly).sort().reverse();
+                if (sorted.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="4"><div class="empty-state">Δεν βρέθηκαν δεδομένα</div></td></tr>`;
+                    return;
                 }
-                grouped[key].income += s.income || 0;
-                grouped[key].stays += s.stays || 0;
-            });
-            const sorted = Object.values(grouped).sort((a,b) => a.month.localeCompare(b.month) || a.room.localeCompare(b.room));
-            tbody.innerHTML = '';
-            if (sorted.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state">No data</div></td></tr>';
+                tbody.innerHTML = sorted.map(m => `
+                    <tr>
+                        <td><strong>${m}</strong></td>
+                        <td class="currency-cell">$${monthly[m].transfer.toFixed(2)}</td>
+                        <td class="currency-cell">$${monthly[m].meal.toFixed(2)}</td>
+                        <td class="currency-cell" style="font-weight:800;">$${(monthly[m].transfer + monthly[m].meal).toFixed(2)}</td>
+                    </tr>
+                `).join('');
                 return;
             }
-            sorted.forEach(item => {
-                const [year, month] = item.month.split('-').map(Number);
-                const daysInMonth = new Date(year, month, 0).getDate();
-                const occupancy = item.stays > 0 ? ((item.stays / daysInMonth) * 100).toFixed(1) : '0.0';
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${item.month}</td>
-                    <td>${item.room}</td>
-                    <td class="currency-cell">$${item.income.toFixed(2)}</td>
-                    <td>${item.stays}</td>
-                    <td>${occupancy}%</td>
-                `;
-                tbody.appendChild(tr);
-            });
+
+            document.getElementById('rs-add-record-btn').style.display = 'block';
+            const isComm = rsActiveTab === 'commission';
+            title.innerHTML = isComm ? '<i class="fas fa-percentage"></i> Commission Records' : '<i class="fas fa-times-circle"></i> No Commission Records';
+            
+            let data = isComm ? state.commissionStats : state.noCommissionStats;
+            if (filterMonth) data = data.filter(d => d.month === filterMonth);
+            if (filterRoom) data = data.filter(d => d.room === filterRoom);
+            data = [...data].sort((a,b) => b.month.localeCompare(a.month));
+
+            thead.innerHTML = `<tr><th>Μήνας</th><th>Δωμάτιο</th><th>Income</th><th>Διανυκτερεύσεις</th><th>Ενέργειες</th></tr>`;
+
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state">Δεν βρέθηκαν δεδομένα</div></td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = data.map(d => `
+                <tr>
+                    <td><strong>${d.month}</strong></td>
+                    <td>${d.room}</td>
+                    <td class="currency-cell">$${(d.income || 0).toFixed(2)}</td>
+                    <td>${d.stays || 0}</td>
+                    <td>
+                        <button class="btn-icon delete" onclick="window.deleteRsRecord('${isComm ? 'comm' : 'nocomm'}', '${d.id}')"><i class="fas fa-trash-alt"></i></button>
+                    </td>
+                </tr>
+            `).join('');
         }
 
-        function applyNoCommissionFilters() {
-            state.noCommissionFilters.month = document.getElementById('no-commission-filter-month').value;
-            state.noCommissionFilters.room = document.getElementById('no-commission-filter-room').value;
-            renderNoCommissionStats();
-            renderNoCommissionSummary();
+        async function saveRsRecord(type) {
+            if (type === 'comm') {
+                const month = document.getElementById('rs-comm-month').value;
+                const room = document.getElementById('rs-comm-room').value;
+                const income = parseFloat(document.getElementById('rs-comm-income').value) || 0;
+                const tax = parseFloat(document.getElementById('rs-comm-tax').value) || 0;
+                const stays = parseInt(document.getElementById('rs-comm-stays').value) || 0;
+                if (!month || !room) return showNotification('Συμπλήρωσε όλα τα πεδία', 'error');
+                
+                await addDoc(commissionStatsCol, { month, room, income: income + tax, stays, createdAt: new Date().toISOString() });
+                document.getElementById('rs-add-commission-modal').classList.remove('active');
+            } else {
+                const month = document.getElementById('rs-nocomm-month').value;
+                const room = document.getElementById('rs-nocomm-room').value;
+                const income = parseFloat(document.getElementById('rs-nocomm-income').value) || 0;
+                const stays = parseInt(document.getElementById('rs-nocomm-stays').value) || 0;
+                if (!month || !room) return showNotification('Συμπλήρωσε όλα τα πεδία', 'error');
+                
+                await addDoc(noCommissionStatsCol, { month, room, income, stays, createdAt: new Date().toISOString() });
+                document.getElementById('rs-add-nocommission-modal').classList.remove('active');
+            }
+            await loadAllData();
+            showNotification('Η εγγραφή αποθηκεύτηκε!', 'success');
+            renderReservationsStats();
         }
 
-        function clearNoCommissionFilters() {
-            state.noCommissionFilters = { month: '', room: '' };
-            document.getElementById('no-commission-filter-month').value = '';
-            document.getElementById('no-commission-filter-room').value = '';
-            renderNoCommissionStats();
-            renderNoCommissionSummary();
-        }
+        window.deleteRsRecord = async (type, id) => {
+            if (!confirm('Να διαγραφεί η εγγραφή;')) return;
+            const col = type === 'comm' ? commissionStatsCol : noCommissionStatsCol;
+            await deleteDoc(doc(db, type === 'comm' ? 'commissionStats' : 'noCommissionStats', id));
+            await loadAllData();
+            renderReservationsStats();
+            showNotification('Διαγράφηκε!', 'success');
+        };
 
         function renderTransferMealAuto() {
             const tbody = document.getElementById('transfer-meal-auto-body');
@@ -4332,9 +4264,7 @@
                 renderTransferAnalytics();
             }
             if (page === 'reservations-stats') {
-                renderCommissionStats();
-                renderNoCommissionStats();
-                renderTransferMealAuto();
+                renderReservationsStats();
             }
         }
 
@@ -4826,13 +4756,33 @@
             document.getElementById('clear-filters-btn')?.addEventListener('click', clearAllFilters);
             document.getElementById('add-commission-btn')?.addEventListener('click', addCommissionStat);
             document.getElementById('add-no-commission-btn')?.addEventListener('click', addNoCommissionStat);
-            document.getElementById('refresh-transfer-meal-btn')?.addEventListener('click', () => {
-                renderTransferMealAuto();
-                showNotification('Transfer/Meal data refreshed', 'success');
+                        // RS Tabs
+            document.querySelectorAll('[data-rstab]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    document.querySelectorAll('[data-rstab]').forEach(b => b.classList.remove('active'));
+                    e.currentTarget.classList.add('active');
+                    rsActiveTab = e.currentTarget.dataset.rstab;
+                    renderRsTable();
+                });
             });
-            document.getElementById('apply-commission-filters')?.addEventListener('click', applyCommissionFilters);
-            document.getElementById('clear-commission-filters')?.addEventListener('click', clearCommissionFilters);
-            document.getElementById('apply-no-commission-filters')?.addEventListener('click', applyNoCommissionFilters);
+
+            // RS Filters
+            document.getElementById('rs-filter-month')?.addEventListener('change', renderRsTable);
+            document.getElementById('rs-filter-room')?.addEventListener('change', renderRsTable);
+            document.getElementById('rs-clear-filters')?.addEventListener('click', () => {
+                document.getElementById('rs-filter-month').value = '';
+                document.getElementById('rs-filter-room').value = '';
+                renderRsTable();
+            });
+
+            // RS Add Button & Modals
+            document.getElementById('rs-add-record-btn')?.addEventListener('click', () => {
+                if (rsActiveTab === 'commission') document.getElementById('rs-add-commission-modal').classList.add('active');
+                else if (rsActiveTab === 'nocommission') document.getElementById('rs-add-nocommission-modal').classList.add('active');
+            });
+            document.getElementById('rs-save-commission-btn')?.addEventListener('click', () => saveRsRecord('comm'));
+            document.getElementById('rs-save-nocommission-btn')?.addEventListener('click', () => saveRsRecord('nocomm'));
+            
             document.getElementById('clear-no-commission-filters')?.addEventListener('click', clearNoCommissionFilters);
             document.getElementById('apply-year-compare')?.addEventListener('click', renderYearlyComparison);
             document.getElementById('apply-month-filter')?.addEventListener('click', () => {
