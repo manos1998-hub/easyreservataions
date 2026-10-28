@@ -3797,20 +3797,21 @@
                 const viewStart = new Date(year, month, 1);
                 const viewEnd = new Date(year, month, daysInMonth);
 
+                const startStr = `${year}-${String(month + 1).padStart(2, '0')}-01`;
+                const endStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(daysInMonth).padStart(2, '0')}`;
+
                 if (state.calendarFilters.checkin) {
-                    // Αν είναι πατημένο το Check In, δείξε μόνο τις αφίξεις (1 μέρα)
+                    // Εμφάνιση ΜΟΝΟ Check-ins
                     displayRes = roomRes.filter(r => {
-                        const ci = new Date(r.checkin);
-                        return ci >= viewStart && ci <= viewEnd;
+                        return r.checkin >= startStr && r.checkin <= endStr;
                     }).map(r => ({ ...r, displayDate: r.checkin, isSingleDay: true }));
                 } else if (state.calendarFilters.checkout) {
-                    // Αν είναι πατημένο το Check Out, δείξε μόνο τις αναχωρήσεις (1 μέρα)
+                    // Εμφάνιση ΜΟΝΟ Check-outs
                     displayRes = roomRes.filter(r => {
-                        const co = new Date(r.checkout);
-                        return co >= viewStart && co <= viewEnd;
+                        return r.checkout >= startStr && r.checkout <= endStr;
                     }).map(r => ({ ...r, displayDate: r.checkout, isSingleDay: true }));
                 } else {
-                    // Default (κανένα κουμπί πατημένο): Δείξε τις κρατήσεις απλωμένες κανονικά
+                    // Default: Εμφάνιση κανονικών multi-day bars
                     displayRes = roomRes.map(r => ({ ...r, isSingleDay: false }));
                 }
 
