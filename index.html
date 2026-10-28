@@ -866,6 +866,54 @@
             box-shadow: 0 0 0 2px var(--primary-color), 0 4px 12px rgba(37, 99, 235, 0.35);
             z-index: 3;
         }
+        /* ---- Flex modal (για να μένει σταθερό το footer) ---- */
+        .modal-content-flex {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            max-height: 90vh;
+        }
+        .modal-content-flex .modal-header,
+        .modal-content-flex .modal-footer {
+            flex-shrink: 0;
+        }
+        .modal-content-flex .modal-body {
+            overflow-y: auto;
+            flex: 1;
+            min-height: 0;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* ---- Grid για τη φόρμα μέσα στο modal ---- */
+        .qadd-grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        @media (max-width: 600px) {
+            .qadd-grid-2 {
+                grid-template-columns: 1fr;
+                gap: 0;
+            }
+            .modal-content-flex { max-height: 95vh; }
+        }
+        .qadd-duration-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(37, 99, 235, 0.08);
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+        .qadd-duration-pill i { font-size: 12px; }
+        .qadd-duration-pill strong { font-size: 16px; }
+
+
 
         /* ---- Responsive για τα νέα κουμπιά ---- */
         @media (max-width: 768px) {
@@ -1658,6 +1706,8 @@
         </div>
     </div>
 
+
+
         <!-- ========== Day Details Modal (ΝΕΟ ΗΜΕΡΟΛΟΓΙΟ) ========== -->
     <div class="cal-day-modal" id="cal-day-modal">
         <div class="cal-day-modal-content">
@@ -1673,6 +1723,24 @@
             <div class="cal-day-modal-body" id="cal-day-modal-body"></div>
         </div>
     </div>
+
+        <!-- ========== Quick Add Reservation Modal ========== -->
+    <div class="modal" id="cal-quick-add-modal">
+        <div class="modal-content modal-content-flex" style="max-width: 680px;">
+            <div class="modal-header">
+                <div class="modal-title"><i class="fas fa-calendar-plus" style="color: var(--primary-color);"></i> New Reservation</div>
+                <button class="modal-close" id="cal-quick-add-modal-close"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body" id="cal-quick-add-modal-body">
+                <!-- Δυναμικό περιεχόμενο (γεμίζει από JS) -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cal-quick-add-cancel"><i class="fas fa-times"></i> Cancel</button>
+                <button class="btn btn-success" id="cal-quick-add-save"><i class="fas fa-save"></i> Save Reservation</button>
+            </div>
+        </div>
+    </div>
+
 
 
     <!-- ========== FIREBASE SCRIPT (με professional Excel export) ========== -->
@@ -3885,38 +3953,242 @@
         }
 
         function quickAddReservation(dateStr, room) {
-            // Πήγαινε στο Dashboard
-            showPage('dashboard');
+            const modal = document.getElementById('cal-quick-add-modal');
+            const body = document.getElementById('cal-quick-add-modal-body');
+            if (!modal || !body) return;
 
-            // Pre-fill τη φόρμα New Reservation
-            const roomSelect = document.getElementById('reservation-room');
-            if (roomSelect) roomSelect.value = room;
+            // Υπολογισμός επόμενης ημέρας για default check-out
+            const nextDay = new Date(dateStr);
+            nextDay.setDate(nextDay.getDate() + 1);
+            const defaultCheckout = nextDay.toISOString().split('T')[0];
 
-            const checkinEl = document.getElementById('reservation-checkin');
-            if (checkinEl) checkinEl.value = dateStr;
+            // Room options
+            const rooms = ['Apartment 1', 'Apartment 2', 'Studio', 'Villa', 'Horizon'];
+            const roomOptions = rooms.map(r =>
+                `<option value="${r}" ${r === room ? 'selected' : ''}>${r}</option>`
+            ).join('');
 
-            const checkoutEl = document.getElementById('reservation-checkout');
-            if (checkoutEl) {
-                const next = new Date(dateStr);
-                next.setDate(next.getDate() + 1);
-                checkoutEl.value = next.toISOString().split('T')[0];
+            // Custom fields HTML
+            const sortedFields = [...state.customFields].sort((a, b) => {
+                const ia = state.fieldOrder.indexOf(a.id);
+                const ib = state.fieldOrder.indexOf(b.id);
+                return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
+            });
+
+            const customFieldsHtml = sortedFields.map(f => {
+                if (f.type === 'checkbox') {
+                    return `<div class="form-group">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="qadd-${f.id}" ${f.defaultValue === 'true' ? 'checked' : ''}>
+                            <label for="qadd-${f.id}">${f.name}</label>
+                        </div>
+                    </div>`;
+                } else if (f.type === 'dropdown') {
+                    let options = '<option value="">Select</option>';
+                    if (f.options) {
+                        f.options.forEach(o => {
+                            options += `<option value="${o}" ${o === f.defaultValue ? 'selected' : ''}>${o}</option>`;
+                        });
+                    }
+                    return `<div class="form-group">
+                        <label class="form-label">${f.name}</label>
+                        <select class="form-control" id="qadd-${f.id}">${options}</select>
+                    </div>`;
+                } else if (f.type === 'status') {
+                    return `<div class="form-group">
+                        <label class="form-label">${f.name}</label>
+                        <select class="form-control" id="qadd-${f.id}">
+                            <option value="pending" ${f.defaultValue === 'pending' ? 'selected' : ''}>Pending</option>
+                            <option value="confirmed" ${f.defaultValue === 'confirmed' ? 'selected' : ''}>Confirmed</option>
+                            <option value="cancelled" ${f.defaultValue === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+                        </select>
+                    </div>`;
+                } else {
+                    const inputType = (f.type === 'date') ? 'date'
+                                    : (f.type === 'currency' || f.type === 'number') ? 'number'
+                                    : 'text';
+                    const step = f.type === 'currency' ? 'step="0.01"' : '';
+                    return `<div class="form-group">
+                        <label class="form-label">${f.name}</label>
+                        <input type="${inputType}" class="form-control" id="qadd-${f.id}"
+                            value="${f.defaultValue || ''}" ${step} placeholder="${f.name}">
+                    </div>`;
+                }
+            }).join('');
+
+            body.innerHTML = `
+                <div class="form-group">
+                    <label class="form-label">Room Type <span>*</span></label>
+                    <select class="form-control" id="qadd-room">${roomOptions}</select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Guest Name <span>*</span></label>
+                    <input type="text" class="form-control" id="qadd-guest" placeholder="Guest name">
+                </div>
+                <div class="qadd-grid-2">
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label">Check-in Date <span>*</span></label>
+                        <input type="date" class="form-control" id="qadd-checkin" value="${dateStr}">
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label">Check-out Date <span>*</span></label>
+                        <input type="date" class="form-control" id="qadd-checkout" value="${defaultCheckout}">
+                    </div>
+                </div>
+                <div class="qadd-grid-2">
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label">Check-in Time <span>*</span></label>
+                        <input type="time" class="form-control" id="qadd-time" value="12:00">
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label">Check-out Time <span>*</span></label>
+                        <input type="time" class="form-control" id="qadd-checkout-time" value="10:00">
+                    </div>
+                </div>
+                <div class="qadd-grid-2">
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label">Transfer ($)</label>
+                        <input type="number" class="form-control" id="qadd-transfer" step="0.01" min="0" value="0">
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label">Meal ($)</label>
+                        <input type="number" class="form-control" id="qadd-meal" step="0.01" min="0" value="0">
+                    </div>
+                </div>
+                <div class="qadd-duration-pill">
+                    <i class="fas fa-moon"></i>
+                    <strong id="qadd-duration">1</strong> nights stay
+                </div>
+                ${customFieldsHtml}
+            `;
+
+            // Live duration update
+            const updateDuration = () => {
+                const ci = document.getElementById('qadd-checkin')?.value;
+                const co = document.getElementById('qadd-checkout')?.value;
+                if (ci && co) {
+                    const n = Math.max(0, Math.ceil((new Date(co) - new Date(ci)) / 86400000));
+                    const el = document.getElementById('qadd-duration');
+                    if (el) el.textContent = n;
+                }
+            };
+            document.getElementById('qadd-checkin')?.addEventListener('change', updateDuration);
+            document.getElementById('qadd-checkout')?.addEventListener('change', updateDuration);
+            updateDuration();
+
+            modal.classList.add('active');
+
+            // Auto-focus στο guest name
+            setTimeout(() => document.getElementById('qadd-guest')?.focus(), 120);
+        }
+
+        async function saveQuickAddReservation() {
+            const room = document.getElementById('qadd-room')?.value;
+            const guest = document.getElementById('qadd-guest')?.value.trim();
+            const checkin = document.getElementById('qadd-checkin')?.value;
+            const checkout = document.getElementById('qadd-checkout')?.value;
+            const time = document.getElementById('qadd-time')?.value;
+            const checkoutTime = document.getElementById('qadd-checkout-time')?.value;
+            const transferAmount = parseFloat(document.getElementById('qadd-transfer')?.value) || 0;
+            const mealPrice = parseFloat(document.getElementById('qadd-meal')?.value) || 0;
+
+            if (!room || !guest || !checkin || !checkout || !time || !checkoutTime) {
+                showNotification('Please fill all required fields', 'error');
+                return;
+            }
+            if (new Date(checkout) < new Date(checkin)) {
+                showNotification('Check-out must be after Check-in', 'error');
+                return;
             }
 
-            // Καθάρισε το guest name για να το συμπληρώσει ο χρήστης
-            const guestEl = document.getElementById('reservation-guest');
-            if (guestEl) guestEl.value = '';
+            const duration = calculateDuration(checkin, checkout);
+            const newRes = {
+                name: room,
+                guestName: guest,
+                checkin,
+                checkout,
+                duration,
+                time,
+                checkoutTime,
+                transferAmount,
+                mealPrice,
+                createdAt: new Date().toISOString()
+            };
 
-            // Scroll στη φόρμα + focus στο guest name
-            setTimeout(() => {
-                const formPanel = document.getElementById('reservation-guest');
-                if (formPanel) {
-                    formPanel.focus();
-                    formPanel.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
-            }, 150);
+            state.customFields.forEach(f => {
+                const el = document.getElementById(`qadd-${f.id}`);
+                if (el) newRes[f.id] = f.type === 'checkbox' ? el.checked : el.value;
+            });
 
-            showNotification(`${room} — ${dateStr}. Συμπλήρωσε το όνομα πελάτη!`, 'info');
+            try {
+                await addDoc(reservationsCol, newRes);
+                document.getElementById('cal-quick-add-modal').classList.remove('active');
+                await loadAllData();
+                showNotification('Reservation created successfully!', 'success');
+            } catch (e) {
+                console.error(e);
+                showNotification('Error saving reservation', 'error');
+            }
         }
+
+        function closeQuickAddModal() {
+            document.getElementById('cal-quick-add-modal')?.classList.remove('active');
+        }
+
+
+        async function saveQuickAddReservation() {
+            const room = document.getElementById('qadd-room')?.value;
+            const guest = document.getElementById('qadd-guest')?.value.trim();
+            const checkin = document.getElementById('qadd-checkin')?.value;
+            const checkout = document.getElementById('qadd-checkout')?.value;
+            const time = document.getElementById('qadd-time')?.value;
+            const checkoutTime = document.getElementById('qadd-checkout-time')?.value;
+            const transferAmount = parseFloat(document.getElementById('qadd-transfer')?.value) || 0;
+            const mealPrice = parseFloat(document.getElementById('qadd-meal')?.value) || 0;
+
+            if (!room || !guest || !checkin || !checkout || !time || !checkoutTime) {
+                showNotification('Please fill all required fields', 'error');
+                return;
+            }
+            if (new Date(checkout) < new Date(checkin)) {
+                showNotification('Check-out must be after Check-in', 'error');
+                return;
+            }
+
+            const duration = calculateDuration(checkin, checkout);
+            const newRes = {
+                name: room,
+                guestName: guest,
+                checkin,
+                checkout,
+                duration,
+                time,
+                checkoutTime,
+                transferAmount,
+                mealPrice,
+                createdAt: new Date().toISOString()
+            };
+
+            state.customFields.forEach(f => {
+                const el = document.getElementById(`qadd-${f.id}`);
+                if (el) newRes[f.id] = f.type === 'checkbox' ? el.checked : el.value;
+            });
+
+            try {
+                await addDoc(reservationsCol, newRes);
+                document.getElementById('cal-quick-add-modal').classList.remove('active');
+                await loadAllData();
+                showNotification('Reservation created successfully!', 'success');
+            } catch (e) {
+                console.error(e);
+                showNotification('Error saving reservation', 'error');
+            }
+        }
+
+        function closeQuickAddModal() {
+            document.getElementById('cal-quick-add-modal')?.classList.remove('active');
+        }
+
 
 
         function openDayModal(dateStr, clickedRoom) {
@@ -4516,6 +4788,13 @@
                 renderCalendar();
             });
 
+                        // Quick Add Reservation Modal
+            document.getElementById('cal-quick-add-modal-close')?.addEventListener('click', closeQuickAddModal);
+            document.getElementById('cal-quick-add-cancel')?.addEventListener('click', closeQuickAddModal);
+            document.getElementById('cal-quick-add-save')?.addEventListener('click', saveQuickAddReservation);
+            document.getElementById('cal-quick-add-modal')?.addEventListener('click', (e) => {
+                if (e.target.id === 'cal-quick-add-modal') closeQuickAddModal();
+            });
 
 
             document.getElementById('cal-day-modal-close')?.addEventListener('click', closeDayModal);
@@ -4525,7 +4804,10 @@
             });
 
             document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape') closeDayModal();
+                if (e.key === 'Escape') {
+                    closeDayModal();
+                    closeQuickAddModal();
+                }
             });
 
 
