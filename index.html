@@ -819,53 +819,6 @@
             box-shadow: 0 2px 8px rgba(245, 158, 11, 0.35);
         }
 
-        /* ---- Διακοσμητικά badges πάνω στις μπάρες ---- */
-        .cal-res-bar {
-            overflow: visible; /* Επιτρέπει στα badges να βγουν έξω */
-        }
-        .cal-res-bar .res-badge {
-            position: absolute;
-            top: -6px;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 9px;
-            color: white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.25);
-            z-index: 5;
-            border: 2px solid white;
-        }
-        .cal-res-bar .res-badge.checkin {
-            left: -6px;
-            background: var(--success-color);
-        }
-        .cal-res-bar .res-badge.checkout {
-            right: -6px;
-            background: var(--warning-color);
-        }
-
-        /* ---- Filter states ---- */
-        .cal-res-bar.dimmed {
-            opacity: 0.18;
-            filter: grayscale(0.8);
-            pointer-events: none;
-            z-index: 1;
-        }
-        .cal-res-bar.highlighted-checkin {
-            box-shadow: 0 0 0 2px var(--success-color), 0 4px 12px rgba(16, 185, 129, 0.3);
-            z-index: 3;
-        }
-        .cal-res-bar.highlighted-checkout {
-            box-shadow: 0 0 0 2px var(--warning-color), 0 4px 12px rgba(245, 158, 11, 0.3);
-            z-index: 3;
-        }
-        .cal-res-bar.highlighted-both {
-            box-shadow: 0 0 0 2px var(--primary-color), 0 4px 12px rgba(37, 99, 235, 0.35);
-            z-index: 3;
-        }
         /* ---- Flex modal (για να μένει σταθερό το footer) ---- */
         .modal-content-flex {
             display: flex;
@@ -3822,12 +3775,13 @@
             const todayStr = new Date().toISOString().split('T')[0];
             let rowsHtml = '';
 
-            ROOMS_LIST.forEach(room => {
+                        ROOMS_LIST.forEach(room => {
                 const roomRes = state.reservations.filter(r => r.name === room && r.checkin && r.checkout);
                 rowsHtml += `<div class="cal-room-row ${getRoomClass(room)}">
                     <div class="cal-room-label">${room}</div>
                     <div class="cal-room-days">`;
 
+                // 1. Σχεδίαση των κενών κελιών (το πλέγμα με τις μέρες)
                 for (let d = 1; d <= daysInMonth; d++) {
                     const date = new Date(year, month, d);
                     const dow = date.getDay();
@@ -3838,79 +3792,71 @@
                         data-date="${dateStr}" data-room="${room}" title="${dateStr} — ${room}"></div>`;
                 }
 
-                roomRes.forEach(r => {
-                    const checkin = new Date(r.checkin);
-                    const checkout = new Date(r.checkout);
-                    const lastNight = new Date(checkout);
-                    lastNight.setDate(lastNight.getDate() - 1);
+                // 2. Φιλτράρισμα κρατήσεων ανάλογα με το κουμπί που πάτησες
+                let displayRes = [];
+                const viewStart = new Date(year, month, 1);
+                const viewEnd = new Date(year, month, daysInMonth);
 
-                    const viewStart = new Date(year, month, 1);
-                    const viewEnd = new Date(year, month, daysInMonth);
+                if (state.calendarFilters.checkin) {
+                    // Αν είναι πατημένο το Check In, δείξε μόνο τις αφίξεις (1 μέρα)
+                    displayRes = roomRes.filter(r => {
+                        const ci = new Date(r.checkin);
+                        return ci >= viewStart && ci <= viewEnd;
+                    }).map(r => ({ ...r, displayDate: r.checkin, isSingleDay: true }));
+                } else if (state.calendarFilters.checkout) {
+                    // Αν είναι πατημένο το Check Out, δείξε μόνο τις αναχωρήσεις (1 μέρα)
+                    displayRes = roomRes.filter(r => {
+                        const co = new Date(r.checkout);
+                        return co >= viewStart && co <= viewEnd;
+                    }).map(r => ({ ...r, displayDate: r.checkout, isSingleDay: true }));
+                } else {
+                    // Default (κανένα κουμπί πατημένο): Δείξε τις κρατήσεις απλωμένες κανονικά
+                    displayRes = roomRes.map(r => ({ ...r, isSingleDay: false }));
+                }
 
-                    const startClipped = checkin < viewStart ? viewStart : checkin;
-                    const endClipped = lastNight > viewEnd ? viewEnd : lastNight;
-
-                    if (endClipped < startClipped) return;
-
-                    const startDay = startClipped.getDate();
-                    const endDay = endClipped.getDate();
-                    const spanDays = endDay - startDay + 1;
-
-                    const leftPct = ((startDay - 1) / daysInMonth) * 100;
-                    const widthPct = (spanDays / daysInMonth) * 100;
-
-                    const continuesLeft = checkin < viewStart;
-                    const continuesRight = lastNight > viewEnd;
-
+                // 3. Σχεδίαση των μπαρών
+                displayRes.forEach(r => {
+                    let leftPct, widthPct, continuesLeft = false, continuesRight = false, spanDays, titleStr;
                     const transfer = r.transferAmount || 0;
 
-                    // Έλεγχος αν check-in/check-out πέφτει στον τρέχοντα μήνα
-                    const isCheckinThisMonth = checkin >= viewStart && checkin <= viewEnd;
-                    const isCheckoutThisMonth = checkout >= viewStart && checkout <= viewEnd;
+                    if (r.isSingleDay) {
+                        // Λογική για 1 μέρα (Check-in ή Check-out mode)
+                        const d = new Date(r.displayDate);
+                        const dayNum = d.getDate();
+                        spanDays = 1;
+                        leftPct = ((dayNum - 1) / daysInMonth) * 100;
+                        widthPct = (1 / daysInMonth) * 100;
+                        titleStr = `${r.name} — ${r.guestName || 'No guest'} (${r.displayDate})`;
+                    } else {
+                        // Λογική για πολλές μέρες (Default mode)
+                        const checkin = new Date(r.checkin);
+                        const checkout = new Date(r.checkout);
+                        const lastNight = new Date(checkout);
+                        lastNight.setDate(lastNight.getDate() - 1);
 
-                    // Badges
-                    let badgeHtml = '';
-                    if (isCheckinThisMonth) {
-                        badgeHtml += '<div class="res-badge checkin" title="Check-in εδώ"><i class="fas fa-arrow-down"></i></div>';
-                    }
-                    if (isCheckoutThisMonth) {
-                        badgeHtml += '<div class="res-badge checkout" title="Check-out εδώ"><i class="fas fa-arrow-up"></i></div>';
+                        const startClipped = checkin < viewStart ? viewStart : checkin;
+                        const endClipped = lastNight > viewEnd ? viewEnd : lastNight;
+
+                        if (endClipped < startClipped) return;
+
+                        const startDay = startClipped.getDate();
+                        const endDay = endClipped.getDate();
+                        spanDays = endDay - startDay + 1;
+                        leftPct = ((startDay - 1) / daysInMonth) * 100;
+                        widthPct = (spanDays / daysInMonth) * 100;
+                        continuesLeft = checkin < viewStart;
+                        continuesRight = lastNight > viewEnd;
+                        titleStr = `${r.name} — ${r.guestName || 'No guest'} (${r.checkin} → ${r.checkout})`;
                     }
 
-                    // Filter state logic
-                    let barClasses = '';
-                    let shouldDim = false;
-                    let hasCheckinMatch = false;
-                    let hasCheckoutMatch = false;
-                    const fCheckin = state.calendarFilters.checkin;
-                    const fCheckout = state.calendarFilters.checkout;
-                    if (fCheckin && !fCheckout) {
-                        if (!isCheckinThisMonth) shouldDim = true;
-                        else hasCheckinMatch = true;
-                    } else if (fCheckout && !fCheckin) {
-                        if (!isCheckoutThisMonth) shouldDim = true;
-                        else hasCheckoutMatch = true;
-                    } else if (fCheckin && fCheckout) {
-                        if (!isCheckinThisMonth && !isCheckoutThisMonth) shouldDim = true;
-                        else {
-                            if (isCheckinThisMonth) hasCheckinMatch = true;
-                            if (isCheckoutThisMonth) hasCheckoutMatch = true;
-                        }
-                    }
-                    if (shouldDim) barClasses += ' dimmed';
-                    if (hasCheckinMatch && hasCheckoutMatch) barClasses += ' highlighted-both';
-                    else if (hasCheckinMatch) barClasses += ' highlighted-checkin';
-                    else if (hasCheckoutMatch) barClasses += ' highlighted-checkout';
-
-                    rowsHtml += `<div class="cal-res-bar ${continuesLeft ? 'continues-left' : ''} ${continuesRight ? 'continues-right' : ''}${barClasses}"
+                    rowsHtml += `<div class="cal-res-bar ${continuesLeft ? 'continues-left' : ''} ${continuesRight ? 'continues-right' : ''}"
                         data-id="${r.id}"
                         style="left:${leftPct}%; width:${widthPct}%;"
-                        title="${r.name} — ${r.guestName || 'No guest'} (${r.checkin} → ${r.checkout})">
-                        ${badgeHtml}
+                        title="${titleStr}">
                         <div class="res-guest">${r.guestName || 'No guest'}</div>
                         <div class="res-meta">
                             <span><i class="fas fa-arrow-right-to-bracket"></i> ${r.time || '—'}</span>
-                            <span><i class="fas fa-moon"></i> ${r.duration || spanDays}n</span>
+                            ${!r.isSingleDay ? `<span><i class="fas fa-moon"></i> ${r.duration || spanDays}n</span>` : ''}
                             ${transfer > 0 ? `<span><i class="fas fa-dollar-sign"></i> ${transfer.toFixed(0)}</span>` : ''}
                         </div>
                     </div>`;
@@ -4726,14 +4672,16 @@
                     document.getElementById('reservation-checkout').value = next.toISOString().split('T')[0];
                 }
             });
-            // Filter buttons (Check In / Check Out)
+                // Filter buttons (Check In / Check Out) - Mutually Exclusive
             document.getElementById('cal-filter-checkin')?.addEventListener('click', () => {
                 state.calendarFilters.checkin = !state.calendarFilters.checkin;
+                if (state.calendarFilters.checkin) state.calendarFilters.checkout = false;
                 renderCalendar();
             });
 
             document.getElementById('cal-filter-checkout')?.addEventListener('click', () => {
                 state.calendarFilters.checkout = !state.calendarFilters.checkout;
+                if (state.calendarFilters.checkout) state.calendarFilters.checkin = false;
                 renderCalendar();
             });
 
