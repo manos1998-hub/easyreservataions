@@ -2443,24 +2443,38 @@
             if (filterRoom) data = data.filter(d => d.room === filterRoom);
             data = [...data].sort((a,b) => b.month.localeCompare(a.month));
 
-            thead.innerHTML = `<tr><th>Μήνας</th><th>Δωμάτιο</th><th>Income</th><th>Διανυκτερεύσεις</th><th>Ενέργειες</th></tr>`;
+                        // 🆕 Προσθήκη στήλης "Πληρότητα %"
+            thead.innerHTML = `<tr><th>Μήνας</th><th>Δωμάτιο</th><th>Income</th><th>Διανυκτερεύσεις</th><th>Πληρότητα %</th><th>Ενέργειες</th></tr>`;
 
             if (data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state">Δεν βρέθηκαν δεδομένα</div></td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state">Δεν βρέθηκαν δεδομένα</div></td></tr>`;
                 return;
             }
 
-            tbody.innerHTML = data.map(d => `
-                <tr>
-                    <td><strong>${d.month}</strong></td>
-                    <td>${d.room}</td>
-                    <td class="currency-cell">$${(d.income || 0).toFixed(2)}</td>
-                    <td>${d.stays || 0}</td>
-                    <td>
-                        <button class="btn-icon delete" onclick="window.deleteRsRecord('${isComm ? 'comm' : 'nocomm'}', '${d.id}')"><i class="fas fa-trash-alt"></i></button>
-                    </td>
-                </tr>
-            `).join('');
+            tbody.innerHTML = data.map(d => {
+                // 🆕 Υπολογισμός Πληρότητας
+                let occupancy = '0.0';
+                if (d.month) {
+                    const [year, month] = d.month.split('-').map(Number);
+                    // Βρίσκουμε πόσες μέρες έχει ο συγκεκριμένος μήνας
+                    const daysInMonth = new Date(year, month, 0).getDate();
+                    // Υπολογισμός ποσοστού: (Διανυκτερεύσεις / Σύνολο Ημερών Μήνα) * 100
+                    occupancy = (d.stays > 0) ? ((d.stays / daysInMonth) * 100).toFixed(1) : '0.0';
+                }
+
+                return `
+                    <tr>
+                        <td><strong>${d.month}</strong></td>
+                        <td>${d.room}</td>
+                        <td class="currency-cell">$${(d.income || 0).toFixed(2)}</td>
+                        <td>${d.stays || 0}</td>
+                        <td><strong style="color: var(--primary);">${occupancy}%</strong></td>
+                        <td>
+                            <button class="btn-icon delete" onclick="window.deleteRsRecord('${isComm ? 'comm' : 'nocomm'}', '${d.id}')"><i class="fas fa-trash-alt"></i></button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
         }
 
         async function saveRsRecord(type) {
